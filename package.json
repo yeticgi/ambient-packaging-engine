@@ -1,8 +1,10 @@
 {
     "private": true,
-    "name": "ambient-packaging-engine",
-    "workspaces": [ "packages/*" ],
-    "scripts": {
-        "start": "yarn workspace base-app start"
-    }
- }
+    "name": "@yeticgi/ape-root",
+    "workspaces": [
+        "packages/*"
+    ],
+    "scripts": {},
+    "repository": "git@github.com:yeticgi/ambient-packaging-engine.git",
+    "license": "MIT"
+}

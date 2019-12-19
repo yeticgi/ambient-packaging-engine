@@ -1,0 +1,9 @@
+{
+    "private": true,
+    "name": "@yeticgi/ape-webxr-qa",
+    "version": "0.0.1",
+    "scripts": {},
+    "description": "Web XR test application useful for quality assurance testing across many devices.",
+    "repository": "git@github.com:yeticgi/ambient-packaging-engine.git",
+    "license": "MIT"
+}

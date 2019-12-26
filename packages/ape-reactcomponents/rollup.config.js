@@ -4,8 +4,7 @@ import commonjs from 'rollup-plugin-commonjs';
 import typescript from 'rollup-plugin-typescript2';
 import replace from 'rollup-plugin-replace';
 import postcss from 'rollup-plugin-postcss';
-import copy from 'rollup-plugin-copy';
-import del from 'rollup-plugin-delete';
+// import copy from 'rollup-plugin-copy'
 
 export default {
     input: 'src/index.tsx',
@@ -13,13 +12,9 @@ export default {
       dir: 'dist',
       format: 'cjs',
       exports: 'named',
-      sourcemap: true
+      sourcemap: true,
     },
     plugins: [
-      del({
-        targets: ['dist'],
-        verbose: true
-      }),
       external(),
       noderesolve({
         browser: true
@@ -39,17 +34,12 @@ export default {
       }),
       typescript({
         objectHashIgnoreUnknownHack: true,
-        clean: true
+        // clean: true
       }),
       postcss(),
       replace({
-        'process.env.NODE_ENV': JSON.stringify('development'),
-      }),
-      copy({
-        targets: [
-          { src: 'src/index.html', dest: 'dist'}
-        ],
-        verbose: true,
+        'process.env.NODE_ENV': JSON.stringify('production'),
       })
     ],
+    external: ['react', 'react-dom']
   };

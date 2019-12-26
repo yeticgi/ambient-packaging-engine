@@ -1,17 +1,13 @@
 {
     "private": true,
-    "name": "@yeticgi/ape-webxr-qa",
+    "name": "@yeticgi/ape-reactcomponents",
     "version": "0.0.1",
     "scripts": {
-        "build": "yarn rollup -c",
-        "build:dependencies": "yarn workspace @yeticgi/ape-reactcomponents build",
+        "build": "rollup -c",
         "watch": "rollup -c -w",
-        "watch:dependencies": "yarn workspace @yeticgi/ape-reactcomponents watch:concurrent",
-        "watch:concurrent": "concurrently \"yarn watch\"",
-        "serve:build": "yarn build:dependencies && yarn build && serve dist",
-        "serve:watch": "concurrently \"yarn watch:dependencies\" \"yarn watch:concurrent\" \"serve dist\""
+        "watch:concurrent": "concurrently \"yarn watch\""
     },
-    "description": "Web XR test application useful for quality assurance testing across many devices.",
+    "files": [ "dist/index.js" ],
     "repository": "git@github.com:yeticgi/ambient-packaging-engine.git",
     "license": "MIT",
     "devDependencies": {
@@ -21,7 +17,6 @@
         "rollup": "^1.27.13",
         "rollup-plugin-commonjs": "^10.1.0",
         "rollup-plugin-copy": "^3.1.0",
-        "rollup-plugin-delete": "^1.1.0",
         "rollup-plugin-node-resolve": "^5.2.0",
         "rollup-plugin-peer-deps-external": "^2.2.0",
         "rollup-plugin-postcss": "^2.0.3",
@@ -30,9 +25,11 @@
         "typescript": "^3.7.3"
     },
     "dependencies": {
-        "@yeticgi/ape-reactcomponents": "0.0.1",
         "react": "^16.12.0",
         "react-dom": "^16.12.0",
         "tslib": "^1.10.0"
-    }
+    },
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "author": "Ryan Cook"
 }

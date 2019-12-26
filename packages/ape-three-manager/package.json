@@ -2,7 +2,9 @@
     "private": true,
     "name": "@yeticgi/ape-three-manager",
     "version": "0.0.1",
-    "scripts": {},
+    "scripts": {
+        "build" : ""
+    },
     "description": "Three JS manager for the Ambient Packaging Engine.",
     "repository": "git@github.com:yeticgi/ambient-packaging-engine.git",
     "license": "MIT"

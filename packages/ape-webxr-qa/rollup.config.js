@@ -38,8 +38,7 @@ export default {
         },
       }),
       typescript({
-        objectHashIgnoreUnknownHack: true,
-        clean: true
+        objectHashIgnoreUnknownHack: true
       }),
       postcss(),
       replace({
@@ -47,7 +46,8 @@ export default {
       }),
       copy({
         targets: [
-          { src: 'src/index.html', dest: 'dist'}
+          { src: 'src/index.html', dest: 'dist'},
+          { src: '../*/dist/public', dest: 'dist'}
         ],
         verbose: true,
       })

@@ -10,16 +10,30 @@ import {
     AmbientLight
 } from 'three';
 import { IDisposable } from '../IDisposable';
+import { Time } from './Time';
+import { Input } from './Input';
 
 export class ThreeManager implements IDisposable {
+
+    /**
+     * Singleton style reference to ThreeManager.
+     */
+    public static instance: ThreeManager = null;
 
     scene: Scene;
     camera: PerspectiveCamera;
     renderer: WebGLRenderer;
+    time: Time;
+    input: Input;
 
+    private appElement: HTMLDivElement;
     private cube: Mesh;
 
-    constructor(canvasParent: HTMLDivElement) {
+    constructor(appElement: HTMLDivElement, canvasParent: HTMLDivElement) {
+        ThreeManager.instance = this;
+
+        this.appElement = appElement;
+
         // Create renderer.
         this.renderer = new WebGLRenderer({
             antialias: true,
@@ -63,6 +77,17 @@ export class ThreeManager implements IDisposable {
         let dirLight = new DirectionalLight('#ffffff', 1.0);
         this.scene.add(dirLight);
 
+        // Create time module.
+        this.time = new Time();
+
+        // Create input module.
+        this.input = new Input({
+            appElement: this.renderer.domElement,
+            canvasElement: this.renderer.domElement,
+            time: this.time,
+            getUIHtmlElements: this.getUIHtmlElement
+        });
+
         // Setup update loop.
         this.update = this.update.bind(this);
         this.renderer.setAnimationLoop(this.update);
@@ -75,6 +100,10 @@ export class ThreeManager implements IDisposable {
     }
     
     dispose(): void {
+        if (ThreeManager.instance === this) {
+            ThreeManager.instance = null;
+        }
+
         window.removeEventListener('resize', this.resize);
 
         this.scene.dispose();
@@ -93,9 +122,16 @@ export class ThreeManager implements IDisposable {
     }
 
     private update(): void {
-        this.cube.rotation.x += 0.01;
-        this.cube.rotation.y += 0.01;
+        this.time.update();
+        this.input.update();
+
+        this.cube.rotation.x += (1 * this.time.deltaTime);
+        this.cube.rotation.y += (1 * this.time.deltaTime);
         
         this.renderer.render(this.scene, this.camera);
+    }
+
+    private getUIHtmlElement(): HTMLElement[] {
+        return [];
     }
 }

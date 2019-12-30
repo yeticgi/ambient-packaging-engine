@@ -5,8 +5,8 @@ export class APEngine implements IDisposable {
 
     public threeManager: ThreeManager;
     
-    constructor(threeCanvasParent: HTMLDivElement) {
-        this.threeManager = new ThreeManager(threeCanvasParent);
+    constructor(appElement: HTMLDivElement, threeCanvasParent: HTMLDivElement) {
+        this.threeManager = new ThreeManager(appElement, threeCanvasParent);
     }
 
     dispose(): void {

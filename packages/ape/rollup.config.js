@@ -8,7 +8,7 @@ import url from '@rollup/plugin-url';
 import del from 'rollup-plugin-delete';
 
 export default {
-    input: 'src/index.tsx',
+    input: 'src/index.ts',
     output: {
       dir: 'dist',
       format: 'cjs',
@@ -24,19 +24,7 @@ export default {
       noderesolve({
         browser: true
       }),
-      commonjs({
-        namedExports: {
-          'react': [
-            'Children',
-            'Component',
-            'PropTypes',
-            'createElement',
-          ],
-          'react-dom': [
-            'render'
-          ],
-        },
-      }),
+      commonjs(),
       typescript({
         objectHashIgnoreUnknownHack: true
       }),
@@ -45,10 +33,7 @@ export default {
         limit: 0,
         publicPath: 'public/',
         destDir: 'dist/public'
-      }),
-      replace({
-        'process.env.NODE_ENV': JSON.stringify('production'),
       })
     ],
-    external: ['react', 'react-dom']
+    external: ['three']
   };

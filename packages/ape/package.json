@@ -1,0 +1,31 @@
+{
+    "private": true,
+    "name": "@yeticgi/ape",
+    "version": "0.0.1",
+    "scripts": {
+        "build": "rollup -c",
+        "watch": "rollup -c -w",
+        "watch:concurrent": "concurrently \"yarn watch\""
+    },
+    "description": "Three JS manager for the Ambient Packaging Engine.",
+    "repository": "git@github.com:yeticgi/ambient-packaging-engine.git",
+    "license": "MIT",
+    "devDependencies": {
+        "rollup": "^1.27.13",
+        "rollup-plugin-commonjs": "^10.1.0",
+        "rollup-plugin-copy": "^3.1.0",
+        "rollup-plugin-delete": "^1.1.0",
+        "rollup-plugin-node-resolve": "^5.2.0",
+        "rollup-plugin-peer-deps-external": "^2.2.0",
+        "rollup-plugin-postcss": "^2.0.3",
+        "rollup-plugin-replace": "^2.2.0",
+        "rollup-plugin-typescript2": "^0.25.3",
+        "typescript": "^3.7.3"
+    },
+    "dependencies": {
+        "three": "^0.112.1",
+        "tslib": "^1.10.0"
+    },
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts"
+}

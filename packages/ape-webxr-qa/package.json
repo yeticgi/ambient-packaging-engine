@@ -3,10 +3,10 @@
     "name": "@yeticgi/ape-webxr-qa",
     "version": "0.0.1",
     "scripts": {
-        "build": "rollup -c",
-        "build:all": "yarn workspace @yeticgi/ape-reactcomponents build && yarn build",
+        "build": "rollup -c --treeshake.pureExternalModules",
+        "build:all": "yarn workspace @yeticgi/ape build && yarn workspace @yeticgi/ape-reactcomponents build && yarn build",
         "serve:build": "yarn build:all && serve dist",
-        "serve:watch": "concurrently \"yarn workspace @yeticgi/ape-reactcomponents watch:concurrent\" \"yarn rollup -c -w\" \"serve dist\""
+        "serve:watch": "concurrently \"yarn workspace @yeticgi/ape watch:concurrent\" \"yarn workspace @yeticgi/ape-reactcomponents watch:concurrent\" \"yarn rollup -c -w\" \"serve dist\""
     },
     "description": "Web XR test application useful for quality assurance testing across many devices.",
     "repository": "git@github.com:yeticgi/ambient-packaging-engine.git",
@@ -28,6 +28,7 @@
     },
     "dependencies": {
         "@yeticgi/ape-reactcomponents": "0.0.1",
+        "@yeticgi/ape": "0.0.1",
         "react": "^16.12.0",
         "react-dom": "^16.12.0",
         "tslib": "^1.10.0"

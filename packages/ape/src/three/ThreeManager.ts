@@ -87,6 +87,7 @@ export class ThreeManager implements IDisposable {
             time: this.time,
             getUIHtmlElements: this.getUIHtmlElement
         });
+        this.input.debugLevel = 2;
 
         // Setup update loop.
         this.update = this.update.bind(this);

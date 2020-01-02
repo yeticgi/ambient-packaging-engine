@@ -123,7 +123,7 @@ export namespace Shout {
         return false;
     }
 
-    export function dispatchEvent(type: string, arg: unknown) {
+    export function dispatchEvent(type: string, arg?: unknown) {
         let listeners: ArgEventListener<unknown>[] = listenersMap.get(type);
 
         if (listeners) {

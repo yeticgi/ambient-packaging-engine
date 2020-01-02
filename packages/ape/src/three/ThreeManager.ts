@@ -12,7 +12,15 @@ import {
 import { IDisposable } from '../IDisposable';
 import { Time } from './Time';
 import { Input } from './Input';
+import { ArgEvent, ArgEventListener } from '../Events';
 
+/**
+ * ThreeManager is a container class for the core three js functionality of the apengine.
+ * 
+ * There are some events that the three manager dispatches that are useful:
+ * - `onUpdateBeforeRender`: Dispatched before we render a three js frame.
+ * - `onUpdatePostRender`: Dispatched after we render a three js frame.
+ */
 export class ThreeManager implements IDisposable {
 
     /**
@@ -26,8 +34,10 @@ export class ThreeManager implements IDisposable {
     time: Time;
     input: Input;
 
+    onUpdateBeforeRender: ArgEvent<ThreeManager> = new ArgEvent();
+    onUpdatePostRender: ArgEvent<ThreeManager> = new ArgEvent();
+
     private appElement: HTMLDivElement;
-    private cube: Mesh;
 
     constructor(appElement: HTMLDivElement, canvasParent: HTMLDivElement) {
         ThreeManager.instance = this;
@@ -47,35 +57,6 @@ export class ThreeManager implements IDisposable {
         this.renderer.shadowMap.enabled = false;
         this.renderer.domElement.style.display = "block";
         canvasParent.appendChild(this.renderer.domElement);
-        
-        // Create scene.
-        this.scene = new Scene();
-        this.scene.background = new Color(0, 0, 0);
-
-        // Create camera.
-        let fov = 75;
-        let aspect = width / height;
-        let near = 0.1;
-        let far = 1000;
-        this.camera = new PerspectiveCamera(fov, aspect, near, far);
-        this.camera.position.z = 5;
-        this.scene.add(this.camera);
-
-        // Create test cube geometry.
-        var cubeGeometry = new BoxGeometry(1, 1, 1);
-        var cubeMaterial = new MeshStandardMaterial({
-            color: '#00ff00'
-        });
-        this.cube = new Mesh(cubeGeometry, cubeMaterial);
-        this.scene.add(this.cube);
-        
-        // Create ambient light.
-        let ambient = new AmbientLight(0x222222);
-        this.scene.add(ambient);
-
-        // Create directional light.
-        let dirLight = new DirectionalLight('#ffffff', 1.0);
-        this.scene.add(dirLight);
 
         // Create time module.
         this.time = new Time();
@@ -111,25 +92,29 @@ export class ThreeManager implements IDisposable {
     }
 
     private resize(): void {
-        console.log('[ThreeManager] resize');
         const width = window.innerWidth;
         const height = window.innerHeight;
         
         this.renderer.setPixelRatio(window.devicePixelRatio | 1);
         this.renderer.setSize(width, height);
 
-        this.camera.aspect = width / height;
-        this.camera.updateProjectionMatrix();
+        if (this.camera) {
+            this.camera.aspect = width / height;
+            this.camera.updateProjectionMatrix();
+        }
     }
 
     private update(): void {
         this.time.update();
         this.input.update();
 
-        this.cube.rotation.x += (1 * this.time.deltaTime);
-        this.cube.rotation.y += (1 * this.time.deltaTime);
+        this.onUpdateBeforeRender.invoke(this);
         
-        this.renderer.render(this.scene, this.camera);
+        if (this.scene && this.camera) {
+            this.renderer.render(this.scene, this.camera);
+        }
+
+        this.onUpdatePostRender.invoke(this);
     }
 
     private getUIHtmlElement(): HTMLElement[] {

@@ -3,9 +3,7 @@
     "name": "@yeticgi/ape",
     "version": "0.0.1",
     "scripts": {
-        "build": "rollup -c",
-        "watch": "rollup -c -w",
-        "watch:concurrent": "concurrently \"yarn watch\""
+        "build": "rollup -c"
     },
     "description": "Three JS manager for the Ambient Packaging Engine.",
     "repository": "git@github.com:yeticgi/ambient-packaging-engine.git",

@@ -3,9 +3,7 @@
     "name": "@yeticgi/ape-reactcomponents",
     "version": "0.0.1",
     "scripts": {
-        "build": "rollup -c",
-        "watch": "rollup -c -w",
-        "watch:concurrent": "concurrently \"yarn watch\""
+        "build": "rollup -c"
     },
     "files": [
         "dist/index.js"

@@ -35,5 +35,5 @@ export default {
         destDir: 'dist/public'
       })
     ],
-    external: ['three']
+    external: ['three', 'howler', 'lodash', 'tslib']
   };

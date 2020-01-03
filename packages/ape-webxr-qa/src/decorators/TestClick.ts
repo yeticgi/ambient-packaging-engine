@@ -6,9 +6,11 @@ import {
     IDecoratorOptions,
     MouseButtonId,
     Physics,
-    findParentGameObject
- } from "@yeticgi/ape";
+    findParentGameObject,
+    GameObject
+} from "@yeticgi/ape";
 import { Rotator } from "./Rotator";
+import { AudioManifest } from "../audio/AudioManifest";
 
 export class TestClick extends Decorator {
 
@@ -16,6 +18,10 @@ export class TestClick extends Decorator {
 
     configure(options: IDecoratorOptions) {
         super.configure(options);
+    }
+
+    onAttach(gameObject: GameObject) {
+        super.onAttach(gameObject);
     }
 
     onUpdate() {
@@ -50,12 +56,16 @@ export class TestClick extends Decorator {
         }
     }
 
-    private clicked() {
-        console.log(`[TestClick] clicked on ${this.gameObject.name}`);
+    onDestroy() {
+    }
 
+    private clicked() {
         const rotator = this.gameObject.getDecorator<Rotator>(Rotator);
         if (rotator) {
             rotator.enabled = !rotator.enabled;
         }
+
+        let audio = APEngine.audioManager.getAudio(AudioManifest.cubeTap.name);
+        audio.play();
     }
 }

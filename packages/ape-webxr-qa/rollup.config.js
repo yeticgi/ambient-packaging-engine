@@ -6,6 +6,7 @@ import replace from 'rollup-plugin-replace';
 import postcss from 'rollup-plugin-postcss';
 import copy from 'rollup-plugin-copy';
 import del from 'rollup-plugin-delete';
+import url from '@rollup/plugin-url';
 
 export default {
     input: 'src/index.tsx',
@@ -41,6 +42,12 @@ export default {
         objectHashIgnoreUnknownHack: true
       }),
       postcss(),
+      url({
+        limit: 0,
+        publicPath: 'public/',
+        destDir: 'dist/public',
+        include: ['**/*.svg', '**/*.png', '**/*.jpg', '**/*.gif', '**/*.mp3', '**/*.webm']
+      }),
       replace({
         'process.env.NODE_ENV': JSON.stringify('development'),
       }),

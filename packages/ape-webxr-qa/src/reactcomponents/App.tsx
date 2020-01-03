@@ -21,6 +21,7 @@ import {
 import { Rotator } from "../decorators/Rotator";
 import { TestClick } from "../decorators/TestClick";
 import { PauseButton } from "./PauseButton";
+import { AudioManifest } from "../audio/AudioManifest";
 
 interface IAppState {
     engineInitialized: boolean
@@ -52,7 +53,11 @@ export class App extends Component<{}, IAppState> {
         
         this.onEngineUpdate = this.onEngineUpdate.bind(this);
         APEngine.onUpdate.addListener(this.onEngineUpdate);
-            
+        
+        // Add audio items from manifest and start preloading audio.
+        AudioManifest.addAudioItems(APEngine.audioManager);
+        APEngine.audioManager.startLoading();
+
         this.createTestScene();
         
         this.setState({

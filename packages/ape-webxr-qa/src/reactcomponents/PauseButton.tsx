@@ -21,6 +21,7 @@ import {
 } from 'three';
 import { Rotator } from "../decorators/Rotator";
 import { TestClick } from "../decorators/TestClick";
+import { AudioManifest } from "../audio/AudioManifest";
 
 export interface IPauseButtonState { 
     paused: boolean;
@@ -62,5 +63,8 @@ export class PauseButton extends Component<{}, IPauseButtonState> {
 
     onClick() {
         APEngine.time.paused = !APEngine.time.paused;
+
+        let audio = APEngine.audioManager.getAudio(AudioManifest.button.name);
+        audio.play();
     }
 }

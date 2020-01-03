@@ -7,6 +7,7 @@ import { Time } from './Time';
 import { Input } from './Input';
 import { GameObject } from "./GameObject";
 import { Event } from "./Events";
+import { AudioManager } from './audio/AudioManager';
 
 export namespace APEngine {
     
@@ -15,6 +16,7 @@ export namespace APEngine {
     export let webglRenderer: WebGLRenderer;
     export let time: Time;
     export let input: Input;
+    export let audioManager: AudioManager;
 
     export let onUpdate: Event = new Event();
     export let onLateUpdate: Event = new Event();
@@ -55,6 +57,9 @@ export namespace APEngine {
             getUIHtmlElements: () => []
         });
         input.debugLevel = 1;
+
+        // Create audio manager.
+        audioManager = new AudioManager();
 
         // Setup update loop.
         webglRenderer.setAnimationLoop(update);

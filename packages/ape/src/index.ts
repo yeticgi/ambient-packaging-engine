@@ -7,6 +7,8 @@ export { IDisposable } from './IDisposable';
 export { MouseButtonId, TargetData, InputState, InputType, Input } from './Input';
 export { Physics } from './Physics';
 export { Time } from './Time';
+export { AudioManager } from './audio/AudioManager';
+export { AudioItem, IAudioItemOptions } from './audio/AudioItem';
 
 export { 
     getOptionalValue,

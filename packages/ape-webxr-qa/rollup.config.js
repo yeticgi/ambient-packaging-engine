@@ -53,8 +53,8 @@ export default {
       }),
       copy({
         targets: [
-          { src: 'src/index.html', dest: 'dist'},
-          { src: '../*/dist/public', dest: 'dist'}
+          { src: 'src/index.html', dest: 'dist'}, // copy index.html to dist
+          { src: '../*/dist/public', dest: 'dist'}, // copy all public folders to dist.
         ],
         verbose: true,
       })

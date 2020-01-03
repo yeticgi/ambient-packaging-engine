@@ -11,6 +11,7 @@ import {
     Geometry,
     Math as ThreeMath,
 } from 'three';
+import { GameObject } from './GameObject';
 
 export function getOptionalValue(obj: any, defaultValue: any): any {
     return obj !== undefined && obj !== null ? obj : defaultValue;
@@ -134,6 +135,21 @@ export function isObjectVisible(obj: Object3D) {
         obj = obj.parent;
     }
     return true;
+}
+
+/**
+ * Find the GameObject that is a parent of the given object.  
+ * If the object is a GameObject, then the object itself is returned.  
+ * If the object has no GameObject parents, then null is returned.
+ */
+export function findParentGameObject(obj: Object3D): GameObject {
+    if (obj instanceof GameObject) {
+        return obj;
+    }
+    if (obj.parent) {
+        return findParentGameObject(obj.parent);
+    }
+    return null;
 }
 
 /**

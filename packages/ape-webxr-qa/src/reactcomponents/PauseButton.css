@@ -1,0 +1,10 @@
+.button {
+  position: absolute;
+  width: 100px;
+  height: 50px;
+}
+
+.button.pause {
+  top: 0px;
+  margin: 8px;
+}

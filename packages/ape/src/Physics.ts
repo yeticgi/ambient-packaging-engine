@@ -8,6 +8,7 @@ import {
     Intersection,
     Plane,
 } from 'three';
+import { GameObject } from './GameObject';
 
 /**
  * Container for all custom physics functions for game engine.
@@ -80,7 +81,7 @@ export namespace Physics {
     }
 
     /**
-     * Performs a raycast at the given screen position with the given camera using the given raycaster and against the given objects.
+     * Performs a raycast at the given screen position with the given camera against the given objects.
      * @param screenPos The screen position to raycast from.
      * @param objects The objects to raycast against.
      * @param camera The camera to use.

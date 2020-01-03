@@ -1,12 +1,15 @@
 import { Clock } from 'three';
-import { IDisposable } from '../IDisposable';
+import { IDisposable } from './IDisposable';
 
 export class Time implements IDisposable {
+    
+    paused: boolean;
     
     private _frameCount: number = 0;
     private _timeSinceStart: number = 0;
     private _deltaTime: number = 0;
     private _clock: Clock;
+    
 
     constructor() {
         this._frameCount = 0;
@@ -39,7 +42,10 @@ export class Time implements IDisposable {
     update() {
         // Track time.
         this._frameCount += 1;
-        this._deltaTime = this._clock.getDelta();
+
+        const clockDelta = this._clock.getDelta();
+        this._deltaTime = !this.paused ? clockDelta : 0;
+        
         this._timeSinceStart += this._deltaTime;
     }
 

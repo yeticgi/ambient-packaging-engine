@@ -5,6 +5,8 @@
     "scripts": {
         "build": "rollup -c",
         "build:all": "yarn workspace @yeticgi/ape build && yarn workspace @yeticgi/ape-reactcomponents build && yarn build",
+        "watch": "rollup -cw",
+        "serve": "serve dist",
         "serve:build": "yarn build:all && serve dist"
     },
     "description": "Web XR test application useful for quality assurance testing across many devices.",

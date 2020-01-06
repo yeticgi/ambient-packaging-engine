@@ -27,6 +27,11 @@ interface IAppState {
     engineInitialized: boolean
 }
 
+/**
+ * Version number of the APE WebXR QA app.
+ */
+const version = "__ape-webxr-qa-version__";
+
 export class App extends Component<{}, IAppState> {
 
     private appDivRef: React.RefObject<HTMLDivElement>;

@@ -8,6 +8,7 @@ import copy from 'rollup-plugin-copy';
 import del from 'rollup-plugin-delete';
 import url from '@rollup/plugin-url';
 import { terser } from 'rollup-plugin-terser';
+import pkg from './package.json';
 
 export default {
     input: 'src/index.tsx',
@@ -52,6 +53,7 @@ export default {
       }),
       replace({
         'process.env.NODE_ENV': JSON.stringify('production'),
+        '__ape-webxr-qa-version__': pkg.version
       }),
       terser({
         sourcemap: true

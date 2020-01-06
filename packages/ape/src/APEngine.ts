@@ -11,6 +11,11 @@ import { AudioManager } from './audio/AudioManager';
 
 export namespace APEngine {
     
+    /**
+     * Version number of the APEngine.
+     */
+    export const version: string = "__ape_version__";
+
     export let scene: Scene;
     export let camera: PerspectiveCamera;
     export let webglRenderer: WebGLRenderer;
@@ -21,6 +26,7 @@ export namespace APEngine {
     export let onUpdate: Event = new Event();
     export let onLateUpdate: Event = new Event();
 
+
     let initialized: boolean;
 
     export function init(appElement: HTMLDivElement, threeCanvasParent: HTMLDivElement) {
@@ -28,7 +34,7 @@ export namespace APEngine {
             return;
         }
 
-        console.log(`[APEngine] init`);
+        console.log(`APEngine v${version} init`);
 
         initialized = true;
 

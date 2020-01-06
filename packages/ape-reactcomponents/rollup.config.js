@@ -6,6 +6,7 @@ import replace from 'rollup-plugin-replace';
 import postcss from 'rollup-plugin-postcss';
 import url from '@rollup/plugin-url';
 import del from 'rollup-plugin-delete';
+import pkg from './package.json';
 
 export default {
     input: 'src/index.tsx',
@@ -48,6 +49,7 @@ export default {
       }),
       replace({
         'process.env.NODE_ENV': JSON.stringify('production'),
+        '__ape-reactcomponents_version__': pkg.version
       })
     ],
     external: ['react', 'react-dom']

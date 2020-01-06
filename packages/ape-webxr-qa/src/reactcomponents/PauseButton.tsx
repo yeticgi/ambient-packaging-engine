@@ -1,26 +1,8 @@
 import React, { Component } from "react";
-import ReactDOM from 'react-dom';
 import "./PauseButton.css";
-import { ThreeContainer } from '@yeticgi/ape-reactcomponents';
 import { 
     APEngine,
-    GameObject,
-    MeshDecorator,
-    Time
 } from '@yeticgi/ape';
-import {
-    Scene,
-    PerspectiveCamera,
-    BoxGeometry,
-    Mesh,
-    Color,
-    MeshStandardMaterial,
-    DirectionalLight,
-    AmbientLight,
-    Vector3
-} from 'three';
-import { Rotator } from "../decorators/Rotator";
-import { TestClick } from "../decorators/TestClick";
 import { AudioManifest } from "../audio/AudioManifest";
 
 export interface IPauseButtonState { 

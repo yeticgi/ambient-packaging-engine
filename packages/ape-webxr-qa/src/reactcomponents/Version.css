@@ -1,0 +1,10 @@
+.version {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.75em;
+    color: #ffffff;
+    text-align: right;
+    pointer-events: none;
+}

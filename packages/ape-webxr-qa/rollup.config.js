@@ -41,8 +41,7 @@ export default {
         },
       }),
       typescript({
-        objectHashIgnoreUnknownHack: true,
-        useTsconfigDeclarationDir: true
+        objectHashIgnoreUnknownHack: true
       }),
       postcss(),
       url({
@@ -55,9 +54,9 @@ export default {
         'process.env.NODE_ENV': JSON.stringify('production'),
         '__ape-webxr-qa-version__': pkg.version
       }),
-      terser({
-        sourcemap: true
-      }),
+      // terser({
+      //   sourcemap: true
+      // }),
       copy({
         targets: [
           { src: 'src/index.html', dest: 'dist'}, // copy index.html to dist

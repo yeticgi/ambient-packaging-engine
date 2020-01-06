@@ -22,17 +22,18 @@ import { Rotator } from "../decorators/Rotator";
 import { TestClick } from "../decorators/TestClick";
 import { PauseButton } from "./PauseButton";
 import { AudioManifest } from "../audio/AudioManifest";
+import { Version } from "./Version";
 
 interface IAppState {
     engineInitialized: boolean
 }
 
-/**
- * Version number of the APE WebXR QA app.
- */
-const version = "__ape-webxr-qa-version__";
-
 export class App extends Component<{}, IAppState> {
+
+    /**
+     * Version number of the APE WebXR QA app.
+     */
+    static readonly version: string = "__ape-webxr-qa-version__";
 
     private appDivRef: React.RefObject<HTMLDivElement>;
     private threeCanvasParentRef: React.RefObject<HTMLDivElement>;
@@ -41,6 +42,8 @@ export class App extends Component<{}, IAppState> {
 
     constructor(props: any) {
         super(props);
+
+        console.log(`APE WebXR QA v${App.version}`);
 
         this.appDivRef = React.createRef<HTMLDivElement>();
         this.threeCanvasParentRef = React.createRef<HTMLDivElement>();
@@ -147,7 +150,10 @@ export class App extends Component<{}, IAppState> {
 
         if (this.state.engineInitialized) {
             ui = (
-                <PauseButton />
+                <div>
+                    <Version />
+                    <PauseButton />
+                </div>
             );
         }
 

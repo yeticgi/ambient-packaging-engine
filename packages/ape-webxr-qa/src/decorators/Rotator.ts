@@ -11,6 +11,7 @@ export class Rotator extends Decorator {
     xSpeed: number;
     ySpeed: number;
     zSpeed: number;
+    enabled: boolean = true;
 
     configure(options: IRotatorOptions) {
         super.configure(options);
@@ -21,6 +22,10 @@ export class Rotator extends Decorator {
     }
 
     onUpdate() {
+        if (!this.enabled) {
+            return;
+        }
+        
         this.gameObject.rotation.x += this.xSpeed * APEngine.time.deltaTime;
         this.gameObject.rotation.y += this.ySpeed * APEngine.time.deltaTime;
         this.gameObject.rotation.z += this.zSpeed * APEngine.time.deltaTime;

@@ -12,7 +12,6 @@ export abstract class Decorator {
         }
 
         // Inform decorator that it is being destroyed.
-        decorator.enabled = false;
         decorator.onDestroy();
         decorator._destroyed = true;
     }
@@ -23,32 +22,16 @@ export abstract class Decorator {
     private _started: boolean = false;
     private _gameObject: GameObject = null;
 
-    get enabled() {
-        return this._enabled;
-    }
-
-    set enabled(value: boolean) {
-        if (this._enabled !== value) {
-            this._enabled = value;
-            
-            if (this.enabled) {
-                this.onEnable();
-                if (!this._started) {
-                    this._started = true;
-                    this.onStart();
-                }
-            } else {
-                this.onDisable();
-            }
-        }
-    }
-
     get destroyed() { 
         return this._destroyed;
     }
 
     get gameObject() { 
         return this._gameObject;
+    }
+
+    get started() {
+        return this._started;
     }
 
     configure(option: IDecoratorOptions) {
@@ -71,20 +54,7 @@ export abstract class Decorator {
      */
     onStart() {
         console.log(`[Decorator] ${this.constructor.name} onStart`);
-    }
-
-    /**
-     * Called each time the Decorator is enabled.
-     */
-    onEnable() {
-        console.log(`[Decorator] ${this.constructor.name} onEnable`);
-    }
-
-    /**
-     * Called each time the Decorator is disabled.
-     */
-    onDisable() {
-        console.log(`[Decorator] ${this.constructor.name} onDisable`);
+        this._started = true;
     }
 
     /**

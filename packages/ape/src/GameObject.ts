@@ -53,12 +53,6 @@ export class GameObject extends Object3D {
         // Add decorator to the array.
         this._decorators.push(decorator);
         decorator.onAttach(this);
-
-        if (decorator.enabled) {
-            throw new Error("Decorator should not be enabled just after construction.");
-        }
-
-        decorator.enabled = true;
         
         return decorator;
     }
@@ -99,9 +93,15 @@ export class GameObject extends Object3D {
             return;
         }
 
-        this._decorators.forEach((c) => {
-            if (!c.destroyed && c.enabled && isObjectVisible(this)) {
-                c.onUpdate();
+        this._decorators.forEach((d) => {
+            if (!d.destroyed && isObjectVisible(this)) {
+                if (!d.started) {
+                    d.onStart();
+                    if (!d.started) {
+                        console.error(`Decorator ${d.constructor.name} does not have super.onStart() called.`);
+                    }
+                }
+                d.onUpdate();
             }
         });
 
@@ -117,7 +117,7 @@ export class GameObject extends Object3D {
         }
 
         this._decorators.forEach((c) => {
-            if (!c.destroyed && c.enabled && isObjectVisible(this)) {
+            if (!c.destroyed && isObjectVisible(this)) {
                 c.onLateUpdate();
             }
         });

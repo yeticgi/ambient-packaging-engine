@@ -6,7 +6,7 @@
         "build": "rollup -c",
         "build:all": "yarn workspace @yeticgi/ape build && yarn workspace @yeticgi/ape-reactcomponents build && yarn build",
         "watch": "rollup -cw",
-        "serve": "serve dist",
+        "serve": "http-server ./dist -p 5000 -c-1",
         "serve:build": "yarn build:all && serve dist"
     },
     "description": "Web XR test application useful for quality assurance testing across many devices.",
@@ -16,6 +16,7 @@
         "@types/react": "^16.9.16",
         "@types/react-dom": "^16.9.4",
         "concurrently": "^5.0.2",
+        "http-server": "^0.12.0",
         "rollup": "^1.27.13",
         "rollup-plugin-commonjs": "^10.1.0",
         "rollup-plugin-copy": "^3.1.0",

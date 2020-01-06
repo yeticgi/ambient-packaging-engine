@@ -5,7 +5,9 @@ export { Event, ArgEvent, ArgEventListener, EventListener, Shout } from './Event
 export { GameObject } from './GameObject';
 export { IDisposable } from './IDisposable';
 export { MouseButtonId, TargetData, InputState, InputType, Input } from './Input';
+export { XRInput } from './XRInput';
 export { Physics } from './Physics';
+export { XRPhysics } from './XRPhysics';
 export { Time } from './Time';
 export { AudioManager } from './audio/AudioManager';
 export { AudioItem, IAudioItemOptions } from './audio/AudioItem';

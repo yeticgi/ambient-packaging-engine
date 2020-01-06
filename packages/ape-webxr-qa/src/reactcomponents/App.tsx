@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import ReactDOM from 'react-dom';
 import "./App.css";
 import { ThreeContainer } from '@yeticgi/ape-reactcomponents';
-import { 
+import {
     APEngine,
     GameObject,
     MeshDecorator
@@ -16,13 +16,20 @@ import {
     MeshStandardMaterial,
     DirectionalLight,
     AmbientLight,
-    Vector3
+    Vector3,
+    RingBufferGeometry,
+    MeshBasicMaterial
 } from 'three';
+import {
+    ARButton
+} from '../../ar-button/ARButton';
 import { Rotator } from "../decorators/Rotator";
 import { TestClick } from "../decorators/TestClick";
+import { XRMoveToRetical } from "../decorators/XRMoveToRetical";
 import { PauseButton } from "./PauseButton";
 import { AudioManifest } from "../audio/AudioManifest";
 import { Version } from "./Version";
+import { XRRetical } from "../decorators/XRRetical";
 
 interface IAppState {
     engineInitialized: boolean
@@ -38,7 +45,7 @@ export class App extends Component<{}, IAppState> {
     private appDivRef: React.RefObject<HTMLDivElement>;
     private threeCanvasParentRef: React.RefObject<HTMLDivElement>;
 
-    private cube: GameObject;
+    private sceneBackgroundColor: Color = new Color(0, 0, 0);
 
     constructor(props: any) {
         super(props);
@@ -58,16 +65,20 @@ export class App extends Component<{}, IAppState> {
             this.appDivRef.current!,
             this.threeCanvasParentRef.current!
         );
-        
+
         this.onEngineUpdate = this.onEngineUpdate.bind(this);
         APEngine.onUpdate.addListener(this.onEngineUpdate);
-        
+
         // Add audio items from manifest and start preloading audio.
         AudioManifest.addAudioItems(APEngine.audioManager);
         APEngine.audioManager.startLoading();
 
         this.createTestScene();
-        
+
+        // Create AR Button.
+        const arButton = ARButton.createButton(APEngine.webglRenderer);
+        document.body.appendChild(arButton);
+
         this.setState({
             engineInitialized: true
         });
@@ -77,7 +88,7 @@ export class App extends Component<{}, IAppState> {
         // Create scene.
         APEngine.scene = new Scene();
         const scene = APEngine.scene;
-        scene.background = new Color(0, 0, 0);
+        scene.background = this.sceneBackgroundColor;
 
         // Create camera.
         const width = window.innerWidth;
@@ -89,9 +100,10 @@ export class App extends Component<{}, IAppState> {
         let far = 1000;
         APEngine.camera = new PerspectiveCamera(fov, aspect, near, far);
         const camera = APEngine.camera;
-        camera.position.z = 5;
+        camera.position.y = 0.4;
+        camera.position.z = 0.5;
         scene.add(camera);
-        
+
         // Create ambient light.
         const ambient = new AmbientLight(0x222222);
         scene.add(ambient);
@@ -100,48 +112,85 @@ export class App extends Component<{}, IAppState> {
         const dirLight = new DirectionalLight('#ffffff', 1.0);
         scene.add(dirLight);
 
-        // Create test cubes.
-        this.createTestCube('#ff0000', new Vector3(0, 2, 0)).name = "redCube";
-        this.createTestCube('#00ff00', new Vector3(0, 0, 0)).name = "greenCube";
-        this.createTestCube('#0000ff', new Vector3(0, -2, 0)).name = "blueCube";
+        // Create cubes.
+        const redCube = this.createTestCube('#ff0000', 0.1, new Vector3(0, 0.6, 0));
+        redCube.name = "redCube";
+        const greenCube = this.createTestCube('#00ff00', 0.1, new Vector3(0, 0.4, 0));
+        greenCube.name = "greenCube";
+        const blueCube = this.createTestCube('#0000ff', 0.1, new Vector3(0, 0.2, 0));
+        blueCube.name = "blueCube";
+
+        // Create parent for cubes.
+        const cubeParent = new GameObject();
+        cubeParent.name = "cubeParent";
+
+        const xrMoveToRetical = new XRMoveToRetical();
+        xrMoveToRetical.configure({});
+        cubeParent.addDecorator(xrMoveToRetical);
+
+        cubeParent.add(redCube);
+        cubeParent.add(blueCube);
+        cubeParent.add(greenCube);
+
+        APEngine.scene.add(cubeParent);
+
+        // Create xr retical.
+        const retical = new GameObject();
+        retical.name = "retical";
+
+        const xrRetical = new XRRetical();
+        xrRetical.configure({});
+        retical.addDecorator(xrRetical);
+
+        const reticleMesh = new Mesh(
+            new RingBufferGeometry( 0.15, 0.2, 32 ).rotateX( - Math.PI / 2 ),
+            new MeshBasicMaterial()
+        );
+        const reticalMeshDecorator = new MeshDecorator();
+        reticalMeshDecorator.configure({
+            mesh: reticleMesh
+        });
+        retical.addDecorator(reticalMeshDecorator);
+
+        APEngine.scene.add(retical);
     }
 
-    private createTestCube(color: Color | string | number, position: Vector3): GameObject {
+    private createTestCube(color: Color | string | number, size: number, position: Vector3): GameObject {
         // Create test cube game object.
-        const cubeGeometry = new BoxGeometry(1, 1, 1);
+        const cubeGeometry = new BoxGeometry(size, size, size);
         const cubeMaterial = new MeshStandardMaterial({
             color
         });
         const cubeMesh = new Mesh(cubeGeometry, cubeMaterial);
-        this.cube = new GameObject();
-        this.cube.position.copy(position);
-        
+        const cube = new GameObject();
+        cube.position.copy(position);
+
         const cubeMeshDecorator = new MeshDecorator();
         cubeMeshDecorator.configure({
             mesh: cubeMesh
         });
-        this.cube.addDecorator(cubeMeshDecorator);
+        cube.addDecorator(cubeMeshDecorator);
 
         const cubeRotator = new Rotator();
         cubeRotator.configure({
             xSpeed: 1.0,
             ySpeed: 1.0
         });
-        this.cube.addDecorator(cubeRotator);
+        cube.addDecorator(cubeRotator);
 
         const cubeClick = new TestClick();
         cubeClick.configure({});
-        this.cube.addDecorator(cubeClick);
+        cube.addDecorator(cubeClick);
 
-        APEngine.scene.add(this.cube);
-
-        return this.cube;
+        return cube;
     }
 
     private onEngineUpdate() {
         if (APEngine.input.getKeyDown('p')) {
             APEngine.time.paused = !APEngine.time.paused;
         }
+
+        APEngine.scene.background = APEngine.isXREnabled() ? null : this.sceneBackgroundColor;
     }
 
     render() {
@@ -159,7 +208,7 @@ export class App extends Component<{}, IAppState> {
 
         return (
             <div className="app" ref={this.appDivRef} >
-                <ThreeContainer canvasParentRef={this.threeCanvasParentRef}/>
+                <ThreeContainer canvasParentRef={this.threeCanvasParentRef} />
                 {ui}
             </div>
         );

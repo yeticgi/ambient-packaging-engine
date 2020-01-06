@@ -8,6 +8,7 @@ import { Input } from './Input';
 import { GameObject } from "./GameObject";
 import { Event } from "./Events";
 import { AudioManager } from './audio/AudioManager';
+import { XRInput } from './XRInput';
 
 export namespace APEngine {
     
@@ -21,22 +22,32 @@ export namespace APEngine {
     export let webglRenderer: WebGLRenderer;
     export let time: Time;
     export let input: Input;
+    export let xrInput: XRInput;
     export let audioManager: AudioManager;
 
     export let onUpdate: Event = new Event();
     export let onLateUpdate: Event = new Event();
 
 
-    let initialized: boolean;
+    let _initialized: boolean;
+    let _xrFrame: any;
+
+    export function isXREnabled() {
+        return !!_xrFrame;
+    }
+
+    export function getXRFrame(): any { 
+        return _xrFrame;
+    }
 
     export function init(appElement: HTMLDivElement, threeCanvasParent: HTMLDivElement) {
-        if (initialized) {
+        if (_initialized) {
             return;
         }
 
         console.log(`APEngine v${version} init`);
 
-        initialized = true;
+        _initialized = true;
 
         // Create renderer.
         webglRenderer = new WebGLRenderer({
@@ -50,6 +61,7 @@ export namespace APEngine {
         webglRenderer.setSize(width, height);
         webglRenderer.shadowMap.enabled = false;
         webglRenderer.domElement.style.display = "block";
+        webglRenderer.xr.enabled = true;
         threeCanvasParent.appendChild(webglRenderer.domElement);
         
         // Create time module.
@@ -64,6 +76,9 @@ export namespace APEngine {
         });
         input.debugLevel = 1;
 
+        // Create xr input module.
+        xrInput = new XRInput(webglRenderer);
+
         // Create audio manager.
         audioManager = new AudioManager();
 
@@ -76,7 +91,9 @@ export namespace APEngine {
         window.addEventListener('resize', resize);
     }
 
-    function update() {
+    function update(timestamp: any, frame: any) {
+        _xrFrame = frame;
+
         input.update();
         
         // Update game objects.
@@ -122,5 +139,4 @@ export namespace APEngine {
             camera.updateProjectionMatrix();
         }
     }
-
 }

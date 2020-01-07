@@ -6,7 +6,6 @@ import {
     IDecoratorOptions,
     MouseButtonId,
     Physics,
-    findParentGameObject,
     GameObject
 } from "@yeticgi/ape";
 import { Rotator } from "./Rotator";
@@ -31,7 +30,7 @@ export class TestClick extends Decorator {
             const firstHit = Physics.firstRaycastHit(results);
 
             if (firstHit) {
-                const hitGameObject = findParentGameObject(firstHit.object);
+                const hitGameObject = GameObject.findParentGameObject(firstHit.object);
 
                 if (hitGameObject === this.gameObject) {
                     this._down = true;
@@ -45,7 +44,7 @@ export class TestClick extends Decorator {
             const firstHit = Physics.firstRaycastHit(results);
 
             if (firstHit) {
-                const hitGameObject = findParentGameObject(firstHit.object);
+                const hitGameObject = GameObject.findParentGameObject(firstHit.object);
 
                 if (hitGameObject === this.gameObject) {
                     this.clicked();

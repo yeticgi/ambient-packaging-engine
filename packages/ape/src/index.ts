@@ -14,7 +14,6 @@ export { AudioItem, IAudioItemOptions } from './audio/AudioItem';
 
 export { 
     getOptionalValue,
-    findParentGameObject,
     findParentScene,
     disposeMaterial,
     disposeObject3D,

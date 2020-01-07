@@ -1,5 +1,4 @@
-import { Object3D, BasicShadowMap } from "three";
-import { IDisposable } from "./IDisposable";
+import { Object3D, Scene } from "three";
 import { Decorator } from "./decorators/Decorator";
 
 /**
@@ -7,6 +6,9 @@ import { Decorator } from "./decorators/Decorator";
  */
 export class GameObject extends Object3D {
 
+    /**
+     * Destroy the given GameObject and all of its children.
+     */
     static destroy(gameObject: GameObject): void {
         // Get array of all child gameObjects in ascending order,
         // including the given gameObject.
@@ -16,11 +18,10 @@ export class GameObject extends Object3D {
                 gameObjects.push(o);
             }
         });
-        gameObjects = gameObjects.reverse();
-        
+
         if (gameObjects.length > 0) {
             for (let i = gameObjects.length - 1; i >= 0; i--) {
-                if (gameObjects[i]._destroyed) {
+                if (!gameObjects[i]._destroyed) {
                     // Inform the gameobject that it is being destroyed.
                     gameObjects[i].onDestroy();
 
@@ -37,8 +38,61 @@ export class GameObject extends Object3D {
         }
     }
 
+    /**
+     * Is the given GameObject visible to rendering?
+     * This function taked into account the visibility of the gameObject's parents.
+     */
+    static isGameObjectVisible(gameObject: GameObject) {
+        let obj = gameObject as Object3D;
+
+        if (!obj) {
+            return false;
+        }
+        while (obj) {
+            if (!obj.visible) {
+                return false;
+            }
+            obj = obj.parent;
+        }
+        return true;
+    }
+
+    /**
+     * Find the GameObject that is a parent of the given object.  
+     * If the object is a GameObject, then the object itself is returned.  
+     * If the object has no GameObject parents, then null is returned.
+     */
+    static findParentGameObject(obj: Object3D): GameObject {
+        if (obj instanceof GameObject) {
+            return obj;
+        }
+        if (obj.parent) {
+            return GameObject.findParentGameObject(obj.parent);
+        }
+        return null;
+    }
+
+    /**
+     * Find a GameObject that has the given name at or underneath the given root/scene.
+     */
+    static findGameObjectByName(root: Object3D | Scene, name: string): GameObject {
+        if (root instanceof GameObject && root.name === name) {
+            return root;
+        }
+
+        for (let child of root.children) {
+            const go = GameObject.findGameObjectByName(child, name);
+            if (go) {
+                return go;
+            }
+        }
+
+        return null;
+    }
+
     private _decorators: Decorator[] = [];
-    private _destroyed: boolean;
+    private _destroyed: boolean = false;
+    // private _visiblityDisabledDecorators: Decorator[] = [];
 
     constructor() {
         super();
@@ -53,11 +107,11 @@ export class GameObject extends Object3D {
         // Add decorator to the array.
         this._decorators.push(decorator);
         decorator.onAttach(this);
-        
+
         return decorator;
     }
 
-    getDecorator<T extends Decorator>(type: { new(): T }): T  {
+    getDecorator<T extends Decorator>(type: { new(): T }): T {
         for (let i = 0; i < this._decorators.length; i++) {
             const decorator = this._decorators[i];
             if (decorator instanceof type) {
@@ -68,7 +122,7 @@ export class GameObject extends Object3D {
         return null;
     }
 
-    getDecorators<T extends Decorator>(type: { new(): T }): T[]  {
+    getDecorators<T extends Decorator>(type: { new(): T }): T[] {
         let decorators: T[] = [];
 
         for (let i = 0; i < this._decorators.length; i++) {
@@ -77,7 +131,7 @@ export class GameObject extends Object3D {
                 decorators.push(decorator);
             }
         }
-        
+
         if (decorators.length > 0) {
             return decorators;
         } else {
@@ -124,7 +178,7 @@ export class GameObject extends Object3D {
         }
 
         this._decorators.forEach((d) => {
-            if (!d.destroyed && isObjectVisible(this)) {
+            if (!d.destroyed && GameObject.isGameObjectVisible(this)) {
                 if (!d.started) {
                     d.onStart();
                     if (!d.started) {
@@ -147,11 +201,11 @@ export class GameObject extends Object3D {
         }
 
         this._decorators.forEach((c) => {
-            if (!c.destroyed && isObjectVisible(this)) {
+            if (!c.destroyed && GameObject.isGameObjectVisible(this)) {
                 c.onLateUpdate();
             }
         });
-        
+
         this.cleanupDestroyedDecorators();
     }
 
@@ -173,17 +227,4 @@ export class GameObject extends Object3D {
             return !c.destroyed;
         });
     }
-}
-
-function isObjectVisible(obj: Object3D) {
-    if (!obj) {
-        return false;
-    }
-    while (obj) {
-        if (!obj.visible) {
-            return false;
-        }
-        obj = obj.parent;
-    }
-    return true;
 }

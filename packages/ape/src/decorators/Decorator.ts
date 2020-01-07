@@ -1,5 +1,4 @@
 import { GameObject } from "../GameObject";
-import { IDisposable } from "../IDisposable";
 
 export interface IDecoratorOptions {
 }
@@ -17,7 +16,6 @@ export abstract class Decorator {
     }
 
     private _configured: boolean = false;
-    private _enabled: boolean = false;
     private _destroyed: boolean = false;
     private _started: boolean = false;
     private _gameObject: GameObject = null;
@@ -43,7 +41,7 @@ export abstract class Decorator {
      */
     onAttach(gameObject: GameObject) {
         if (!this._configured) {
-            throw new Error(`[Decorator] ${this.constructor.name} did not have configure() called before being attached to gameObject.`);
+            throw new Error(`[Decorator] ${this.constructor.name} on ${this.gameObject.name} did not have configure() called before being attached to gameObject.`);
         }
 
         this._gameObject = gameObject;
@@ -53,7 +51,7 @@ export abstract class Decorator {
      * Called once when the Decorator is first started.
      */
     onStart() {
-        console.log(`[Decorator] ${this.constructor.name} onStart`);
+        // console.log(`[Decorator] ${this.constructor.name} on ${this.gameObject.name} onStart`);
         this._started = true;
     }
 
@@ -61,20 +59,20 @@ export abstract class Decorator {
      * Called for each three js frame.
      */
     onUpdate() {
-        // console.log(`[Decorator] ${this.constructor.name} onUpdate`);
+        // console.log(`[Decorator] ${this.constructor.name} on ${this.gameObject.name} onUpdate`);
     }
 
     /**
      * Called for each three js frame but after all onUpdate calls have been made.
      */
     onLateUpdate() {
-        // console.log(`[Decorator] ${this.constructor.name} onLateUpdate`);
+        // console.log(`[Decorator] ${this.constructor.name} on ${this.gameObject.name} onLateUpdate`);
     }
 
     /**
      * Called once when the Decorator is being destroyed.
      */
     protected onDestroy() {
-        console.log(`[Decorator] ${this.constructor.name} onDestroy`);
+        // console.log(`[Decorator] ${this.constructor.name} on ${this.gameObject.name} onDestroy`);
     }
 }

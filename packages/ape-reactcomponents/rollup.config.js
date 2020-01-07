@@ -52,5 +52,5 @@ export default {
         '__ape-reactcomponents_version__': pkg.version
       })
     ],
-    external: ['react', 'react-dom']
+    external: ['react', 'react-dom', '@yeticgi/ape']
   };

@@ -1,7 +1,10 @@
 import React, { Component } from "react";
 import ReactDOM from 'react-dom';
 import "./App.css";
-import { ThreeContainer } from '@yeticgi/ape-reactcomponents';
+import { 
+    ThreeContainer,
+    ARButton
+} from '@yeticgi/ape-reactcomponents';
 import {
     APEngine,
     GameObject,
@@ -20,9 +23,9 @@ import {
     RingBufferGeometry,
     MeshBasicMaterial
 } from 'three';
-import {
-    ARButton
-} from '../../ar-button/ARButton';
+// import {
+//     ARButton
+// } from '../../ar-button/ARButton';
 import { Rotator } from "../decorators/Rotator";
 import { TestClick } from "../decorators/TestClick";
 import { XRMoveToRetical } from "../decorators/XRMoveToRetical";
@@ -76,8 +79,8 @@ export class App extends Component<{}, IAppState> {
         this.createTestScene();
 
         // Create AR Button.
-        const arButton = ARButton.createButton(APEngine.webglRenderer);
-        document.body.appendChild(arButton);
+        // const arButton = ARButton.createButton(APEngine.webglRenderer);
+        // document.body.appendChild(arButton);
 
         this.setState({
             engineInitialized: true
@@ -114,29 +117,29 @@ export class App extends Component<{}, IAppState> {
 
         // Create cubes.
         const redCube = this.createTestCube('#ff0000', 0.1, new Vector3(0, 0.6, 0));
-        redCube.name = "redCube";
+        redCube.name = 'redCube';
         const greenCube = this.createTestCube('#00ff00', 0.1, new Vector3(0, 0.4, 0));
-        greenCube.name = "greenCube";
+        greenCube.name = 'greenCube';
         const blueCube = this.createTestCube('#0000ff', 0.1, new Vector3(0, 0.2, 0));
-        blueCube.name = "blueCube";
+        blueCube.name = 'blueCube';
 
         // Create parent for cubes.
         const cubeParent = new GameObject();
-        cubeParent.name = "cubeParent";
+        cubeParent.name = 'cubeParent';
 
         const xrMoveToRetical = new XRMoveToRetical();
         xrMoveToRetical.configure({});
         cubeParent.addDecorator(xrMoveToRetical);
 
         cubeParent.add(redCube);
-        cubeParent.add(blueCube);
         cubeParent.add(greenCube);
+        cubeParent.add(blueCube);
 
         APEngine.scene.add(cubeParent);
 
         // Create xr retical.
         const retical = new GameObject();
-        retical.name = "retical";
+        retical.name = 'retical';
 
         const xrRetical = new XRRetical();
         xrRetical.configure({});
@@ -201,6 +204,7 @@ export class App extends Component<{}, IAppState> {
             ui = (
                 <div>
                     <Version />
+                    <ARButton />
                     <PauseButton />
                 </div>
             );

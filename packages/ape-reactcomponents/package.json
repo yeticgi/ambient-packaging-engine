@@ -27,6 +27,7 @@
         "typescript": "^3.7.3"
     },
     "dependencies": {
+        "@yeticgi/ape": "*",
         "react": "^16.12.0",
         "react-dom": "^16.12.0",
         "tslib": "^1.10.0"

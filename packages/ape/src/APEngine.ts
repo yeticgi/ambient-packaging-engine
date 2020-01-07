@@ -27,13 +27,16 @@ export namespace APEngine {
 
     export let onUpdate: Event = new Event();
     export let onLateUpdate: Event = new Event();
+    export let onXRSessionStarted: Event = new Event();
+    export let onXRSessionEnded: Event = new Event();
 
 
-    let _initialized: boolean;
+    let _initialized: boolean = false;
     let _xrFrame: any;
+    let _xrEnabled: boolean = false;
 
     export function isXREnabled() {
-        return !!_xrFrame;
+        return _xrEnabled;
     }
 
     export function getXRFrame(): any { 
@@ -93,6 +96,18 @@ export namespace APEngine {
 
     function update(timestamp: any, frame: any) {
         _xrFrame = frame;
+
+        // Track state of XR presentation.
+        const xrEnabled = webglRenderer.xr.isPresenting && !!_xrFrame;
+        if (_xrEnabled !== xrEnabled) {
+            _xrEnabled = xrEnabled;
+
+            if (_xrEnabled) {
+                onXRSessionStarted.invoke();
+            } else {
+                onXRSessionEnded.invoke();
+            }
+        }
 
         input.update();
         

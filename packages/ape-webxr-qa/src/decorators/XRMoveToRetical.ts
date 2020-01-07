@@ -1,5 +1,5 @@
-import { Decorator, getOptionalValue, APEngine, IDecoratorOptions } from "@yeticgi/ape";
-import { Vector3 } from 'three';
+import { Decorator, getOptionalValue, APEngine, IDecoratorOptions, MeshDecorator } from "@yeticgi/ape";
+import { Vector3, Object3D } from 'three';
 import { XRRetical } from './XRRetical';
 
 export class XRMoveToRetical extends Decorator {
@@ -8,6 +8,12 @@ export class XRMoveToRetical extends Decorator {
 
     configure(options: IDecoratorOptions) {
         super.configure(options);
+
+        this._onXRStarted = this._onXRStarted.bind(this);
+        this._onXREnded = this._onXREnded.bind(this);
+
+        APEngine.onXRSessionStarted.addListener(this._onXRStarted);
+        APEngine.onXRSessionEnded.addListener(this._onXREnded);
     }
 
     onStart() {
@@ -22,6 +28,9 @@ export class XRMoveToRetical extends Decorator {
 
     onDestroy() {
         super.onDestroy();
+
+        APEngine.onXRSessionStarted.removeListener(this._onXRStarted);
+        APEngine.onXRSessionEnded.removeListener(this._onXREnded);
     }
 
     onUpdate() {
@@ -32,10 +41,30 @@ export class XRMoveToRetical extends Decorator {
         }
     }
 
+    private _onXRStarted() {
+        // Hide objects when xr starts up.
+        this._setMeshesVisible(false);
+    }
+
+    private _onXREnded() {
+        // Make sure objects are visible when XR has ended.
+        this._setMeshesVisible(true);
+    }
+
     private _onSelect() {
         const retical = XRRetical.instance;
         if (retical) {
             this.gameObject.position.copy(retical.gameObject.position);
+            this._setMeshesVisible(true);
+        }
+    }
+
+    private _setMeshesVisible(visible: boolean) {
+        const meshDecorators = this.gameObject.getDecoratorsInChildren(MeshDecorator, true);
+        if (meshDecorators) {
+            meshDecorators.forEach((meshDec) => {
+                meshDec.mesh.visible = visible;
+            });
         }
     }
 }

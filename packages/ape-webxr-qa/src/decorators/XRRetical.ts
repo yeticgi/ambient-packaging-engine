@@ -8,6 +8,10 @@ export class XRRetical extends Decorator {
     private _meshDecorator: MeshDecorator;
     private _raycasting: boolean;
 
+    get isVisible() {
+        return this._meshDecorator.mesh.visible;
+    }
+
     configure(options: IDecoratorOptions) {
         super.configure(options);
     }
@@ -21,10 +25,12 @@ export class XRRetical extends Decorator {
     onStart() {
         super.onStart();
 
-        this._meshDecorator = this.gameObject.getDecorator<MeshDecorator>(MeshDecorator);
+        this._meshDecorator = this.gameObject.getDecorator(MeshDecorator);
         if (!this._meshDecorator) {
             console.error(`[XRRetical] Missing reference to MeshDecorator on GameObject ${this.gameObject.name}.`);
         }
+
+        this._meshDecorator.mesh.visible = false;
     }
 
     onDestroy() {

@@ -60,7 +60,7 @@ export class TestClick extends Decorator {
     }
 
     private clicked() {
-        const rotator = this.gameObject.getDecorator<Rotator>(Rotator);
+        const rotator = this.gameObject.getDecorator(Rotator);
         if (rotator) {
             rotator.enabled = !rotator.enabled;
         }

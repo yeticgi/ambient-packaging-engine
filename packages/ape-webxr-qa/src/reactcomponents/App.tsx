@@ -143,7 +143,7 @@ export class App extends Component<{}, IAppState> {
         retical.addDecorator(xrRetical);
 
         const reticleMesh = new Mesh(
-            new RingBufferGeometry( 0.15, 0.2, 32 ).rotateX( - Math.PI / 2 ),
+            new RingBufferGeometry(0.15, 0.2, 32).rotateX(- Math.PI / 2),
             new MeshBasicMaterial()
         );
         const reticalMeshDecorator = new MeshDecorator();

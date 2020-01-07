@@ -85,6 +85,36 @@ export class GameObject extends Object3D {
         }
     }
 
+    getDecoratorsInChildren<T extends Decorator>(type: { new(): T }, includeInvisible?: boolean): T[] {
+        const decorators: T[] = [];
+
+        if (includeInvisible) {
+            this.traverseVisible((o) => {
+                if (o instanceof GameObject) {
+                    const decs = o.getDecorators(type);
+                    if (decs) {
+                        decorators.push(...decs);
+                    }
+                }
+            });
+        } else {
+            this.traverse((o) => {
+                if (o instanceof GameObject) {
+                    const decs = o.getDecorators(type);
+                    if (decs) {
+                        decorators.push(...decs);
+                    }
+                }
+            });
+        }
+
+        if (decorators.length > 0) {
+            return decorators;
+        } else {
+            return null;
+        }
+    }
+
     /**
      * Called for each three js frame.
      */

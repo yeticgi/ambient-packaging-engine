@@ -1,5 +1,5 @@
 import external from 'rollup-plugin-peer-deps-external';
-import noderesolve from 'rollup-plugin-node-resolve';
+import nodeResolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import typescript from 'rollup-plugin-typescript2';
 import replace from 'rollup-plugin-replace';
@@ -10,59 +10,102 @@ import url from '@rollup/plugin-url';
 import { terser } from 'rollup-plugin-terser';
 import pkg from './package.json';
 
-export default {
-    input: 'src/index.tsx',
-    output: {
-      dir: 'dist',
-      format: 'cjs',
-      exports: 'named',
-      sourcemap: true
-    },
-    plugins: [
-      del({
-        targets: ['dist'],
-        verbose: true
-      }),
-      external(),
-      noderesolve({
-        browser: true
-      }),
-      commonjs({
-        namedExports: {
-          'react': [
-            'Children',
-            'Component',
-            'PropTypes',
-            'createElement',
-          ],
-          'react-dom': [
-            'render'
-          ],
-        },
-      }),
-      typescript({
-        objectHashIgnoreUnknownHack: true
-      }),
-      postcss(),
-      url({
-        limit: 0,
-        publicPath: 'public/',
-        destDir: 'dist/public',
-        include: ['**/*.svg', '**/*.png', '**/*.jpg', '**/*.gif', '**/*.mp3', '**/*.webm']
-      }),
-      replace({
-        'process.env.NODE_ENV': JSON.stringify('production'),
-        '__ape-webxr-qa-version__': pkg.version
-      }),
-      // terser({
-      //   sourcemap: true
-      // }),
-      copy({
-        targets: [
-          { src: 'src/index.html', dest: 'dist'}, // copy index.html to dist
-          { src: '../*/dist/public', dest: 'dist'}, // copy all public folders to dist.
-        ],
-        verbose: true,
-      })
-    ],
+export default (args) => {
+  const isDevMode = args.configMode === 'dev';
+  if (isDevMode) { 
+    console.log(`Using rollup config in dev mode.`);
+  }
+
+  let input = 'src/index.tsx';
+  let output = {
+    dir: 'dist',
+    format: 'cjs',
+    exports: 'named',
+    sourcemap: true
   };
+
+  let plugins = [];
+
+  plugins.push(
+    del({
+      targets: ['dist'],
+      verbose: true
+    })
+  );
+
+  plugins.push(
+    external()
+  );
+
+  plugins.push(
+    nodeResolve({
+      browser: true
+    })
+  );
+
+  plugins.push(
+    commonjs({
+      namedExports: {
+        'react': [
+          'Children',
+          'Component',
+          'PropTypes',
+          'createElement',
+        ],
+        'react-dom': [
+          'render'
+        ],
+      }
+    })
+  );
+
+  plugins.push(
+    typescript({
+      objectHashIgnoreUnknownHack: true
+    })
+  );
+
+  plugins.push(
+    postcss()
+  );
+
+  plugins.push(
+    url({
+      limit: 0,
+      publicPath: 'public/',
+      destDir: 'dist/public',
+      include: ['**/*.svg', '**/*.png', '**/*.jpg', '**/*.gif', '**/*.mp3', '**/*.webm']
+    })
+  );
+
+  plugins.push(
+    replace({
+      'process.env.NODE_ENV': JSON.stringify(isDevMode ? 'development' : 'production'),
+      '__ape-webxr-qa-version__': pkg.version
+    })
+  );
+  
+  plugins.push(
+    copy({
+      targets: [
+        { src: 'src/index.html', dest: 'dist' }, // copy index.html to dist
+        { src: '../*/dist/public', dest: 'dist' }, // copy all public folders to dist.
+      ],
+      verbose: true,
+    })
+  );
+  
+  if (!isDevMode) {
+    plugins.push(
+      terser({
+        sourcemap: true
+      })
+    );
+  }
+
+  return {
+    input,
+    output,
+    plugins
+  };
+};

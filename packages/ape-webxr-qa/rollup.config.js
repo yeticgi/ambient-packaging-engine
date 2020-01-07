@@ -8,6 +8,7 @@ import copy from 'rollup-plugin-copy';
 import del from 'rollup-plugin-delete';
 import url from '@rollup/plugin-url';
 import { terser } from 'rollup-plugin-terser';
+import sourcemaps from 'rollup-plugin-sourcemaps';
 import pkg from './package.json';
 
 export default (args) => {
@@ -61,7 +62,7 @@ export default (args) => {
 
   plugins.push(
     typescript({
-      objectHashIgnoreUnknownHack: true
+      objectHashIgnoreUnknownHack: true,
     })
   );
 
@@ -82,6 +83,11 @@ export default (args) => {
     replace({
       'process.env.NODE_ENV': JSON.stringify(isDevMode ? 'development' : 'production'),
       '__ape-webxr-qa-version__': pkg.version
+    })
+  );
+
+  plugins.push(
+    sourcemaps({
     })
   );
   

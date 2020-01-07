@@ -17,7 +17,6 @@ export class Version extends Component {
     render() {
         return (
             <div className="version">
-                APE WebXR QA v{App.version}<br/>
                 APEngine v{APEngine.version}
             </div>
         );

@@ -25,8 +25,8 @@ The following are the key components of APE WebXR QA v0.0.1:
    - In the upper right corner of the screen is a Pause button rendered by React.
    - In the upper left corner of the screen is some version info rendered by React.
 4. Tapping on a rotating cube should play a sound effect and toggle its rotation on/off.
-5. Tapping the Pause button should toggle time. So if the cubes were rotating, they should stop while paused.
-6. Pause button should now be the Resume button. Pressing the Resume button should turn time back on.
+5. Tapping the Pause button should play a sound effect and also toggle time. So if the cubes were rotating, they should stop while paused.
+6. Pause button should now be the Resume button. Pressing the Resume button should play a sound effect and also turn time back on.
 7. A WebXR button should be visible at the bottom center of the screen that can be in a few different states:
    1. If the browser does not support AR it should say: `WEBXR NOT AVAILABLE` or `AR NOT SUPPORTED`
    2. If the device supports AR and the browser supports the WebXR API it should say `START AR`. 

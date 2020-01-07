@@ -31,7 +31,7 @@ The following are the key components of APE WebXR QA v0.0.1:
    1. If the browser does not support AR it should say: `WEBXR NOT AVAILABLE` or `AR NOT SUPPORTED`
    2. If the device supports AR and the browser supports the WebXR API it should say `START AR`. 
         > **NOTE:**  
-         Be sure to [read the section]((#browser-webxr-support)) about browser WebXR support. WebXR has only recently been standardized and support is just starting to come online.
+         Be sure to [read the section](#browser-webxr-support) about browser WebXR support. WebXR has only recently been standardized and support is just starting to come online.
 8. Pressing the WebXR button when it says `START AR` should ask you permission to start AR and then put the device into Immersive AR mode.
 9.  Once you have the camera feed, move the device around until a white donut shaped reticule appears on detected planar surfaces.
 10. Tapping on the screen once the white reticule is visible will place the red, green, and blue cubes at the location of the reticule.

@@ -1,0 +1,79 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558 
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "APE",
+            "detail": "Build ape package.",
+            "type": "npm",
+            "script": "build",
+            "path": "packages/ape/",
+            "group": "build",
+            "presentation": {
+                "focus": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "APE React Components",
+            "detail": "Build ape-reactcomponents package.",
+            "type": "npm",
+            "script": "build",
+            "path": "packages/ape-reactcomponents/",
+            "group": "build",
+            "presentation": {
+                "focus": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "APE WebXR QA",
+            "detail": "Build ape-webxr-qa react web app.",
+            "type": "npm",
+            "script": "build",
+            "path": "packages/ape-webxr-qa/",
+            "group": "build",
+            "presentation": {
+                "focus": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "APE WebXR QA (Dev)",
+            "detail": "Build ape-webxr-qa react web app in development mode.",
+            "type": "npm",
+            "script": "build:dev",
+            "path": "packages/ape-webxr-qa/",
+            "group": "build",
+            "presentation": {
+                "focus": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build All",
+            "detail": "Build all ape packages in sequence.",
+            "group": "build",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "APE",
+                "APE React Components",
+                "APE WebXR QA"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Build All (Dev)",
+            "detail": "Build all ape packages in sequence (in development mode where possible).",
+            "group": "build",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "APE",
+                "APE React Components",
+                "APE WebXR QA (Dev)"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}

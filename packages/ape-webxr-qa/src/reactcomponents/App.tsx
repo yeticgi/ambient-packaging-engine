@@ -23,9 +23,6 @@ import {
     RingBufferGeometry,
     MeshBasicMaterial
 } from 'three';
-// import {
-//     ARButton
-// } from '../../ar-button/ARButton';
 import { Rotator } from "../decorators/Rotator";
 import { TestClick } from "../decorators/TestClick";
 import { XRMoveToRetical } from "../decorators/XRMoveToRetical";
@@ -77,10 +74,10 @@ export class App extends Component<{}, IAppState> {
         APEngine.audioManager.startLoading();
 
         this.createTestScene();
-
-        // Create AR Button.
-        // const arButton = ARButton.createButton(APEngine.webglRenderer);
-        // document.body.appendChild(arButton);
+        
+        // Show performance stats.
+        APEngine.performanceStats.enabled = true;
+        APEngine.performanceStats.position = 'bottom right';
 
         this.setState({
             engineInitialized: true
@@ -189,10 +186,6 @@ export class App extends Component<{}, IAppState> {
     }
 
     private onEngineUpdate() {
-        if (APEngine.input.getKeyDown('p')) {
-            APEngine.time.paused = !APEngine.time.paused;
-        }
-
         APEngine.scene.background = APEngine.isXREnabled() ? null : this.sceneBackgroundColor;
     }
 

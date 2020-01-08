@@ -9,6 +9,7 @@ import { GameObject } from "./GameObject";
 import { Event } from "./Events";
 import { AudioManager } from './audio/AudioManager';
 import { XRInput } from './XRInput';
+import { PerformanceStats } from './PerformanceStats';
 
 export namespace APEngine {
     
@@ -24,6 +25,7 @@ export namespace APEngine {
     export let input: Input;
     export let xrInput: XRInput;
     export let audioManager: AudioManager;
+    export let performanceStats: PerformanceStats;
 
     export let onUpdate: Event = new Event();
     export let onLateUpdate: Event = new Event();
@@ -70,6 +72,9 @@ export namespace APEngine {
         // Create time module.
         time = new Time();
 
+        // Create performance stats module.
+        performanceStats = new PerformanceStats();
+
         // Create input module.
         input = new Input({
             appElement: webglRenderer.domElement,
@@ -77,7 +82,6 @@ export namespace APEngine {
             time: time,
             getUIHtmlElements: () => []
         });
-        input.debugLevel = 1;
 
         // Create xr input module.
         xrInput = new XRInput(webglRenderer);
@@ -133,6 +137,7 @@ export namespace APEngine {
         }
 
         time.update();
+        performanceStats.update();
     }
 
     export function dispose() {

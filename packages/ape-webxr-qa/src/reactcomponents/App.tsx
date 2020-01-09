@@ -1,9 +1,10 @@
-import React, { Component } from "react";
+import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import "./App.css";
+import './App.css';
 import { 
     ThreeContainer,
-    ARButton
+    ARButton,
+    Overlay
 } from '@yeticgi/ape-reactcomponents';
 import {
     APEngine,
@@ -23,13 +24,13 @@ import {
     RingBufferGeometry,
     MeshBasicMaterial
 } from 'three';
-import { Rotator } from "../decorators/Rotator";
-import { TestClick } from "../decorators/TestClick";
-import { XRMoveToRetical } from "../decorators/XRMoveToRetical";
-import { PauseButton } from "./PauseButton";
-import { AudioManifest } from "../audio/AudioManifest";
-import { Version } from "./Version";
-import { XRRetical } from "../decorators/XRRetical";
+import { Rotator } from '../decorators/Rotator';
+import { TestClick } from '../decorators/TestClick';
+import { XRMoveToRetical } from '../decorators/XRMoveToRetical';
+import { PauseButton } from './PauseButton';
+import { AudioManifest } from '../audio/AudioManifest';
+import { Version } from './Version';
+import { XRRetical } from '../decorators/XRRetical';
 
 interface IAppState {
     engineInitialized: boolean
@@ -40,7 +41,7 @@ export class App extends Component<{}, IAppState> {
     /**
      * Version number of the APE WebXR QA app.
      */
-    static readonly version: string = "__ape-webxr-qa-version__";
+    static readonly version: string = '__ape-webxr-qa-version__';
 
     private appDivRef: React.RefObject<HTMLDivElement>;
     private threeCanvasParentRef: React.RefObject<HTMLDivElement>;
@@ -190,11 +191,10 @@ export class App extends Component<{}, IAppState> {
     }
 
     render() {
-
-        let ui: JSX.Element | null = null;
+        let engineDependentComponents: JSX.Element | null = null;
 
         if (this.state.engineInitialized) {
-            ui = (
+            engineDependentComponents = (
                 <div>
                     <Version />
                     <ARButton />
@@ -204,9 +204,9 @@ export class App extends Component<{}, IAppState> {
         }
 
         return (
-            <div className="app" ref={this.appDivRef} >
+            <div className='app' ref={this.appDivRef} >
                 <ThreeContainer canvasParentRef={this.threeCanvasParentRef} />
-                {ui}
+                {engineDependentComponents}
             </div>
         );
     }

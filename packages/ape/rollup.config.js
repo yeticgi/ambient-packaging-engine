@@ -18,8 +18,7 @@ export default {
     },
     plugins: [
       del({
-        targets: ['dist'],
-        verbose: true
+        targets: ['dist']
       }),
       external(),
       noderesolve({

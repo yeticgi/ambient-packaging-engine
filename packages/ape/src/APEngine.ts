@@ -32,7 +32,6 @@ export namespace APEngine {
     export let onXRSessionStarted: Event = new Event();
     export let onXRSessionEnded: Event = new Event();
 
-
     let _initialized: boolean = false;
     let _xrFrame: any;
     let _xrEnabled: boolean = false;

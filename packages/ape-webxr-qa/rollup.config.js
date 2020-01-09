@@ -29,8 +29,7 @@ export default (args) => {
 
   plugins.push(
     del({
-      targets: ['dist'],
-      verbose: true
+      targets: ['dist']
     })
   );
 

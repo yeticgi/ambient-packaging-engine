@@ -1,10 +1,8 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 import './App.css';
 import { 
     ThreeContainer,
-    ARButton,
-    Overlay
+    ARButton
 } from '@yeticgi/ape-reactcomponents';
 import {
     APEngine,

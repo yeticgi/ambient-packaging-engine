@@ -31,7 +31,6 @@ export class Overlay extends Component<IOverlayProps> {
     }
 
     onClick() {
-        console.log(`[Overlay] onClick`);
         if (this.props.canCloseByClick) {
             this.props.onRequestClose();
         }

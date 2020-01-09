@@ -1,10 +1,10 @@
-import { IDisposable } from "./IDisposable";
+import { IDisposable } from "../util/IDisposable";
 import { 
     Group,
     Scene,
     WebGLRenderer
 } from "three";
-import { Event } from './Events';
+import { Event } from '../util/Events';
 
 export class XRInput implements IDisposable {
 

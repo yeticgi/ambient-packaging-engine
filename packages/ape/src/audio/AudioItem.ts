@@ -1,6 +1,7 @@
 import { Howl } from "howler";
-import { getOptionalValue } from "../Utils";
-import { ArgEvent } from "../Events";
+import { getOptionalValue } from "../util/Utils";
+import { ArgEvent } from "../util/Events";
+import { IDisposable } from "../util/IDisposable";
 
 export interface IAudioItemOptions {
     loop?: boolean
@@ -9,7 +10,7 @@ export interface IAudioItemOptions {
 type AudioItemCallback = (item: AudioItem) => void; 
 type AudioItemErrorCallback = (item: AudioItem, error: any) => void; 
 
-export class AudioItem {
+export class AudioItem implements IDisposable {
     private _name: string;
     private _url: string;
     private _loop: boolean;
@@ -64,7 +65,11 @@ export class AudioItem {
         this._loadCallback = null;
         this._loadErrorCallback = null;
     }
-
+    
+    dispose() {
+        this.unloadAudio();
+    }
+    
     private _onLoaded(): void {
         this._loaded = true;
 

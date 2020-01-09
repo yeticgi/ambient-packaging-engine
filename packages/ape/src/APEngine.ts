@@ -4,12 +4,12 @@ import {
     WebGLRenderer
 } from 'three';
 import { Time } from './Time';
-import { Input } from './Input';
-import { GameObject } from "./GameObject";
-import { Event } from "./Events";
+import { Input } from './input/Input';
+import { GameObject } from "./gameobject/GameObject";
+import { Event } from "./util/Events";
 import { AudioManager } from './audio/AudioManager';
-import { XRInput } from './XRInput';
-import { PerformanceStats } from './PerformanceStats';
+import { XRInput } from './input/XRInput';
+import { PerformanceStats } from './util/PerformanceStats';
 
 export namespace APEngine {
     
@@ -144,6 +144,19 @@ export namespace APEngine {
         window.removeEventListener('resize', resize);
 
         scene.dispose();
+        webglRenderer.dispose();
+        time.dispose();
+        input.dispose();
+        xrInput.dispose();
+        audioManager.dispose();
+        performanceStats.dispose();
+
+        onUpdate.removeAllListeners();
+        onLateUpdate.removeAllListeners();
+        onXRSessionStarted.removeAllListeners();
+        onXRSessionEnded.removeAllListeners();
+
+        _initialized = false;
     }
 
     function resize() {

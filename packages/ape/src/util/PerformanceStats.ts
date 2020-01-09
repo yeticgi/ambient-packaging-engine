@@ -1,7 +1,8 @@
 import Stats from 'stats.js';
+import { IDisposable } from './IDisposable';
 
 declare type StatsPosition = 'top left' | 'top right' | 'bottom left' |'bottom right';
-export class PerformanceStats {
+export class PerformanceStats implements IDisposable {
 
     private _enabled: boolean = false;
     private _position: StatsPosition = null;
@@ -43,6 +44,10 @@ export class PerformanceStats {
         if (this._enabled) {
             this._stats.update();
         }
+    }
+
+    dispose() {
+        this.enabled = false;
     }
 
     private _onEnable() {

@@ -1,5 +1,5 @@
 import { Clock } from 'three';
-import { IDisposable } from './IDisposable';
+import { IDisposable } from './util/IDisposable';
 
 export class Time implements IDisposable {
     

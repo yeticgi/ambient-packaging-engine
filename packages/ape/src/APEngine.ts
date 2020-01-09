@@ -10,6 +10,7 @@ import { Event } from "./util/Events";
 import { AudioManager } from './audio/AudioManager';
 import { XRInput } from './input/XRInput';
 import { PerformanceStats } from './util/PerformanceStats';
+import { QRManager } from './qr/QRManager';
 
 export namespace APEngine {
     
@@ -25,6 +26,7 @@ export namespace APEngine {
     export let input: Input;
     export let xrInput: XRInput;
     export let audioManager: AudioManager;
+    export let qrManager: QRManager;
     export let performanceStats: PerformanceStats;
 
     export let onUpdate: Event = new Event();
@@ -71,9 +73,10 @@ export namespace APEngine {
         // Create time module.
         time = new Time();
 
+        
         // Create performance stats module.
         performanceStats = new PerformanceStats();
-
+        
         // Create input module.
         input = new Input({
             appElement: webglRenderer.domElement,
@@ -81,12 +84,15 @@ export namespace APEngine {
             time: time,
             getUIHtmlElements: () => []
         });
-
+        
         // Create xr input module.
         xrInput = new XRInput(webglRenderer);
-
+        
         // Create audio manager.
         audioManager = new AudioManager();
+
+        // Create qr manager.
+        qrManager = new QRManager();
 
         // Setup update loop.
         webglRenderer.setAnimationLoop(update);
@@ -144,12 +150,31 @@ export namespace APEngine {
         window.removeEventListener('resize', resize);
 
         scene.dispose();
+        scene = null;
+
         webglRenderer.dispose();
+        webglRenderer = null;
+
         time.dispose();
+        time = null;
+
         input.dispose();
+        input = null;
+
         xrInput.dispose();
+        xrInput = null;
+
         audioManager.dispose();
+        audioManager = null;
+
+        qrManager.dispose();
+        qrManager = null;
+
         performanceStats.dispose();
+        performanceStats = null;
+
+        _xrEnabled = false;
+        _xrFrame = null;
 
         onUpdate.removeAllListeners();
         onLateUpdate.removeAllListeners();

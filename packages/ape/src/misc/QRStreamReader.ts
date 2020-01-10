@@ -12,7 +12,7 @@ export class QRStreamReader implements IDisposable {
 
     private _deviceCamera: DeviceCamera;
     private _canvas: HTMLCanvasElement;
-    private _started: boolean;
+    private _started: boolean = false;
     private _tickHandle: number;
 
     /**
@@ -20,22 +20,22 @@ export class QRStreamReader implements IDisposable {
      */
     onQRScanned: ArgEvent<string> = new ArgEvent();
 
-    get deviceCamera(): DeviceCamera {
-        return this._deviceCamera;
-    }
-
-    get canvas(): HTMLCanvasElement {
-        return this._canvas;
-    }
-
-    get started(): boolean {
-        return this._started;
-    }
-
     constructor() {
         this._canvas = document.createElement('canvas');
 
         this.tick = this.tick.bind(this);
+    }
+
+    getDeviceCamera(): DeviceCamera {
+        return this._deviceCamera;
+    }
+
+    getCanvas(): HTMLCanvasElement {
+        return this._canvas;
+    }
+
+    isStarted(): boolean {
+        return this._started;
     }
 
     /**
@@ -55,8 +55,8 @@ export class QRStreamReader implements IDisposable {
     }
 
     tick() {
-        if (this._started && this._deviceCamera.playing) {
-            const video = this._deviceCamera.video;
+        if (this._started && this._deviceCamera.isPlaying()) {
+            const video = this._deviceCamera.getVideoElement();
             const ctx = this._canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, this._canvas.width, this._canvas.height);
             const imageData = ctx.getImageData(0, 0, this._canvas.width, this._canvas.height);

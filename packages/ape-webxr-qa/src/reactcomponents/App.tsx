@@ -7,7 +7,8 @@ import {
 import {
     APEngine,
     GameObject,
-    MeshDecorator
+    MeshDecorator,
+    QRStreamReader
 } from '@yeticgi/ape';
 import {
     Scene,
@@ -43,6 +44,7 @@ export class App extends Component<{}, IAppState> {
 
     private appDivRef: React.RefObject<HTMLDivElement>;
     private threeCanvasParentRef: React.RefObject<HTMLDivElement>;
+    private qrStreamReader: QRStreamReader;
 
     private sceneBackgroundColor: Color = new Color(0, 0, 0);
 
@@ -71,6 +73,11 @@ export class App extends Component<{}, IAppState> {
         // Add audio items from manifest and start preloading audio.
         AudioManifest.addAudioItems(APEngine.audioManager);
         APEngine.audioManager.startLoading();
+
+        this.qrStreamReader = new QRStreamReader();
+        this.qrStreamReader.onQRScanned.addListener((code) => {
+            console.log(`[App] qr code scanned: ${code}`)
+        });
 
         this.createTestScene();
         
@@ -185,6 +192,20 @@ export class App extends Component<{}, IAppState> {
     }
 
     private onEngineUpdate() {
+        if (APEngine.input.getKeyDown('q')) {
+            if (!this.qrStreamReader.isStarted()) {
+                console.log(`[App] Start device camera and qr stream reader.`);
+                APEngine.deviceCamera.startVideoStream();
+                this.qrStreamReader.start({
+                    deviceCamera: APEngine.deviceCamera
+                });
+            } else {
+                console.log(`[App] Stop device camera and qr stream reader.`);
+                APEngine.deviceCamera.stopVideoStream();
+                this.qrStreamReader.stop();
+            }
+        }
+
         APEngine.scene.background = APEngine.isXREnabled() ? null : this.sceneBackgroundColor;
     }
 

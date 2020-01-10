@@ -11,24 +11,24 @@ export class DeviceCamera implements IDisposable {
 
     private _video: HTMLVideoElement = null;
     private _stream: MediaStream = null;
-    private _playing: boolean;
+    private _playing: boolean = false;
+
+    constructor(constraints?: MediaStreamConstraints) {
+        this.constraints = constraints;
+    }
 
     /**
      * Is the device camera stream currently playing or not.
      */
-    get playing(): boolean {
+    isPlaying(): boolean {
         return this._playing;
     }
 
     /**
      * The video element that is playing the device camera feed.
      */
-    get video(): HTMLVideoElement {
+    getVideoElement(): HTMLVideoElement {
         return this._video;
-    }
-
-    constructor(constraints?: MediaStreamConstraints) {
-        this.constraints = constraints;
     }
 
     /**
@@ -54,8 +54,10 @@ export class DeviceCamera implements IDisposable {
         
         try {
             await waitForCondition(() => {
-                return this._video.readyState === HTMLMediaElement.HAVE_ENOUGH_DATA;
-            }, 5000);
+                if (this._video) {
+                    return this._video.readyState === HTMLMediaElement.HAVE_ENOUGH_DATA;
+                }
+            }, 2000);
 
             this._playing = true;
             return true;

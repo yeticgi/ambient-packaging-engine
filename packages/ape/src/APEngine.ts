@@ -6,11 +6,11 @@ import {
 import { Time } from './Time';
 import { Input } from './input/Input';
 import { GameObject } from "./gameobject/GameObject";
-import { Event } from "./util/Events";
+import { Event } from "./misc/Events";
 import { AudioManager } from './audio/AudioManager';
 import { XRInput } from './input/XRInput';
-import { PerformanceStats } from './util/PerformanceStats';
-import { QRManager } from './qr/QRManager';
+import { PerformanceStats } from './misc/PerformanceStats';
+import { DeviceCamera } from './misc/DeviceCamera';
 
 export namespace APEngine {
     
@@ -26,8 +26,8 @@ export namespace APEngine {
     export let input: Input;
     export let xrInput: XRInput;
     export let audioManager: AudioManager;
-    export let qrManager: QRManager;
     export let performanceStats: PerformanceStats;
+    export let deviceCamera: DeviceCamera;
 
     export let onUpdate: Event = new Event();
     export let onLateUpdate: Event = new Event();
@@ -73,7 +73,6 @@ export namespace APEngine {
         // Create time module.
         time = new Time();
 
-        
         // Create performance stats module.
         performanceStats = new PerformanceStats();
         
@@ -91,8 +90,13 @@ export namespace APEngine {
         // Create audio manager.
         audioManager = new AudioManager();
 
-        // Create qr manager.
-        qrManager = new QRManager();
+        // Create device camera module.
+        deviceCamera = new DeviceCamera({
+            video: {
+                facingMode: 'environment'
+            },
+            audio: false
+        })
 
         // Setup update loop.
         webglRenderer.setAnimationLoop(update);
@@ -167,8 +171,8 @@ export namespace APEngine {
         audioManager.dispose();
         audioManager = null;
 
-        qrManager.dispose();
-        qrManager = null;
+        deviceCamera.dispose();
+        deviceCamera = null;
 
         performanceStats.dispose();
         performanceStats = null;

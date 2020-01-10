@@ -2,7 +2,7 @@ import { Vector2, Vector3 } from 'three';
 import find from 'lodash/find';
 import some from 'lodash/some';
 import { Time } from '../Time';
-import { IDisposable } from '../util/IDisposable';
+import { IDisposable } from '../misc/IDisposable';
 
 interface IOptions { 
     time: Time,

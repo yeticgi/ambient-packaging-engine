@@ -1,7 +1,7 @@
 import { AudioItem, IAudioItemOptions } from "./AudioItem";
 import { Howl } from "howler";
-import { Event, ArgEvent } from "../util/Events";
-import { IDisposable } from "../util/IDisposable";
+import { Event, ArgEvent } from "../misc/Events";
+import { IDisposable } from "../misc/IDisposable";
 
 
 export class AudioManager implements IDisposable {

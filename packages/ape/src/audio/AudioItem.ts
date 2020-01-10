@@ -1,7 +1,7 @@
 import { Howl } from "howler";
-import { getOptionalValue } from "../util/Utils";
-import { ArgEvent } from "../util/Events";
-import { IDisposable } from "../util/IDisposable";
+import { getOptionalValue } from "../Utils";
+import { ArgEvent } from "../misc/Events";
+import { IDisposable } from "../misc/IDisposable";
 
 export interface IAudioItemOptions {
     loop?: boolean

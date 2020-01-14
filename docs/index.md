@@ -1,7 +1,10 @@
 # APE WebXR QA Builds
 
+## v0.0.2
+[APE WebXR QA v0.0.2 - Build](./ape-webxr-qa/0.0.2/index.html)  
+
 ## v0.0.1
-[APE WebXR QA v0.0.1 - Build](./ape-webxr-qa/0-0-1/index.html)  
+[APE WebXR QA v0.0.1 - Build](./ape-webxr-qa/0.0.1/index.html)  
 [APE WebXR QA v0.0.1 - Video (No Sound)](https://drive.google.com/a/yeticgi.com/file/d/1CDz7fVnQgFQLjifo8IQtLzSIDRnukVA6/view?usp=sharing)
 
 ### Notes

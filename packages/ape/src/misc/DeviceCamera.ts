@@ -58,8 +58,10 @@ export class DeviceCamera implements IDisposable {
 
         this._video = document.createElement('video');
         this._video.srcObject = this._stream;
-        this._video.setAttribute('playinline', 'true'); // Required to tell iOS safari we don't want fullscreen.
-        this._video.play();
+        this._video.setAttribute('autoplay', '');
+        this._video.setAttribute('muted', '');
+        this._video.setAttribute('playinline', 'true');
+        // this._video.play();
         
         try {
             await waitForCondition(() => {

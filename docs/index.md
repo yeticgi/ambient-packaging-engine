@@ -1,7 +1,20 @@
 # APE WebXR QA Builds
 
 ## v0.0.2
-[APE WebXR QA v0.0.2 - Build](./ape-webxr-qa/0.0.2/index.html)  
+
+[APE WebXR QA v0.0.2 - Build](./ape-webxr-qa/0.0.2/index.html)
+
+### Notes
+
+This build's primary focus is on integrating QR code scanning support.
+
+### Changelog
+
+- Added `QR Scan` button underneath the `Pause` button.
+  - Clicking on the `QR Scan` button will attempt to start a video stream using an environment facing device camera (back facing camera on phones).
+  - Focus the camera on a QR code to scan it.
+  - Scanning a QR code will show an alert dialog that says what code was detected. Scanning a QR code will also close the QR code scanner automatically.
+- Added performance stats to the bottom right corner of the page.
 
 ## v0.0.1
 [APE WebXR QA v0.0.1 - Build](./ape-webxr-qa/0.0.1/index.html)  

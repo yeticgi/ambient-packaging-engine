@@ -66,6 +66,18 @@ export async function waitForCondition(condition: () => boolean, timeout?: numbe
 }
 
 /**
+ * Return a promise that waits the given number of seconds before resolving.
+ * @param seconds Number of seconds to wait before resolving the promise.
+ */
+export async function waitForSeconds(seconds: number): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        window.setTimeout(() => {
+            return resolve();
+        }, (seconds * 1000));
+    });
+}
+
+/**
  * Set the parent of the object3d.
  * @param object3d the object to re-parent.
  * @param parent the object to parent to.

@@ -1,6 +1,6 @@
 
 import { IDisposable } from './IDisposable';
-import { waitForCondition } from '../Utils';
+import { waitForCondition, waitForSeconds } from '../Utils';
 
 export interface IVideoStreamStartResult {
     started: boolean;
@@ -11,7 +11,7 @@ export interface IVideoStreamStartResult {
  * Device Camera is a class that wraps modern rowser functionality to interact with device camera hardware.
  */
 export class DeviceCamera implements IDisposable {
-
+    
     constraints: MediaStreamConstraints;
 
     private _video: HTMLVideoElement = null;
@@ -58,10 +58,10 @@ export class DeviceCamera implements IDisposable {
 
         this._video = document.createElement('video');
         this._video.srcObject = this._stream;
-        this._video.setAttribute('autoplay', '');
-        this._video.setAttribute('muted', '');
-        this._video.setAttribute('playinline', 'true');
-        // this._video.play();
+        // this._video.setAttribute('autoplay', 'false');
+        this._video.setAttribute('playsinline', 'true');
+        this._video.play();
+
         
         try {
             await waitForCondition(() => {

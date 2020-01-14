@@ -4,12 +4,13 @@ import {
     WebGLRenderer
 } from 'three';
 import { Time } from './Time';
-import { Input } from './Input';
-import { GameObject } from "./GameObject";
-import { Event } from "./Events";
+import { Input } from './input/Input';
+import { GameObject } from "./gameobject/GameObject";
+import { Event } from "./misc/Events";
 import { AudioManager } from './audio/AudioManager';
-import { XRInput } from './XRInput';
-import { PerformanceStats } from './PerformanceStats';
+import { XRInput } from './input/XRInput';
+import { PerformanceStats } from './misc/PerformanceStats';
+import { DeviceCamera } from './misc/DeviceCamera';
 
 export namespace APEngine {
     
@@ -26,6 +27,7 @@ export namespace APEngine {
     export let xrInput: XRInput;
     export let audioManager: AudioManager;
     export let performanceStats: PerformanceStats;
+    export let deviceCamera: DeviceCamera;
 
     export let onUpdate: Event = new Event();
     export let onLateUpdate: Event = new Event();
@@ -73,7 +75,7 @@ export namespace APEngine {
 
         // Create performance stats module.
         performanceStats = new PerformanceStats();
-
+        
         // Create input module.
         input = new Input({
             appElement: webglRenderer.domElement,
@@ -81,12 +83,20 @@ export namespace APEngine {
             time: time,
             getUIHtmlElements: () => []
         });
-
+        
         // Create xr input module.
         xrInput = new XRInput(webglRenderer);
-
+        
         // Create audio manager.
         audioManager = new AudioManager();
+
+        // Create device camera module.
+        deviceCamera = new DeviceCamera({
+            video: {
+                facingMode: 'environment'
+            },
+            audio: false
+        })
 
         // Setup update loop.
         webglRenderer.setAnimationLoop(update);
@@ -144,6 +154,38 @@ export namespace APEngine {
         window.removeEventListener('resize', resize);
 
         scene.dispose();
+        scene = null;
+
+        webglRenderer.dispose();
+        webglRenderer = null;
+
+        time.dispose();
+        time = null;
+
+        input.dispose();
+        input = null;
+
+        xrInput.dispose();
+        xrInput = null;
+
+        audioManager.dispose();
+        audioManager = null;
+
+        deviceCamera.dispose();
+        deviceCamera = null;
+
+        performanceStats.dispose();
+        performanceStats = null;
+
+        _xrEnabled = false;
+        _xrFrame = null;
+
+        onUpdate.removeAllListeners();
+        onLateUpdate.removeAllListeners();
+        onXRSessionStarted.removeAllListeners();
+        onXRSessionEnded.removeAllListeners();
+
+        _initialized = false;
     }
 
     function resize() {

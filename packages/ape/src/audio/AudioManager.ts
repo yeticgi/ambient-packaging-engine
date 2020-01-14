@@ -1,10 +1,10 @@
 import { AudioItem, IAudioItemOptions } from "./AudioItem";
 import { Howl } from "howler";
-import { Event, ArgEvent } from "../Events";
+import { Event, ArgEvent } from "../misc/Events";
+import { IDisposable } from "../misc/IDisposable";
 
 
-export class AudioManager {
-
+export class AudioManager implements IDisposable {
     private _loaded: boolean;
     private _audioLoadedCount: number = 0;
     private _audioItems: Map<string, AudioItem> = new Map();
@@ -52,6 +52,14 @@ export class AudioManager {
         } else {
             return null;
         }
+    }
+
+    dispose() {
+        this._audioItems.forEach((item) => {
+            item.dispose();
+        });
+
+        this._audioItems = new Map();
     }
 
     private _onAudioLoaded(item: AudioItem) {

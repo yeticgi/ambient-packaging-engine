@@ -1,15 +1,15 @@
-import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
+import React, { Component, FunctionComponent } from 'react';
 import './App.css';
 import { 
     ThreeContainer,
-    ARButton,
-    Overlay
+    ARButton
 } from '@yeticgi/ape-reactcomponents';
 import {
     APEngine,
     GameObject,
-    MeshDecorator
+    MeshDecorator,
+    QRStreamReader,
+    ArgEvent
 } from '@yeticgi/ape';
 import {
     Scene,
@@ -28,12 +28,14 @@ import { Rotator } from '../decorators/Rotator';
 import { TestClick } from '../decorators/TestClick';
 import { XRMoveToRetical } from '../decorators/XRMoveToRetical';
 import { PauseButton } from './PauseButton';
+import { QRReader } from './QRReader';
 import { AudioManifest } from '../audio/AudioManifest';
 import { Version } from './Version';
 import { XRRetical } from '../decorators/XRRetical';
 
 interface IAppState {
-    engineInitialized: boolean
+    engineInitialized: boolean,
+    qrReaderOpen: boolean
 }
 
 export class App extends Component<{}, IAppState> {
@@ -56,8 +58,11 @@ export class App extends Component<{}, IAppState> {
         this.appDivRef = React.createRef<HTMLDivElement>();
         this.threeCanvasParentRef = React.createRef<HTMLDivElement>();
 
+        this.onQRScanClick = this.onQRScanClick.bind(this);
+
         this.state = {
-            engineInitialized: false
+            engineInitialized: false,
+            qrReaderOpen: false
         }
     }
 
@@ -190,23 +195,78 @@ export class App extends Component<{}, IAppState> {
         APEngine.scene.background = APEngine.isXREnabled() ? null : this.sceneBackgroundColor;
     }
 
-    render() {
-        let engineDependentComponents: JSX.Element | null = null;
+    private onQRScanClick() {
+        console.log(`[App] Turning QR Reader ${this.state.qrReaderOpen ? 'off' : 'on'}.`);
+        
+        // Play button sound.
+        let audio = APEngine.audioManager.getAudio(AudioManifest.button.name);
+        audio.play();
+        
+        this.setState({
+            qrReaderOpen: !this.state.qrReaderOpen
+        });
+    }
 
-        if (this.state.engineInitialized) {
-            engineDependentComponents = (
-                <div>
-                    <Version />
-                    <ARButton />
-                    <PauseButton />
-                </div>
-            );
-        }
+    render() {
+        const QR = () => {
+            if (this.state.qrReaderOpen) {
+                return (
+                    <QRReader 
+                        onQRScanned={(code) => {
+                            // Automatically close QR Reader upon successful code scan.
+                            this.setState({
+                                qrReaderOpen: false
+                            });
+
+                            alert(`Scanned QR code: ${code}`);
+                        }}
+                        onCloseClick={() => {
+                            // Play button sound.
+                            let audio = APEngine.audioManager.getAudio(AudioManifest.button.name);
+                            audio.play();
+
+                            this.setState({
+                                qrReaderOpen: false
+                            });
+                        }}
+                        onError={(error) => {
+                            // Automatically close QR Reader upon error.
+                            this.setState({
+                                qrReaderOpen: false
+                            });
+
+                            // Show alert dialog with error message to give user an explanation.
+                            alert(`Could not start QR scanner.\n\nError: ${error ?? 'Unknown reason.'}`); 
+                        }}
+                    /> 
+                );
+            } else {
+                return null;
+            }
+        };
+
+        const EngineComponents = () => {
+            if (this.state.engineInitialized) {
+                return (
+                    <div>
+                        <Version />
+                        <div id="hud-ul-grp">
+                            <PauseButton />
+                            <button className='appButton' onClick={this.onQRScanClick}>QR Scan</button>
+                        </div>
+                        <ARButton />
+                        <QR />
+                    </div>
+                );
+            } else {
+                return null;
+            }
+        };
 
         return (
             <div className='app' ref={this.appDivRef} >
                 <ThreeContainer canvasParentRef={this.threeCanvasParentRef} />
-                {engineDependentComponents}
+                <EngineComponents />
             </div>
         );
     }

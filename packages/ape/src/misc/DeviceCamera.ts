@@ -2,6 +2,11 @@
 import { IDisposable } from './IDisposable';
 import { waitForCondition } from '../Utils';
 
+export interface IVideoStreamStartResult {
+    started: boolean;
+    error?: any;
+}
+
 /**
  * Device Camera is a class that wraps modern rowser functionality to interact with device camera hardware.
  */
@@ -35,16 +40,20 @@ export class DeviceCamera implements IDisposable {
      * Request to start device camera video stream. Promise will return true if successful, otherwise false.
      * Uses the DeviceCamera.constraints object when requesting the camera from the browser.
      */
-    async startVideoStream(): Promise<boolean> {
+    async startVideoStream(): Promise<IVideoStreamStartResult> {
         if (this._video) {
-            return true;
+            return {
+                started: true
+            }
         }
 
         try {
             this._stream = await navigator.mediaDevices.getUserMedia(this.constraints);
         } catch (error) {
-            console.error(`[DeviceCamera] Could not start video stream. error: ${error}`);
-            return false;
+            return {
+                started: false,
+                error: error
+            }
         }
 
         this._video = document.createElement('video');
@@ -60,12 +69,16 @@ export class DeviceCamera implements IDisposable {
             }, 2000);
 
             this._playing = true;
-            return true;
+            return {
+                started: true
+            }
         } catch (error) {
-            console.error(error);
             this.stopVideoStream();
             this._playing = false;
-            return false;
+            return {
+                started: false,
+                error: error
+            }
         }
     }
 

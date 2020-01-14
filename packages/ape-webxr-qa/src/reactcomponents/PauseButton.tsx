@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import "./PauseButton.css";
 import { 
     APEngine,
 } from '@yeticgi/ape';
@@ -31,7 +30,7 @@ export class PauseButton extends Component<{}, IPauseButtonState> {
     render() {
         const buttonText = this.state.paused ? "Resume" : "Pause";
         return (
-            <button className="button pause" onClick={this.onClick}>{buttonText}</button>
+            <button className="appButton" onClick={this.onClick}>{buttonText}</button>
         );
     }
 

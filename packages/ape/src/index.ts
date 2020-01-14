@@ -11,7 +11,7 @@ export { XRPhysics } from './physics/XRPhysics';
 export { Time } from './Time';
 export { AudioManager } from './audio/AudioManager';
 export { AudioItem, IAudioItemOptions } from './audio/AudioItem';
-export { DeviceCamera } from './misc/DeviceCamera';
+export { DeviceCamera, IVideoStreamStartResult } from './misc/DeviceCamera';
 export { QRStreamReader } from './misc/QRStreamReader';
 
 export { 

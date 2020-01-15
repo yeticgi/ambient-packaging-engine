@@ -8,7 +8,7 @@
             "detail": "Build ape package.",
             "type": "npm",
             "script": "build",
-            "path": "packages/ape/",
+            "path": "ambient-packaging-engine/packages/ape/",
             "group": "build",
             "presentation": {
                 "focus": true,
@@ -21,7 +21,7 @@
             "detail": "Build ape-reactcomponents package.",
             "type": "npm",
             "script": "build",
-            "path": "packages/ape-reactcomponents/",
+            "path": "ambient-packaging-engine/packages/ape-reactcomponents/",
             "group": "build",
             "presentation": {
                 "focus": true,
@@ -34,7 +34,7 @@
             "detail": "Build ape-webxr-qa react web app.",
             "type": "npm",
             "script": "build",
-            "path": "packages/ape-webxr-qa/",
+            "path": "ambient-packaging-engine/packages/ape-webxr-qa/",
             "group": "build",
             "presentation": {
                 "focus": true,
@@ -47,7 +47,7 @@
             "detail": "Build ape-webxr-qa react web app in development mode.",
             "type": "npm",
             "script": "build:dev",
-            "path": "packages/ape-webxr-qa/",
+            "path": "ambient-packaging-engine/packages/ape-webxr-qa/",
             "group": "build",
             "presentation": {
                 "focus": true,
@@ -84,7 +84,7 @@
             "detail": "Serve APE WebXR QA on local http server.",
             "type": "npm",
             "script": "serve",
-            "path": "packages/ape-webxr-qa/",
+            "path": "ambient-packaging-engine/packages/ape-webxr-qa/",
             "group": "none",
             "isBackground": true,
             "promptOnClose": true,

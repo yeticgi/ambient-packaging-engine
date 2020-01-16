@@ -126,18 +126,22 @@ export namespace APEngine {
         
         // Update game objects.
         let gameObjects: GameObject[] = [];
-        scene.traverse((o) => {
-            if (o instanceof GameObject) {
-                gameObjects.push(o);
-                o.onUpdate();
-            }
-        });
+        if (scene) {
+            scene.traverse((o) => {
+                if (o instanceof GameObject) {
+                    gameObjects.push(o);
+                    o.onUpdate();
+                }
+            });
+        }
         
         onUpdate.invoke();
 
-        gameObjects.forEach((o) => {
-            o.onLateUpdate();
-        });
+        if (scene) {
+            gameObjects.forEach((o) => {
+                o.onLateUpdate();
+            });
+        }
 
         onLateUpdate.invoke();
         

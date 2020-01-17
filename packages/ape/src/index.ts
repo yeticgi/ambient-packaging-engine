@@ -26,5 +26,7 @@ export {
     setParent,
     isObjectVisible,
     convertToBox2,
-    waitForCondition
+    waitForCondition,
+    waitForSeconds,
+    postJsonData
 } from './Utils';

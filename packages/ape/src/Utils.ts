@@ -78,6 +78,38 @@ export async function waitForSeconds(seconds: number): Promise<void> {
 }
 
 /**
+ * Post the given data object as JSON to the provided URL.
+ * @returns - Promise that resolves to a Response or null if an exception occured.
+ */
+export async function postJsonData(url: string, data: any): Promise<Response> {
+    console.log(`[postJsonData] start...`);
+
+    const headers = new Headers();
+    headers.set('Content-Type', 'application/json');
+
+    const init: RequestInit = {
+        method: 'POST',
+        body: JSON.stringify(data),
+        mode: 'cors',
+        headers: headers,
+
+    }
+
+    const request = new Request(url, init);
+    console.log(request);
+
+    try {
+        // Until aux is CORS enabled, the response will always be opaque and thus checking the response for anything is pointless.
+        const response = await fetch(request);
+        console.log(`[postJsonData] response received.`);
+        return response;
+    } catch (error) {
+        console.error(`[postJsonData] Could not fetch. error: ${error}`);
+        return null;
+    }
+}
+
+/**
  * Set the parent of the object3d.
  * @param object3d the object to re-parent.
  * @param parent the object to parent to.

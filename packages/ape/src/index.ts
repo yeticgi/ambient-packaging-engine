@@ -17,4 +17,4 @@ export * from './dev/ThreeDevTools';
 export * from './utils/Utils';
 export * from './utils/PromiseFunctions';
 export * from './utils/ThreeUtils';
-export * from './controls/CameraControls';
+export * from './controls/CameraOrbitControls';

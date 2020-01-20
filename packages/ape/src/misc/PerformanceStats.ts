@@ -76,8 +76,6 @@ export class PerformanceStats implements IDisposable {
             pos = 'bottom left';
         }
 
-        console.log(`[PerformanceState] _updatePosition ${pos}`);
-
         if (pos === 'top left') {
             this._stats.dom.style.top = '0px';
             this._stats.dom.style.left = '0px';

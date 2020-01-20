@@ -1,7 +1,7 @@
 import { DeviceCamera } from './DeviceCamera';
 import jsQR, { Options } from 'jsqr';
 import { IDisposable } from './IDisposable';
-import { getOptionalValue } from '../Utils';
+import { getOptionalValue } from '../utils/Utils';
 import { ArgEvent } from './Events';
 
 export interface IQRStreamReaderOptions {

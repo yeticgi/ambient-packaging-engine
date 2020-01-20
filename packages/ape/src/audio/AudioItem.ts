@@ -1,5 +1,5 @@
 import { Howl } from "howler";
-import { getOptionalValue } from "../Utils";
+import { getOptionalValue } from "../utils/Utils";
 import { ArgEvent } from "../misc/Events";
 import { IDisposable } from "../misc/IDisposable";
 

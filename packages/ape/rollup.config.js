@@ -38,5 +38,10 @@ export default {
         '__ape_version__': pkg.version
       })
     ],
-    external: ['three', 'howler', 'lodash', 'tslib']
+    external: [
+      'three',
+      'three/examples/jsm/loaders/GLTFLoader',
+      'howler',
+      'lodash',
+      'tslib']
   };

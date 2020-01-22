@@ -9,8 +9,10 @@ import {
     BufferGeometry,
     Material,
     Geometry,
+    Group,
     Math as ThreeMath,
 } from 'three';
+import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 
 /**
  * Set the parent of the object3d.
@@ -130,6 +132,23 @@ export function isObjectVisible(obj: Object3D) {
         obj = obj.parent;
     }
     return true;
+}
+
+export async function loadGltf(url: string): Promise<Scene> {
+    return new Promise<Scene>((resolve, reject) => {
+        const loader = new GLTFLoader();
+        loader.load(
+            url, 
+            (gltf) => {
+                resolve(gltf.scene);
+            },
+            (progressEvent) => {
+            },
+            (errorEvent) => {
+                reject(errorEvent);
+            }
+        );
+    });
 }
 
 /**

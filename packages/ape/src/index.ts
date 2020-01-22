@@ -15,6 +15,6 @@ export * from './misc/DeviceCamera';
 export * from './misc/QRStreamReader';
 export * from './dev/ThreeDevTools';
 export * from './utils/Utils';
-export * from './utils/PromiseFunctions';
+export * from './utils/WaitPromises';
 export * from './utils/ThreeUtils';
 export * from './controls/CameraOrbitControls';

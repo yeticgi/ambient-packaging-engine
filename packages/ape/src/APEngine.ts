@@ -12,6 +12,8 @@ import { PerformanceStats } from './misc/PerformanceStats';
 import { DeviceCamera } from './misc/DeviceCamera';
 import { ResourceManager } from './resources/ResourceManager';
 import { AudioResource } from './resources/AudioResource';
+import { GLTFResource } from './resources/GLTFResource';
+import { ThreeResourceTracker } from './utils/ThreeResourceTracker';
 
 export namespace APEngine {
     
@@ -27,6 +29,8 @@ export namespace APEngine {
     export let input: Input;
     export let xrInput: XRInput;
     export let audioManager: ResourceManager<AudioResource>;
+    export let gltfManager: ResourceManager<GLTFResource>;
+    export let resourceTracker: ThreeResourceTracker;
     export let performanceStats: PerformanceStats;
     export let deviceCamera: DeviceCamera;
 
@@ -87,9 +91,13 @@ export namespace APEngine {
         
         // Create xr input module.
         xrInput = new XRInput(webglRenderer);
+
+        // Create resource tracker.
+        resourceTracker = new ThreeResourceTracker();
         
-        // Create audio manager.
+        // Create resource managers.
         audioManager = new ResourceManager<AudioResource>();
+        gltfManager = new ResourceManager<GLTFResource>();
 
         // Create device camera module.
         deviceCamera = new DeviceCamera({
@@ -128,10 +136,10 @@ export namespace APEngine {
         // Update game objects.
         let gameObjects: GameObject[] = [];
         if (scene) {
-            scene.traverse((o) => {
-                if (o instanceof GameObject) {
-                    gameObjects.push(o);
-                    o.onUpdate();
+            scene.traverse((go) => {
+                if (go instanceof GameObject) {
+                    gameObjects.push(go);
+                    go.onUpdate();
                 }
             });
         }
@@ -139,12 +147,14 @@ export namespace APEngine {
         onUpdate.invoke();
 
         if (scene) {
-            gameObjects.forEach((o) => {
-                o.onLateUpdate();
+            gameObjects.forEach((go) => {
+                go.onLateUpdate();
             });
         }
 
         onLateUpdate.invoke();
+
+        GameObject.__APEngine_ProcessGameObjectDestroyQueue();
         
         if (scene && camera) {
             webglRenderer.render(scene, camera);
@@ -175,6 +185,9 @@ export namespace APEngine {
 
         audioManager.dispose();
         audioManager = null;
+
+        gltfManager.dispose();
+        gltfManager = null;
 
         deviceCamera.dispose();
         deviceCamera = null;

@@ -23,7 +23,7 @@ export class AudioResource extends Resource<Howl> {
     }
 
     protected _loadObject(): Promise<Howl> {
-        return new Promise<Howl>((resolve, reject) => {
+        return new Promise<Howl>(((resolve: (value: Howl) => void, reject) => {
             const howl = new Howl({
                 src: this._url,
                 loop: this._loop,
@@ -34,12 +34,10 @@ export class AudioResource extends Resource<Howl> {
                     reject(error);
                 }
             });
-        });
+        }));
     }
 
     protected _unloadObject(): void {
-        if (this.object) {
-            this.object.unload();
-        }
+        this.object.unload();
     }
 }

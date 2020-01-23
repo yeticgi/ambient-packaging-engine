@@ -1,10 +1,19 @@
 import { Object3D, Scene } from "three";
 import { Decorator } from "./decorators/Decorator";
 
+
+enum DestroyState {
+    None = -1,
+    WillDestroy = 0,
+    Destroyed = 1
+}
+
 /**
  * GameObject is an APEngine specific implemention of Three's Object3D class that supports decorators.
  */
 export class GameObject extends Object3D {
+
+    private static __APEngine_destroyQueue: GameObject[] = [];
 
     /**
      * Destroy the given GameObject and all of its children.
@@ -13,26 +22,34 @@ export class GameObject extends Object3D {
         // Get array of all child gameObjects in ascending order,
         // including the given gameObject.
         let gameObjects: GameObject[] = [];
-        gameObject.traverse((o) => {
-            if (o instanceof GameObject) {
-                gameObjects.push(o);
+        gameObject.traverse((go) => {
+            if (go instanceof GameObject) {
+                if (go._destroyState === DestroyState.None) {
+                    GameObject.__APEngine_destroyQueue.push(go);
+                    go._destroyState = DestroyState.WillDestroy;
+                }
             }
         });
+    }
 
-        if (gameObjects.length > 0) {
-            for (let i = gameObjects.length - 1; i >= 0; i--) {
-                if (!gameObjects[i]._destroyed) {
-                    // Inform the gameobject that it is being destroyed.
-                    gameObjects[i].onDestroy();
+    /**
+     * Process the GameObject destroy queue.
+     * This should ONLY be called by APEngine.
+     */
+    static __APEngine_ProcessGameObjectDestroyQueue() {
+        if (this.__APEngine_destroyQueue.length > 0) {
+            // Use a copy of the destroy queue in its current state so that 
+            // any modifications to the destroy queue during processing are not affected.
+            const count = this.__APEngine_destroyQueue.length;
 
-                    if (gameObjects[i] === gameObject) {
-                        // Remove root gameObject from its parent.
-                        if (gameObject.parent) {
-                            gameObject.parent.remove(gameObject);
-                        }
-                    }
+            for (let i = 0; i < count; i++) {
+                const gameObject = this.__APEngine_destroyQueue.pop();
+                if (gameObject && gameObject._destroyState === DestroyState.WillDestroy) {
+                    // Infrom the gameobject that it is being destroyed.
+                    gameObject.onDestroy();
+                    console.log(`[GameObject] ${gameObject.name} onDestroy`);
 
-                    gameObjects[i]._destroyed = true;
+                    gameObject._destroyState = DestroyState.Destroyed;
                 }
             }
         }
@@ -91,8 +108,7 @@ export class GameObject extends Object3D {
     }
 
     private _decorators: Decorator[] = [];
-    private _destroyed: boolean = false;
-    // private _visiblityDisabledDecorators: Decorator[] = [];
+    private _destroyState: DestroyState = DestroyState.None;
 
     constructor() {
         super();
@@ -173,7 +189,7 @@ export class GameObject extends Object3D {
      * Called for each three js frame.
      */
     onUpdate() {
-        if (this._destroyed) {
+        if (this._destroyState !== DestroyState.None) {
             return;
         }
 
@@ -196,7 +212,7 @@ export class GameObject extends Object3D {
      * Called for each three js frame but after all onUpdate calls have been made.
      */
     onLateUpdate() {
-        if (this._destroyed) {
+        if (this._destroyState !== DestroyState.None) {
             return;
         }
 

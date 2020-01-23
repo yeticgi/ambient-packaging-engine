@@ -6,13 +6,8 @@ import {
     Vector2,
     Box3,
     Layers,
-    BufferGeometry,
-    Material,
-    Geometry,
-    Group,
     Math as ThreeMath,
 } from 'three';
-import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 
 /**
  * Set the parent of the object3d.
@@ -132,85 +127,4 @@ export function isObjectVisible(obj: Object3D) {
         obj = obj.parent;
     }
     return true;
-}
-
-export async function loadGltf(url: string): Promise<Scene> {
-    return new Promise<Scene>((resolve, reject) => {
-        const loader = new GLTFLoader();
-        loader.load(
-            url, 
-            (gltf) => {
-                resolve(gltf.scene);
-            },
-            (progressEvent) => {
-            },
-            (errorEvent) => {
-                reject(errorEvent);
-            }
-        );
-    });
-}
-
-/**
- * Disposes the given material(s).
- * @param material The material(s) to dispose.
- */
-export function disposeMaterial(material: Material | Material[]) {
-    if (!material) return;
-    if (Array.isArray(material)) {
-        material.forEach(m => m.dispose());
-    } else {
-        material.dispose();
-    }
-}
-
-/**
- * Releases any unmanaged resources used by the given mesh.
- * @param mesh The mesh to dispose.
- * @param disposeGeometry Whether to dispose the mesh's geometry. Default true.
- * @param disposeMat Whether to dispose the mesh's material(s). Default true.
- */
-export function disposeMesh(
-    mesh: {
-        geometry: Geometry | BufferGeometry;
-        material: Material | Material[];
-    },
-    disposeGeometry: boolean = true,
-    disposeMat: boolean = true
-) {
-    if (!mesh) return;
-    if (disposeGeometry) {
-        mesh.geometry.dispose();
-    }
-    if (disposeMat) {
-        disposeMaterial(mesh.material);
-    }
-}
-
-export function disposeObject3D(
-    object3d: Object3D,
-    disposeGeometry: boolean = true,
-    disposeMaterial: boolean = true
-) {
-    if (!object3d) return;
-
-    if (disposeGeometry) {
-        let geometry = (<any>object3d).geometry;
-        if (geometry) {
-            geometry.dispose();
-        }
-    }
-
-    if (disposeMaterial) {
-        let material = (<any>object3d).material;
-        if (material) {
-            if (Array.isArray(material)) {
-                for (let i = 0; i < material.length; i++) {
-                    material[i].dispose();
-                }
-            } else {
-                material.dispose();
-            }
-        }
-    }
 }

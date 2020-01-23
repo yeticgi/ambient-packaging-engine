@@ -1,6 +1,7 @@
 import { 
-    AudioManager,
-    IAudioItemOptions
+    ResourceManager,
+    IAudioOptions,
+    AudioResource
 } from "@yeticgi/ape";
 
 import buttonUrl from '../public/sound/button.mp3';
@@ -9,7 +10,7 @@ import cubeTapUrl from '../public/sound/cube_tap.mp3';
 export interface IAudioItemEntry {
     name: string,
     url: string,
-    options?: IAudioItemOptions
+    options?: IAudioOptions
 }
 
 export namespace AudioManifest {
@@ -24,10 +25,12 @@ export namespace AudioManifest {
         url: cubeTapUrl,
     }
 
-    export function addAudioItems(audioManager: AudioManager) {
+    export function addAudioResources(audioManager: ResourceManager<AudioResource>) {
         let entries = getItemEntries();
         entries.forEach((entry) => {
-            audioManager.addAudioItem(entry.name, entry.url, entry.options);
+            audioManager.addResource(new AudioResource(
+                entry.name, entry.url, entry.options
+            ));
         });
     }
 

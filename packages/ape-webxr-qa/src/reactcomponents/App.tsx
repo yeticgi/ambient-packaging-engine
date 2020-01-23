@@ -76,8 +76,8 @@ export class App extends Component<{}, IAppState> {
         APEngine.onUpdate.addListener(this.onEngineUpdate);
 
         // Add audio items from manifest and start preloading audio.
-        AudioManifest.addAudioItems(APEngine.audioManager);
-        APEngine.audioManager.startLoading();
+        AudioManifest.addAudioResources(APEngine.audioManager);
+        APEngine.audioManager.preloadResources();
 
         this.createTestScene();
         
@@ -199,8 +199,11 @@ export class App extends Component<{}, IAppState> {
         console.log(`[App] Turning QR Reader ${this.state.qrReaderOpen ? 'off' : 'on'}.`);
         
         // Play button sound.
-        let audio = APEngine.audioManager.getAudio(AudioManifest.button.name);
-        audio.play();
+        APEngine.audioManager.getResource(AudioManifest.button.name).then(
+            (audioResource) => {
+                audioResource.object.play();
+            }
+        );
         
         this.setState({
             qrReaderOpen: !this.state.qrReaderOpen
@@ -222,8 +225,11 @@ export class App extends Component<{}, IAppState> {
                         }}
                         onCloseClick={() => {
                             // Play button sound.
-                            let audio = APEngine.audioManager.getAudio(AudioManifest.button.name);
-                            audio.play();
+                            APEngine.audioManager.getResource(AudioManifest.button.name).then(
+                                (audioResource) => {
+                                    audioResource.object.play();
+                                }
+                            );
 
                             this.setState({
                                 qrReaderOpen: false

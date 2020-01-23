@@ -45,7 +45,10 @@ export class PauseButton extends Component<{}, IPauseButtonState> {
     onClick() {
         APEngine.time.paused = !APEngine.time.paused;
 
-        let audio = APEngine.audioManager.getAudio(AudioManifest.button.name);
-        audio.play();
+        APEngine.audioManager.getResource(AudioManifest.button.name).then(
+            (audioResource) => {
+                audioResource.object.play();
+            }
+        );
     }
 }

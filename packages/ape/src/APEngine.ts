@@ -7,10 +7,11 @@ import { Time } from './Time';
 import { Input } from './input/Input';
 import { GameObject } from "./gameobject/GameObject";
 import { Event } from "./misc/Events";
-import { AudioManager } from './audio/AudioManager';
 import { XRInput } from './input/XRInput';
 import { PerformanceStats } from './misc/PerformanceStats';
 import { DeviceCamera } from './misc/DeviceCamera';
+import { ResourceManager } from './resources/ResourceManager';
+import { AudioResource } from './resources/AudioResource';
 
 export namespace APEngine {
     
@@ -25,7 +26,7 @@ export namespace APEngine {
     export let time: Time;
     export let input: Input;
     export let xrInput: XRInput;
-    export let audioManager: AudioManager;
+    export let audioManager: ResourceManager<AudioResource>;
     export let performanceStats: PerformanceStats;
     export let deviceCamera: DeviceCamera;
 
@@ -88,7 +89,7 @@ export namespace APEngine {
         xrInput = new XRInput(webglRenderer);
         
         // Create audio manager.
-        audioManager = new AudioManager();
+        audioManager = new ResourceManager<AudioResource>();
 
         // Create device camera module.
         deviceCamera = new DeviceCamera({

@@ -63,8 +63,10 @@ export class TestClick extends Decorator {
         if (rotator) {
             rotator.enabled = !rotator.enabled;
         }
-
-        let audio = APEngine.audioManager.getAudio(AudioManifest.cubeTap.name);
-        audio.play();
+        APEngine.audioManager.getResource(AudioManifest.cubeTap.name).then(
+            (audioResource) => {
+                audioResource.object.play();
+            }
+        );
     }
 }

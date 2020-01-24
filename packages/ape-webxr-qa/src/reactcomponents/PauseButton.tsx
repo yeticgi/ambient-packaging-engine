@@ -1,8 +1,7 @@
 import React, { Component } from "react";
 import { 
-    APEngine,
+    APEngine, APEResources,
 } from '@yeticgi/ape';
-import { AudioManifest } from "../audio/AudioManifest";
 
 export interface IPauseButtonState { 
     paused: boolean;
@@ -45,10 +44,8 @@ export class PauseButton extends Component<{}, IPauseButtonState> {
     onClick() {
         APEngine.time.paused = !APEngine.time.paused;
 
-        APEngine.audioManager.getResource(AudioManifest.button.name).then(
-            (audioResource) => {
-                audioResource.object.play();
-            }
+        APEResources.getAudio('button').then(
+            (resource) => { resource.object.play(); }
         );
     }
 }

@@ -6,10 +6,10 @@ import {
     IDecoratorOptions,
     MouseButtonId,
     Physics,
-    GameObject
+    GameObject,
+    APEResources
 } from "@yeticgi/ape";
 import { Rotator } from "./Rotator";
-import { AudioManifest } from "../audio/AudioManifest";
 
 export class TestClick extends Decorator {
 
@@ -63,10 +63,9 @@ export class TestClick extends Decorator {
         if (rotator) {
             rotator.enabled = !rotator.enabled;
         }
-        APEngine.audioManager.getResource(AudioManifest.cubeTap.name).then(
-            (audioResource) => {
-                audioResource.object.play();
-            }
+        
+        APEResources.getAudio('cubeTap').then(
+            (resource) => { resource.object.play(); }
         );
     }
 }

@@ -6,7 +6,6 @@ import replace from 'rollup-plugin-replace';
 import postcss from 'rollup-plugin-postcss';
 import copy from 'rollup-plugin-copy';
 import del from 'rollup-plugin-delete';
-import url from '@rollup/plugin-url';
 import { terser } from 'rollup-plugin-terser';
 import sourcemaps from 'rollup-plugin-sourcemaps';
 import pkg from './package.json';
@@ -70,15 +69,6 @@ export default (args) => {
   );
 
   plugins.push(
-    url({
-      limit: 0,
-      publicPath: 'public/',
-      destDir: 'dist/public',
-      include: ['**/*.svg', '**/*.png', '**/*.jpg', '**/*.gif', '**/*.mp3', '**/*.webm']
-    })
-  );
-
-  plugins.push(
     replace({
       'process.env.NODE_ENV': JSON.stringify(isDevMode ? 'development' : 'production'),
       '__ape-webxr-qa-version__': pkg.version
@@ -94,7 +84,8 @@ export default (args) => {
     copy({
       targets: [
         { src: 'src/index.html', dest: 'dist' }, // copy index.html to dist
-        { src: '../*/dist/public', dest: 'dist' }, // copy all public folders to dist.
+        { src: 'src/public', dest: 'dist' }, // copy src/public to dist
+        { src: '../*/dist/public', dest: 'dist' }, // copy all public folders to dist
       ],
       verbose: true,
     })

@@ -8,7 +8,7 @@
         "build:all": "yarn workspace @yeticgi/ape build && yarn workspace @yeticgi/ape-reactcomponents build && yarn build",
         "build:all:dev": "yarn workspace @yeticgi/ape build && yarn workspace @yeticgi/ape-reactcomponents build && yarn build:dev",
         "watch": "rollup -cw",
-        "serve": "http-server ./dist -p 5000 -c-1"
+        "serve": "http-server ./dist -p 5000 -c0"
     },
     "description": "Web XR test application useful for quality assurance testing across many devices.",
     "repository": "git@github.com:yeticgi/ambient-packaging-engine.git",

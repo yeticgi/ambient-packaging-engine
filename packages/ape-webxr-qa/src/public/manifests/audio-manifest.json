@@ -1,0 +1,10 @@
+{
+    "button": {
+        "url": "public/sound/button.mp3",
+        "loop": false
+    },
+    "cubeTap": {
+        "url": "public/sound/cube_tap.mp3",
+        "loop": false
+    }
+}

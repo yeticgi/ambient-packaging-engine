@@ -4,7 +4,6 @@ import {
     APEngine,
 } from '@yeticgi/ape';
 import { App } from './App';
-import { AudioManifest } from "../audio/AudioManifest";
 
 export class Version extends Component {
 

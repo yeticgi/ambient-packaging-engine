@@ -8,8 +8,7 @@ import {
     APEngine,
     GameObject,
     MeshDecorator,
-    QRStreamReader,
-    ArgEvent
+    APEResources
 } from '@yeticgi/ape';
 import {
     Scene,
@@ -29,7 +28,6 @@ import { TestClick } from '../decorators/TestClick';
 import { XRMoveToRetical } from '../decorators/XRMoveToRetical';
 import { PauseButton } from './PauseButton';
 import { QRReader } from './QRReader';
-import { AudioManifest } from '../audio/AudioManifest';
 import { Version } from './Version';
 import { XRRetical } from '../decorators/XRRetical';
 
@@ -66,24 +64,27 @@ export class App extends Component<{}, IAppState> {
         }
     }
 
-    componentDidMount() {
+    async componentDidMount() {
         APEngine.init(
             this.appDivRef.current!,
             this.threeCanvasParentRef.current!
         );
 
-        this.onEngineUpdate = this.onEngineUpdate.bind(this);
-        APEngine.onUpdate.addListener(this.onEngineUpdate);
-
-        // Add audio items from manifest and start preloading audio.
-        AudioManifest.addAudioResources(APEngine.audioManager);
-        APEngine.audioManager.preloadResources();
+        // Add resources from manifest.
+        await APEResources.addResourcesFromManifest({
+            audioUrl: 'public/manifests/audio-manifest.json'
+        });
+        // Preload resources.
+        await APEResources.preloadResources();
 
         this.createTestScene();
         
         // Show performance stats.
         APEngine.performanceStats.enabled = true;
         APEngine.performanceStats.position = 'bottom right';
+
+        this.onEngineUpdate = this.onEngineUpdate.bind(this);
+        APEngine.onUpdate.addListener(this.onEngineUpdate);
 
         this.setState({
             engineInitialized: true
@@ -199,10 +200,8 @@ export class App extends Component<{}, IAppState> {
         console.log(`[App] Turning QR Reader ${this.state.qrReaderOpen ? 'off' : 'on'}.`);
         
         // Play button sound.
-        APEngine.audioManager.getResource(AudioManifest.button.name).then(
-            (audioResource) => {
-                audioResource.object.play();
-            }
+        APEResources.getAudio('button').then(
+            (resource) => { resource.object.play(); }
         );
         
         this.setState({
@@ -225,10 +224,8 @@ export class App extends Component<{}, IAppState> {
                         }}
                         onCloseClick={() => {
                             // Play button sound.
-                            APEngine.audioManager.getResource(AudioManifest.button.name).then(
-                                (audioResource) => {
-                                    audioResource.object.play();
-                                }
+                            APEResources.getAudio('button').then(
+                                (resource) => { resource.object.play(); }
                             );
 
                             this.setState({

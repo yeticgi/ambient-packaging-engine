@@ -90,8 +90,6 @@ export class GLTFResource extends Resource<GLTFPrefab> {
                 this._url,
                 (gltf) => {
                     const gltfPrefab = new GLTFPrefab(this.name, gltf);
-                    console.log(`[GLTFResource] Loaded gltf:`);
-                    console.log(gltf);
 
                     resolve(gltfPrefab);
                 },

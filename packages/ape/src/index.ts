@@ -11,6 +11,7 @@ export * from './physics/XRPhysics';
 export * from './Time';
 export * from './resources/AudioResource';
 export * from './resources/GLTFResource';
+export * from './resources/TextureResource';
 export * from './resources/Resource';
 export * from './resources/ResourceManager';
 export * from './misc/DeviceCamera';

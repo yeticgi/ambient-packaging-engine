@@ -39,8 +39,10 @@ export class DeviceCamera implements IDisposable {
     /**
      * Request to start device camera video stream. Promise will return true if successful, otherwise false.
      * Uses the DeviceCamera.constraints object when requesting the camera from the browser.
+     * 
+     * May provide a timeout value in milliseconds.
      */
-    async startVideoStream(): Promise<IVideoStreamStartResult> {
+    async startVideoStream(timeout?: number): Promise<IVideoStreamStartResult> {
         if (this._video) {
             return {
                 started: true
@@ -62,13 +64,19 @@ export class DeviceCamera implements IDisposable {
         this._video.setAttribute('playsinline', 'true');
         this._video.play();
 
+        if (typeof timeout === 'number') {
+            if (timeout <= 0) {
+                timeout = 6000;
+            }
+        }
+
         
         try {
             await waitForCondition(() => {
                 if (this._video) {
                     return this._video.readyState === HTMLMediaElement.HAVE_ENOUGH_DATA;
                 }
-            }, 2000);
+            }, timeout);
 
             this._playing = true;
             return {

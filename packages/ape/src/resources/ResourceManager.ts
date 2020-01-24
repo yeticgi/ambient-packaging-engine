@@ -1,5 +1,5 @@
 
-import { Resource } from './Resource';
+import { Resource, IResourceConfig } from './Resource';
 import { ArgEvent } from "../misc/Events";
 import { IDisposable } from "../misc/IDisposable";
 
@@ -7,10 +7,31 @@ import { IDisposable } from "../misc/IDisposable";
  * A Resource Manager is a generic class that manages any type of Resouce that it is created for.
  * Resource Managers load, track, retrieve, and dipose of any Resources assigned to it.
  */
-export class ResourceManager<T extends Resource<any>> implements IDisposable {
+export class ResourceManager<T extends Resource<{}>> implements IDisposable {
     private _resources: Map<string, T> = new Map();
+    private _activator: { new(name: string, config: IResourceConfig): T };
 
-    addResource(resource: T): void {
+    constructor(resourceActivator: { new(name: string, config: unknown): T }) {
+        this._activator = resourceActivator;
+    }
+
+    async addResourcesFromManifest(manifestUrl: string) {
+        try {
+            const response = await fetch(manifestUrl);
+            const manifest = await response.json();
+            
+            const keys = Object.keys(manifest);
+            for (const key of keys) {
+                const config: IResourceConfig = manifest[key];
+                this.addResource(key, config);
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    addResource(name: string, config: IResourceConfig): void {
+        const resource = new this._activator(name, config);
         this._resources.set(resource.name, resource);
     }
 

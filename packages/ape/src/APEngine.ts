@@ -10,10 +10,6 @@ import { Event } from "./misc/Events";
 import { XRInput } from './input/XRInput';
 import { PerformanceStats } from './misc/PerformanceStats';
 import { DeviceCamera } from './misc/DeviceCamera';
-import { ResourceManager } from './resources/ResourceManager';
-import { AudioResource } from './resources/AudioResource';
-import { GLTFResource } from './resources/GLTFResource';
-import { ThreeResourceTracker } from './utils/ThreeResourceTracker';
 
 export namespace APEngine {
     
@@ -28,9 +24,6 @@ export namespace APEngine {
     export let time: Time;
     export let input: Input;
     export let xrInput: XRInput;
-    export let audioManager: ResourceManager<AudioResource>;
-    export let gltfManager: ResourceManager<GLTFResource>;
-    export let resourceTracker: ThreeResourceTracker;
     export let performanceStats: PerformanceStats;
     export let deviceCamera: DeviceCamera;
 
@@ -91,13 +84,6 @@ export namespace APEngine {
         
         // Create xr input module.
         xrInput = new XRInput(webglRenderer);
-
-        // Create resource tracker.
-        resourceTracker = new ThreeResourceTracker();
-        
-        // Create resource managers.
-        audioManager = new ResourceManager<AudioResource>();
-        gltfManager = new ResourceManager<GLTFResource>();
 
         // Create device camera module.
         deviceCamera = new DeviceCamera({
@@ -182,12 +168,6 @@ export namespace APEngine {
 
         xrInput.dispose();
         xrInput = null;
-
-        audioManager.dispose();
-        audioManager = null;
-
-        gltfManager.dispose();
-        gltfManager = null;
 
         deviceCamera.dispose();
         deviceCamera = null;

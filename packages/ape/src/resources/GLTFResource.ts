@@ -1,15 +1,13 @@
-import { Resource } from "./Resource";
-import { getOptionalValue } from "../utils/Utils";
-import { Howl } from "howler";
-import { Group, Scene, Object3D } from "three";
+import { APEResources } from "./APEResources";
+import { APEAssetTracker } from "./APEAssetTracker";
+import { Resource, IResourceConfig } from "./Resource";
+import { Group, Object3D } from "three";
 import { GLTFLoader, GLTF } from "three/examples/jsm/loaders/GLTFLoader";
-import { ThreeResourceTracker } from "../utils/ThreeResourceTracker";
 import { IDisposable } from "../misc/IDisposable";
-import { APEngine } from "../APEngine";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 
-export interface IGLTFOptions {
-    
+export interface IGLTFConfig extends IResourceConfig {
+    url: string
 }
 
 export class GLTFPrefab implements IDisposable {
@@ -37,7 +35,7 @@ export class GLTFPrefab implements IDisposable {
             this._prefab.add(child);
         }
 
-        APEngine.resourceTracker.track(this._prefab);
+        APEAssetTracker.track(this._prefab);
 
         // Dispose of the original GLTF scene.
         scene.dispose();
@@ -65,17 +63,19 @@ export class GLTFPrefab implements IDisposable {
     }
 
     dispose(): void {
-        APEngine.resourceTracker.untrack(this._prefab);
+        APEAssetTracker.untrack(this._prefab);
     }
 }
 
 export class GLTFResource extends Resource<GLTFPrefab> {
     private _url: string;
 
-    constructor(name: string, url: string, options?: IGLTFOptions) {
-        super(name);
+    constructor(name: string, config: unknown) {
+        super(name, config);
 
-        this._url = url;
+        const gltfConfig = config as IGLTFConfig;
+
+        this._url = gltfConfig.url;
     }
 
     protected _loadObject(): Promise<GLTFPrefab> {

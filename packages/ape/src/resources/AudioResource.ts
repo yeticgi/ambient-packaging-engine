@@ -1,8 +1,9 @@
-import { Resource } from "./Resource";
+import { Resource, IResourceConfig } from "./Resource";
 import { getOptionalValue } from "../utils/Utils";
 import { Howl } from "howler";
 
-export interface IAudioOptions {
+export interface IAudioConfig extends IResourceConfig {
+    url: string,
     loop?: boolean
 }
 
@@ -10,16 +11,13 @@ export class AudioResource extends Resource<Howl> {
     private _url: string;
     private _loop: boolean;
 
-    constructor(name: string, url: string, options?: IAudioOptions) {
-        super(name);
+    constructor(name: string, config: unknown) {
+        super(name, config);
 
-        this._url = url;
+        const audioConfig = config as IAudioConfig;
 
-        if (!options) {
-            options = {};
-        }
-
-        this._loop = getOptionalValue(options.loop, false);
+        this._url = audioConfig.url;
+        this._loop = getOptionalValue(audioConfig.loop, false);
     }
 
     protected _loadObject(): Promise<Howl> {

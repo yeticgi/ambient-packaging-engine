@@ -9,6 +9,8 @@ export * from './input/XRInput';
 export * from './physics/Physics';
 export * from './physics/XRPhysics';
 export * from './Time';
+export * from './resources/APEResources';
+export * from './resources/APEAssetTracker';
 export * from './resources/AudioResource';
 export * from './resources/GLTFResource';
 export * from './resources/TextureResource';

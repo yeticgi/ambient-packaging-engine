@@ -2,20 +2,19 @@ import { Resource } from "./Resource";
 import { getOptionalValue } from "../utils/Utils";
 import { Texture, TextureLoader } from "three";
 
-export interface ITextureOptions {
+export interface ITextureConfig {
+    url: string
 }
 
 export class TextureResource extends Resource<Texture> {
     private _url: string;
 
-    constructor(name: string, url: string, options?: ITextureOptions) {
-        super(name);
+    constructor(name: string, config: unknown) {
+        super(name, config);
+        
+        const textureConfig = config as ITextureConfig;
 
-        this._url = url;
-
-        if (!options) {
-            options = {};
-        }
+        this._url = textureConfig.url;
     }
 
     protected _loadObject(): Promise<Texture> {

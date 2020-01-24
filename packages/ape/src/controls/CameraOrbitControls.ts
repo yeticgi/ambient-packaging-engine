@@ -1,15 +1,10 @@
 import {
     PerspectiveCamera,
     Vector3,
-    Spherical,
     Vector2,
-    Quaternion,
-    Matrix4,
     Math as ThreeMath,
-    OrthographicCamera,
-    Euler,
 } from 'three';
-import { InputType, MouseButtonId, Input } from '../input/Input';
+import { InputType } from '../input/Input';
 import { clampDegAngle, pointOnSphere, clamp } from '../utils/Utils';
 import { APEngine } from '../APEngine';
 
@@ -68,15 +63,27 @@ export class CameraOrbitControls {
 
     constructor(camera: PerspectiveCamera) {
         this._camera = camera;
-
-        this._x = ThreeMath.radToDeg(this._camera.rotation.y);
-        this._y = ThreeMath.radToDeg(this._camera.rotation.x);
     }
 
     update(): void {
         if (this.target) {
             this._rotateControls();
             this._zoomControls();
+            this._updateCamera();
+        }
+    }
+
+    setOrbit(x?: number, y?: number) {
+        let set = false;
+        if (typeof x === 'number') {
+            this._x = x;
+            set = true;
+        }
+        if (typeof y === 'number') {
+            this._y = y;
+            set = true;
+        }
+        if (set) {
             this._updateCamera();
         }
     }

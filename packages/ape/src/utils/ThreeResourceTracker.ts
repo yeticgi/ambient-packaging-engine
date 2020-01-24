@@ -11,6 +11,11 @@ export interface IResourceCount {
     unknown: number;
 }
 
+export interface IResourceReference { 
+    resource: Trackable,
+    referenceCount: number
+}
+
 /**
  * Three Resource Tracker is a class that tracks objects that must be manually cleaned up that are created by Three JS.
  * These include geometries, materials, and textures.
@@ -26,7 +31,7 @@ export class ThreeResourceTracker implements IDisposable {
     /**
      * Map of tracked resources indexed by the trackable's uuid.
      */
-    resources: Map<string, Trackable> = new Map();
+    resourceRefs: Map<string, IResourceReference> = new Map();
 
     /**
      * Debug level for ThreeResourceTracker class.
@@ -46,7 +51,9 @@ export class ThreeResourceTracker implements IDisposable {
             unknown: 0
         }
 
-        this.resources.forEach((resource) => {
+        this.resourceRefs.forEach((resourceRef) => {
+            const resource = resourceRef.resource;
+
             if (resource instanceof Object3D) {
                 resourceCounts.object3d++;
             } else if (resource instanceof Material) {
@@ -63,29 +70,42 @@ export class ThreeResourceTracker implements IDisposable {
         return resourceCounts;
     }
 
+    /**
+     * Track the given resource by incrementing the reference counter for it.
+     */
     track(resource: any): void {
         const trackables = new Map<string, Trackable>();
         findTrackables(resource, trackables);
 
         if (trackables && trackables.size > 0) {
-            trackables.forEach((resource, key) => {
-                if (!this.resources.has(resource.uuid)) {
-                    this.resources.set(resource.uuid, resource);
-                    if (this.debugLevel >= 1) {
-                        console.log(`[ThreeResourceTracker] track resource type: ${resource.constructor.name}, uuid: ${resource.uuid}`);
-                    }
-                    if (this.debugLevel >= 2) {
-                        console.log(`[ThreeResourceTracker] tracked resources -> ${JSON.stringify(this.getResourceCounts())}`);
-                    }
+            trackables.forEach((resource, uuid) => {
+                let resourceRef: IResourceReference = this.resourceRefs.get(uuid);
+
+                if (resourceRef) {
+                    resourceRef.referenceCount++;
+                } else {
+                    resourceRef = {
+                        resource: resource,
+                        referenceCount: 1
+                    };
+
+                    this.resourceRefs.set(resource.uuid, resourceRef);
+                }
+
+                if (this.debugLevel >= 1) {
+                    console.log(`[ThreeResourceTracker] track resource type: ${resource.constructor.name}, uuid: ${resource.uuid}, refCount: ${resourceRef.referenceCount}`);
+                }
+                if (this.debugLevel >= 2) {
+                    console.log(`[ThreeResourceTracker] tracked resources -> ${JSON.stringify(this.getResourceCounts())}`);
                 }
             });
         }
     }
 
     /**
-     * Release the given 
+     * Untrack the given resource by decrementing the reference counter for it. If the reference counter reaches zero, the resource will be released.
      */
-    release(resource: any): void {
+    untrack(resource: any): void {
         const trackables = new Map<string, Trackable>();
         findTrackables(resource, trackables);
 
@@ -93,26 +113,38 @@ export class ThreeResourceTracker implements IDisposable {
             trackables.forEach((resource, uuid) => {
                 // Only release resources that are explicitly tracked by the tracker.
                 // We dont want to cause unintended behaviour by releasing an untracked trackable resource.
-                if (this.resources.has(uuid)) {
-                    if (this.debugLevel >= 1) {
-                        console.log(`[ThreeResourceTracker] release resource type: ${resource.constructor.name}, uuid: ${resource.uuid}`);
-                    }
-                    
-                    if (resource instanceof Object3D) {
-                        if (resource.parent) {
-                            resource.parent.remove(resource);
+                const resourceRef = this.resourceRefs.get(uuid);
+
+                if (resourceRef) {
+                    if (resourceRef.referenceCount > 0) {
+                        resourceRef.referenceCount--;
+
+                        if (this.debugLevel >= 1) {
+                            console.log(`[ThreeResourceTracker] decrement reference count for resource type: ${resource.constructor.name}, uuid: ${resource.uuid}, refCount: ${resourceRef.referenceCount}`);
                         }
                     }
-        
-                    if ('dispose' in resource) {
-                        resource.dispose();
-                    }
-                    
-                    // Remove the tracked resource from the map.
-                    this.resources.delete(uuid);
 
-                    if (this.debugLevel >= 2) {
-                        console.log(`[ThreeResourceTracker] tracked resources -> ${JSON.stringify(this.getResourceCounts())}`);
+                    if (resourceRef.referenceCount <= 0) {
+                        if (this.debugLevel >= 1) {
+                            console.log(`[ThreeResourceTracker] release resource type: ${resource.constructor.name}, uuid: ${resource.uuid}`);
+                        }
+                    
+                        if (resource instanceof Object3D) {
+                            if (resource.parent) {
+                                resource.parent.remove(resource);
+                            }
+                        }
+            
+                        if ('dispose' in resource) {
+                            resource.dispose();
+                        }
+                        
+                        // Remove the tracked resource from the map.
+                        this.resourceRefs.delete(uuid);
+    
+                        if (this.debugLevel >= 2) {
+                            console.log(`[ThreeResourceTracker] tracked resources -> ${JSON.stringify(this.getResourceCounts())}`);
+                        }
                     }
                 }
             });
@@ -123,8 +155,10 @@ export class ThreeResourceTracker implements IDisposable {
      * Dispose of all tracked resources.
      */
     dispose(): void {
-        this.resources.forEach((resource, uuid) => {
-            this.release(resource);
+        this.resourceRefs.forEach((resourceRef, uuid) => {
+            const resource = resourceRef.resource;
+
+            this.untrack(resource);
             if (resource instanceof Object3D) {
                 if (resource.parent) {
                     resource.parent.remove(resource);
@@ -136,7 +170,7 @@ export class ThreeResourceTracker implements IDisposable {
             }
         });
 
-        this.resources = new Map();
+        this.resourceRefs = new Map();
     }
 }
 

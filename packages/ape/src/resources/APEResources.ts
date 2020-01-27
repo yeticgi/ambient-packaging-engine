@@ -1,7 +1,7 @@
-import { ResourceManager } from '../resources/ResourceManager';
-import { AudioResource } from '../resources/AudioResource';
-import { GLTFResource } from '../resources/GLTFResource';
-import { TextureResource } from '../resources/TextureResource';
+import { ResourceManager } from './ResourceManager';
+import { AudioResource } from './AudioResource';
+import { GLTFResource } from './GLTFResource';
+import { TextureResource } from './TextureResource';
 
 export interface IManifestFiles{
     audioUrl?: string;

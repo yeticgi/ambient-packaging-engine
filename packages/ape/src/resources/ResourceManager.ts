@@ -1,6 +1,5 @@
 
 import { Resource, IResourceConfig } from './Resource';
-import { ArgEvent } from "../misc/Events";
 import { IDisposable } from "../misc/IDisposable";
 
 /**

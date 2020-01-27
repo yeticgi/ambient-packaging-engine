@@ -37,7 +37,7 @@ export namespace APEAssetTracker {
      * Debug level for asset tracker.
      * 0: Disabled, 1: Track/Release events, 2: Total counts
      */
-    export let debugLevel: number = 2;
+    export let debugLevel: number = 0;
 
     export function getAssetCounts(): IAssetCount {
         const assetCounts: IAssetCount = {

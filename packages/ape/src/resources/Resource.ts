@@ -39,7 +39,8 @@ export abstract class Resource<K> implements IDisposable {
             return this;
         } catch(error) {
             this._loaded = false;
-            throw `Could not load resource ${this.name}. error: ${error}`;
+            console.error(`Could not load resource ${this.name}.`);
+            console.error(error);
         }
     }
 

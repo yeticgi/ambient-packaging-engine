@@ -16,6 +16,7 @@ export * from './resources/GLTFResource';
 export * from './resources/TextureResource';
 export * from './resources/Resource';
 export * from './resources/ResourceManager';
+export * from './resources/Object3DPrefab';
 export * from './misc/DeviceCamera';
 export * from './misc/QRStreamReader';
 export * from './dev/ThreeDevTools';

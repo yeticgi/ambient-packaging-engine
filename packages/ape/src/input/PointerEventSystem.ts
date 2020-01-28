@@ -2,6 +2,7 @@ import { Object3D, Vector2, Intersection, Camera } from 'three';
 import { IDisposable } from '../misc/IDisposable';
 import { Input, InputType } from './Input';
 import { Physics } from '../physics/Physics';
+import { isObjectVisible } from '../utils/ThreeUtils';
 
 export type PointerEventType = 'pointer enter' | 'pointer exit' | 'pointer down' | 'pointer up' | 'pointer click';
 
@@ -114,14 +115,18 @@ export class PointerEventSystem implements IDisposable {
         let closestListener: IPointerEventListener;
 
         if (pointerScreenPos) {
-            // Collect all listener target objects.
-            const allListenerTargets: Object3D[] = [];
+            // Collect all active listener target objects.
+            const allActiveListenerTargets: Object3D[] = [];
             this._listeners.forEach((listener) => {
-                allListenerTargets.push(...listener.pointerTargets);
+                const activeTargets = listener.pointerTargets.filter((target) => {
+                    return isObjectVisible(target);
+                });
+
+                allActiveListenerTargets.push(...activeTargets);
             });
     
             // Raycast againsts all pointer event listener target objects.
-            const hits = Physics.raycastAtScreenPos(pointerScreenPos, allListenerTargets, camera);
+            const hits = Physics.raycastAtScreenPos(pointerScreenPos, allActiveListenerTargets, camera);
             closestIntersection = Physics.firstRaycastHit(hits);
             closestListener = closestIntersection ? this._findEventListenerForObject(closestIntersection.object) : null;
         } else {

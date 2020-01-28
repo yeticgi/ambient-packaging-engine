@@ -84,15 +84,17 @@ export namespace Physics {
      * @param screenPos The screen position to raycast from.
      * @param objects The objects to raycast against.
      * @param camera The camera to use.
+     * @param recursive — If true, it also checks all descendants of the objects. Otherwise it only checks intersecton with the objects. Default is false.
      */
     export function raycastAtScreenPos(
         screenPos: Vector2,
         objects: Object3D[],
-        camera: Camera
+        camera: Camera,
+        recursive?: boolean
     ): RaycastResult {
         const raycaster = new Raycaster();
         raycaster.setFromCamera(screenPos, camera);
-        const intersects = raycaster.intersectObjects(objects, true);
+        const intersects = raycaster.intersectObjects(objects, recursive);
 
         return {
             pointerScreenPos: screenPos,
@@ -105,10 +107,11 @@ export namespace Physics {
      * Performs a raycast with the given ray against the given objects.
      * @param ray The ray to use.
      * @param objects The objects to raycast against.
+     * @param recursive — If true, it also checks all descendants of the objects. Otherwise it only checks intersecton with the objects. Default is false.
      */
-    export function raycast(ray: Ray, objects: Object3D[]): RaycastResult {
+    export function raycast(ray: Ray, objects: Object3D[], recursive?: boolean): RaycastResult {
         const raycaster = new Raycaster(ray.origin, ray.direction);
-        const intersects = raycaster.intersectObjects(objects, true);
+        const intersects = raycaster.intersectObjects(objects, recursive);
 
         return {
             pointerScreenPos: null,

@@ -8,7 +8,6 @@ import {
     Intersection,
     Plane,
 } from 'three';
-import { GameObject } from '../gameobject/GameObject';
 
 /**
  * Container for all custom physics functions for game engine.

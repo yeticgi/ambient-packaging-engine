@@ -10,6 +10,7 @@ import { Event } from "./misc/Events";
 import { XRInput } from './input/XRInput';
 import { PerformanceStats } from './misc/PerformanceStats';
 import { DeviceCamera } from './misc/DeviceCamera';
+import { PointerEventSystem } from './input/PointerEventSystem';
 
 export namespace APEngine {
     
@@ -26,6 +27,7 @@ export namespace APEngine {
     export let xrInput: XRInput;
     export let performanceStats: PerformanceStats;
     export let deviceCamera: DeviceCamera;
+    export let pointerEventSystem: PointerEventSystem;
 
     export let onUpdate: Event = new Event();
     export let onLateUpdate: Event = new Event();
@@ -85,6 +87,9 @@ export namespace APEngine {
         // Create xr input module.
         xrInput = new XRInput(webglRenderer);
 
+        // Create pointer event system.
+        pointerEventSystem = new PointerEventSystem();
+
         // Create device camera module.
         deviceCamera = new DeviceCamera({
             video: {
@@ -118,6 +123,9 @@ export namespace APEngine {
         }
 
         input.update();
+
+        // Update pointer event system.
+        pointerEventSystem.update(input, camera);
         
         // Update game objects.
         let gameObjects: GameObject[] = [];

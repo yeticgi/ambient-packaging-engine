@@ -6,6 +6,7 @@ export * from './gameobject/GameObject';
 export * from './misc/IDisposable';
 export * from './input/Input';
 export * from './input/XRInput';
+export * from './input/PointerEventSystem';
 export * from './physics/Physics';
 export * from './physics/XRPhysics';
 export * from './Time';

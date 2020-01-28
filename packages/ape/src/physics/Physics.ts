@@ -18,6 +18,8 @@ export namespace Physics {
      */
     export const GroundPlane: Plane = new Plane(new Vector3(0, 1, 0));
 
+    const _Raycaster: Raycaster = new Raycaster();
+
     /**
      * Defines the result of a raycast.
      */
@@ -44,9 +46,8 @@ export namespace Physics {
      * @camera The camera that the ray should point from.
      */
     export function screenPosToRay(screenPos: Vector2, camera: Camera): Ray {
-        let raycaster = new Raycaster();
-        raycaster.setFromCamera(screenPos, camera);
-        return raycaster.ray;
+        _Raycaster.setFromCamera(screenPos, camera);
+        return _Raycaster.ray.clone();
     }
 
     /**
@@ -92,13 +93,12 @@ export namespace Physics {
         camera: Camera,
         recursive?: boolean
     ): RaycastResult {
-        const raycaster = new Raycaster();
-        raycaster.setFromCamera(screenPos, camera);
-        const intersects = raycaster.intersectObjects(objects, recursive);
+        _Raycaster.setFromCamera(screenPos, camera);
+        const intersects = _Raycaster.intersectObjects(objects, recursive);
 
         return {
             pointerScreenPos: screenPos,
-            ray: raycaster.ray.clone(),
+            ray: _Raycaster.ray.clone(),
             intersects,
         };
     }
@@ -110,12 +110,12 @@ export namespace Physics {
      * @param recursive — If true, it also checks all descendants of the objects. Otherwise it only checks intersecton with the objects. Default is false.
      */
     export function raycast(ray: Ray, objects: Object3D[], recursive?: boolean): RaycastResult {
-        const raycaster = new Raycaster(ray.origin, ray.direction);
-        const intersects = raycaster.intersectObjects(objects, recursive);
+        _Raycaster.set(ray.origin, ray.direction);
+        const intersects = _Raycaster.intersectObjects(objects, recursive);
 
         return {
             pointerScreenPos: null,
-            ray: raycaster.ray.clone(),
+            ray: _Raycaster.ray.clone(),
             intersects,
         };
     }

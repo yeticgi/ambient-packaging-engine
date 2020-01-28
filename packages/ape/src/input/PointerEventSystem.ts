@@ -6,8 +6,20 @@ import { Physics } from '../physics/Physics';
 export type PointerEventType = 'pointer enter' | 'pointer exit' | 'pointer down' | 'pointer up' | 'pointer click';
 
 export interface IPointerEvent {
+    /**
+     * The string event type identifier.
+     */
     eventType: PointerEventType;
+
+    /**
+     * The Object3D (if any) that was responsible for this event.
+     */
     object: Object3D;
+
+    /**
+     * The object (if any) that had pointer down called on it at the time of this event.
+     */
+    pointerDown: IPointerEventListener;
 }
 
 export interface IPointerEnterEvent extends IPointerEvent {
@@ -117,8 +129,12 @@ export class PointerEventSystem implements IDisposable {
             closestIntersection = null;
             closestListener = null;
         }
+        
+        const isPrimaryHeld: boolean = (input.currentInputType === InputType.Mouse) ? input.getMouseButtonHeld(0) : input.getTouchHeld(0);
 
+        //
         // Pointer enter/exit events.
+        //
         if (closestListener) {
             if (this._pointerEnter !== null && this._pointerEnter !== closestListener) {
                 // Let the last pointer enter object know that the pointer has exited it.
@@ -127,7 +143,8 @@ export class PointerEventSystem implements IDisposable {
 
                 pointerExit.onPointerExit({
                     eventType: 'pointer exit',
-                    object: closestIntersection.object
+                    object: closestIntersection.object,
+                    pointerDown: this._pointerDown
                 });
             }
 
@@ -137,7 +154,8 @@ export class PointerEventSystem implements IDisposable {
 
                 this._pointerEnter.onPointerEnter({
                     eventType: 'pointer enter',
-                    object: closestIntersection.object
+                    object: closestIntersection.object,
+                    pointerDown: this._pointerDown
                 });
             }
 
@@ -147,52 +165,57 @@ export class PointerEventSystem implements IDisposable {
                 // Let the last pointer enter object know that the pointer has exited it.
                 this._pointerEnter.onPointerExit({
                     eventType: 'pointer exit',
-                    object: null
+                    object: null,
+                    pointerDown: this._pointerDown
                 });
                 this._pointerEnter = null;
             }
         }
 
+        //
         // Pointer down/up/click events.
+        //
+        const isPrimaryDown: boolean = (input.currentInputType === InputType.Mouse) ? input.getMouseButtonDown(0) : input.getTouchDown(0);
+        if (isPrimaryDown) {
+            if (this._pointerEnter !== null && this._pointerEnter === closestListener && this._pointerDown === null) {
+                // Let the closest listener know that the pointer is down on it.
+                this._pointerDown = closestListener;
 
-            // if (this._pointerEnter !== null && this._pointerDown === null) {
-            //     // Detect pointer down event with primary input action on the last pointer enter object.
-            //     const isPrimaryDown: boolean = (input.currentInputType === InputType.Mouse) ? input.getMouseButtonDown(0) : input.getTouchDown(0);
+                this._pointerDown.onPointerDown({
+                    eventType: 'pointer down',
+                    object: closestIntersection.object,
+                    pointerDown: this._pointerDown
+                });
+            }
+        }
+        
+        const isPrimaryUp: boolean = (input.currentInputType === InputType.Mouse) ? input.getMouseButtonUp(0) : input.getTouchUp(0);
+        if (isPrimaryUp) {
+            if (this._pointerDown !== null) {
+                // Let the last pointer down object know that the pointer is up.
+                const pointerUp = this._pointerDown;
+                this._pointerDown = null;
                 
-            //     if (isPrimaryDown) {
-            //         // Let the closest listener know that the pointer is down on it.
-            //         this._pointerDown = closestListener;
-    
-            //         this._pointerDown.onPointerDown({
-            //             eventType: 'pointer down',
-            //             object: closestIntersection.object
-            //         });
-            //     }
-            // }
+                pointerUp.onPointerUp({
+                    eventType: 'pointer up',
+                    object: closestIntersection ? closestIntersection.object : null,
+                    pointerDown: this._pointerDown
+                });
 
-            // if (this._pointerDown !== null) {
-            //     // Detect pointer up with primary input action on the last pointer down object.
-            //     const isPrimaryUp: boolean = (input.currentInputType === InputType.Mouse) ? input.getMouseButtonUp(0) : input.getTouchUp(0);
+                // Detect if pointer click occurs. 
+                // Click means that an event listener that received the down event is now receiving the up event while being hovered over.
+                const isClick: boolean = (closestListener !== null && pointerUp === closestListener);
+                if (isClick) {
+                    const pointerClick = pointerUp;
 
-            //     if (isPrimaryUp) {
-            //         // Let the last pointer down object know that the pointer is up.
-            //         const pointerUp = this._pointerDown;
-            //         this._pointerDown = null;
-                    
-            //         pointerUp.onPointerUp({
-            //             eventType: 'pointer up',
-            //             object: closestIntersection.object
-            //         });
-                    
-            //         // Detect if pointer click occurs. Click means the an event listener received both down and up events with the the pointer over them.
-            //         const isClick: boolean = pointerUp === closestListener;
-
-            //         if (isClick) {
-
-            //         }
-            //     }
-            // }
-
+                    pointerClick.onPointerClick({
+                        eventType: 'pointer click',
+                        object: closestIntersection.object,
+                        pointerDown: this._pointerDown
+                    });
+                }
+            }
+        }
     }
 
     dispose(): void {

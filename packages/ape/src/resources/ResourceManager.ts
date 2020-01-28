@@ -50,7 +50,7 @@ export class ResourceManager<T extends Resource<{}>> implements IDisposable {
             }
             return resource;
         } else {
-            return null;
+            throw new Error(`Could not get resource: ${name}`);
         }
     }
 

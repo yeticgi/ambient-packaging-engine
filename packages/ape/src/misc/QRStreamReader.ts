@@ -44,7 +44,7 @@ export class QRStreamReader implements IDisposable {
      */
     start(options: IQRStreamReaderOptions): void {
         if (this._started) {
-            throw `Instance of QRStreamReader is already running`;
+            throw new Error(`Instance of QRStreamReader is already running`);
         }
 
         this._started = true;

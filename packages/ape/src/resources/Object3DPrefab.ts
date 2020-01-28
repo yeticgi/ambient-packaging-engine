@@ -34,7 +34,7 @@ export class Object3DPrefab implements IDisposable {
                 clone.name = `${clone.name} (clone)`;
                 return clone;
             } else {
-                throw `Could not find child object named ${childObjectName} in the prefab ${this._prefab}`;
+                throw new Error(`Could not find child object named ${childObjectName} in the prefab ${this._prefab}`);
             }
         } else {
             const clone = this._prefab.clone();

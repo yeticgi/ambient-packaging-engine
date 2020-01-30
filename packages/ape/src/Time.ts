@@ -1,16 +1,18 @@
 import { Clock } from 'three';
 import { IDisposable } from './misc/IDisposable';
+import { ArgEvent } from './misc/Events';
 
 export class Time implements IDisposable {
     
     paused: boolean;
+
+    onUpdate: ArgEvent<Time> = new ArgEvent();
     
     private _frameCount: number = 0;
     private _timeSinceStart: number = 0;
     private _deltaTime: number = 0;
     private _clock: Clock;
     
-
     constructor() {
         this._frameCount = 0;
         this._timeSinceStart = 0;
@@ -47,6 +49,8 @@ export class Time implements IDisposable {
         this._deltaTime = !this.paused ? clockDelta : 0;
         
         this._timeSinceStart += this._deltaTime;
+
+        this.onUpdate.invoke(this);
     }
 
     dispose(): void {

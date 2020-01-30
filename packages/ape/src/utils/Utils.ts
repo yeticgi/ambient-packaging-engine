@@ -37,11 +37,19 @@ export function pointOnSphere (center: Vector3, radius: number, rotation: Vector
 }
 
 export function normalize(value: number, min: number, max: number): number {
+    return (value - min) / (max - min);
+}
+
+export function normalizeClamped(value: number, min: number, max: number): number {
     value = clamp(value, min, max);
     return (value - min) / (max - min);
 }
 
 export function unnormalize(normal: number, min: number, max: number): number {
+    return normal * (max - min) + min;
+}
+
+export function unnormalizeClamped(normal: number, min: number, max: number): number {
     normal = clamp(normal, 0.0, 1.0);
     return normal * (max - min) + min;
 }

@@ -29,10 +29,11 @@ export namespace APEngine {
     export let deviceCamera: DeviceCamera;
     export let pointerEventSystem: PointerEventSystem;
 
-    export let onUpdate: Event = new Event();
-    export let onLateUpdate: Event = new Event();
-    export let onXRSessionStarted: Event = new Event();
-    export let onXRSessionEnded: Event = new Event();
+    export const onUpdate: Event = new Event();
+    export const onLateUpdate: Event = new Event();
+    export const onResize: Event = new Event();
+    export const onXRSessionStarted: Event = new Event();
+    export const onXRSessionEnded: Event = new Event();
 
     let _initialized: boolean = false;
     let _xrFrame: any;
@@ -205,5 +206,7 @@ export namespace APEngine {
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
         }
+
+        onResize.invoke();
     }
 }

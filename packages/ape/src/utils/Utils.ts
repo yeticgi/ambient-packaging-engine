@@ -85,3 +85,43 @@ export async function postJsonData(url: string, data: any): Promise<Response> {
         return null;
     }
 }
+
+/**
+ * Search through element's descendents and return the first child element that contains the given class name(s). 
+ * An element must contain all of the given class names in order to be matched.
+ * @param element The element to search the descendents of.
+ * @param className The class name(s) to search for. Can be either a single class name or many.
+ */
+export function getElementByClassName(element: Element, names: string): HTMLElement {
+    if (element instanceof HTMLElement) {
+        // Check element for class names.
+        const elementClassList: DOMTokenList = element.classList;
+
+        if (elementClassList.length > 0) {
+            const classNames: string[] = names.split(' ');
+            let classFoundCount: number = 0;
+            
+            for (const className of classNames) {
+                if (elementClassList.contains(className)) {
+                    classFoundCount++;
+
+                    if (classFoundCount === classNames.length) {
+                        return element;
+                    }
+                }
+            }
+        }
+    }
+
+    // Check descendents of element.
+    const children = element.children;
+    for (let i = 0; i < children.length; i++) {
+        const match = getElementByClassName(children[i], names);
+        if (match !== null) {
+            return match;
+        }
+    }
+
+    // No matching element.
+    return null;
+}

@@ -2,11 +2,13 @@ import { ResourceManager } from './ResourceManager';
 import { AudioResource } from './AudioResource';
 import { GLTFResource } from './GLTFResource';
 import { TextureResource } from './TextureResource';
+import { ImageResource } from './ImageResource';
 
 export interface IManifestFiles{
     audioUrl?: string;
     gltfUrl?: string;
     textureUrl?: string;
+    imageUrl?: string;
 }
 
 /**
@@ -17,6 +19,7 @@ export namespace APEResources {
     const audioManager = new ResourceManager(AudioResource);
     const gltfManager = new ResourceManager(GLTFResource);
     const textureManager = new ResourceManager(TextureResource);
+    const imageManager = new ResourceManager(ImageResource);
     
     /**
      * Add resources from the given manifest files.
@@ -31,6 +34,9 @@ export namespace APEResources {
         if (manifestFiles.textureUrl) {
             await textureManager.addResourcesFromManifest(manifestFiles.textureUrl);
         }
+        if (manifestFiles.imageUrl) {
+            await imageManager.addResourcesFromManifest(manifestFiles.imageUrl);
+        }
     }
 
     /**
@@ -40,6 +46,7 @@ export namespace APEResources {
         await audioManager.preloadResources();
         await gltfManager.preloadResources();
         await textureManager.preloadResources();
+        await imageManager.preloadResources();
     }
 
     export async function getAudio(name: string): Promise<AudioResource> {
@@ -54,6 +61,10 @@ export namespace APEResources {
         return textureManager.getResource(name);
     }
 
+    export async function getImage(name: string): Promise<ImageResource> {
+        return imageManager.getResource(name);
+    }
+
     /**
      * Dispose of all resource managers.
      */
@@ -61,5 +72,6 @@ export namespace APEResources {
         audioManager.dispose();
         gltfManager.dispose();
         textureManager.dispose();
+        imageManager.dispose();
     }
 }

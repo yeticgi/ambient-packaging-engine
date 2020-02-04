@@ -20,6 +20,7 @@ export * from './resources/APEResources';
 export * from './resources/APEAssetTracker';
 export * from './resources/AudioResource';
 export * from './resources/GLTFResource';
+export * from './resources/ImageResource';
 export * from './resources/TextureResource';
 export * from './resources/Resource';
 export * from './resources/ResourceManager';

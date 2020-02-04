@@ -12,6 +12,8 @@ export * from './misc/Events';
 export * from './misc/DeviceCamera';
 export * from './misc/QRStreamReader';
 export * from './misc/IDisposable';
+export * from './misc/StateMachine';
+export * from './misc/PropertySpectator';
 export * from './physics/Physics';
 export * from './physics/XRPhysics';
 export * from './resources/APEResources';

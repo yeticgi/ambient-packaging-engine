@@ -1,15 +1,8 @@
 import { ResourceManager } from './ResourceManager';
-import { AudioResource } from './AudioResource';
-import { GLTFResource } from './GLTFResource';
-import { TextureResource } from './TextureResource';
-import { ImageResource } from './ImageResource';
-
-export interface IManifestFiles{
-    audioUrl?: string;
-    gltfUrl?: string;
-    textureUrl?: string;
-    imageUrl?: string;
-}
+import { AudioResource, IAudioConfig } from './AudioResource';
+import { GLTFResource, IGLTFConfig } from './GLTFResource';
+import { TextureResource, ITextureConfig } from './TextureResource';
+import { ImageResource, IImageConfig } from './ImageResource';
 
 /**
  * Contains all the core APEngine Resource Managers and related objects.
@@ -20,24 +13,6 @@ export namespace APEResources {
     const gltfManager = new ResourceManager(GLTFResource);
     const textureManager = new ResourceManager(TextureResource);
     const imageManager = new ResourceManager(ImageResource);
-    
-    /**
-     * Add resources from the given manifest files.
-     */
-    export async function addResourcesFromManifest(manifestFiles: IManifestFiles) {
-        if (manifestFiles.audioUrl) {
-            await audioManager.addResourcesFromManifest(manifestFiles.audioUrl);
-        }
-        if (manifestFiles.gltfUrl) {
-            await gltfManager.addResourcesFromManifest(manifestFiles.gltfUrl);
-        }
-        if (manifestFiles.textureUrl) {
-            await textureManager.addResourcesFromManifest(manifestFiles.textureUrl);
-        }
-        if (manifestFiles.imageUrl) {
-            await imageManager.addResourcesFromManifest(manifestFiles.imageUrl);
-        }
-    }
 
     /**
      * Preload all resource managers.
@@ -49,16 +24,32 @@ export namespace APEResources {
         await imageManager.preloadResources();
     }
 
+    export function addAudio(name: string, config: IAudioConfig): void {
+        audioManager.addResource(name, config);
+    }
+
     export async function getAudio(name: string): Promise<AudioResource> {
         return audioManager.getResource(name);
+    }
+
+    export function addGLTF(name: string, config: IGLTFConfig): void {
+        gltfManager.addResource(name, config);
     }
 
     export async function getGLTF(name: string): Promise<GLTFResource> {
         return gltfManager.getResource(name);
     }
 
+    export function addTexture(name: string, config: ITextureConfig): void {
+        textureManager.addResource(name, config);
+    }
+
     export async function getTexture(name: string): Promise<TextureResource> {
         return textureManager.getResource(name);
+    }
+
+    export function addImage(name: string, config: IImageConfig): void {
+        imageManager.addResource(name, config);
     }
 
     export async function getImage(name: string): Promise<ImageResource> {

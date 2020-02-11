@@ -14,28 +14,19 @@ export class ResourceManager<T extends Resource<{}>> implements IDisposable {
         this._activator = resourceActivator;
     }
 
-    async addResourcesFromManifest(manifestUrl: string) {
-        try {
-            const response = await fetch(manifestUrl);
-            const manifest = await response.json();
-            
-            const keys = Object.keys(manifest);
-            for (const key of keys) {
-                const config: IResourceConfig = manifest[key];
-                this.addResource(key, config);
-            }
-        } catch (error) {
-            throw error;
-        }
-    }
-
     addResource(name: string, config: IResourceConfig): void {
         const resource = new this._activator(name, config);
         this._resources.set(resource.name, resource);
+
+        console.groupCollapsed(`[${this._activator.name} Resource Manager] add resource: ${name}`);
+        console.log(`name: ${name}`);
+        console.log(`config: ${JSON.stringify(config)}`);
+        console.groupEnd();
     }
 
     unloadResource(name: string) {
         if (this._resources.has(name)) {
+            console.log(`[${this._activator.name} Resource Manager] unload resource: ${name}`);
             const resource = this._resources.get(name);
             resource.unload();
             this._resources.delete(name);
@@ -83,6 +74,7 @@ export class ResourceManager<T extends Resource<{}>> implements IDisposable {
     }
 
     dispose(): void {
+        console.log(`[${this._activator.name} Resource Manager] dispose`);
         this._resources.forEach((resource) => {
             resource.dispose();
         });

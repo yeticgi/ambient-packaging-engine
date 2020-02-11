@@ -125,3 +125,37 @@ export function getElementByClassName(element: Element, names: string): HTMLElem
     // No matching element.
     return null;
 }
+
+export function getFilename(path: string): string | null {
+    const lastSlashIndex = path.lastIndexOf('/');
+
+    let filename: string | null= null;
+    if (lastSlashIndex < 0) {
+        filename = path;
+    } else {
+        filename = path.substr(lastSlashIndex + 1);
+    }
+
+    // Make sure that it is a file by check for an extension.
+    const ext = getExtension(filename);
+
+    if (ext !== null) {
+        return filename;
+    } else {
+        return null;
+    }
+}
+
+export function getExtension(path: string): string | null {
+    if (path.includes('.')) {
+        const ext = path.split('.').pop();
+
+        if (ext) {
+            if (!ext.includes('/')) {
+                return ext;
+            }
+        }
+    }
+    
+    return null;
+}

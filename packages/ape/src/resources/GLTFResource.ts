@@ -37,8 +37,14 @@ export class GLTFResource extends Resource<Object3DPrefab> {
                 //Redirect gltf relative url to CDN asset location.
                 const filename = getFilename(url);
                 const ext = getExtension(url);
-                let redirectUrl: string = null;
 
+                if (filename === 'draco_wasm_wrapper.js' || filename === 'draco_decoder.wasm') {
+                    // Do not redirect draco specific files.
+                    return url;
+                }
+                
+                let redirectUrl: string = null;
+                
                 if (ext === 'gltf') {
                     redirectUrl = this._gltfUrl;
                 } else if (ext === 'bin') {

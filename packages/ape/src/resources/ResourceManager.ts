@@ -14,7 +14,7 @@ export class ResourceManager<T extends Resource<{}>> implements IDisposable {
         this._activator = resourceActivator;
     }
 
-    addResource(name: string, config: IResourceConfig): void {
+    add(name: string, config: IResourceConfig): void {
         const resource = new this._activator(name, config);
         this._resources.set(resource.name, resource);
 
@@ -24,7 +24,7 @@ export class ResourceManager<T extends Resource<{}>> implements IDisposable {
         console.groupEnd();
     }
 
-    unloadResource(name: string) {
+    unload(name: string) {
         if (this._resources.has(name)) {
             console.log(`[${this._activator.name} Resource Manager] unload resource: ${name}`);
             const resource = this._resources.get(name);
@@ -33,7 +33,7 @@ export class ResourceManager<T extends Resource<{}>> implements IDisposable {
         }
     }
 
-    async getResource(name: string): Promise<T> {
+    async get(name: string): Promise<T> {
         if (this._resources.has(name)) {
             const resource = this._resources.get(name);
             if (!resource.loaded) {
@@ -45,7 +45,7 @@ export class ResourceManager<T extends Resource<{}>> implements IDisposable {
         }
     }
 
-    async preloadResources(): Promise<void> {
+    async preload(): Promise<void> {
         if (this._resources.size > 0) {
             const resources: Resource<any>[] = Array.from(this._resources.values());
             for (let resource of resources) {
@@ -59,7 +59,7 @@ export class ResourceManager<T extends Resource<{}>> implements IDisposable {
     /**
      * Returns wether all Resources that are currently in this Resource Manager are loaded or not.
      */
-    resourcesLoaded(): boolean {
+    allLoaded(): boolean {
         if (this._resources.size > 0) {
             const resources: Resource<any>[] = Array.from(this._resources.values());
             for (let resource of resources) {

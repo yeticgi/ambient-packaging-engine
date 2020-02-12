@@ -73,6 +73,19 @@ export class ResourceManager<T extends Resource<{}>> implements IDisposable {
         }
     }
 
+    /**
+     * Returns a map of all resource names currenty in the resource manager and wether or not they are currently loaded.
+     */
+    loadState(): Map<string, boolean> {
+        const map = new Map<string, boolean>();
+
+        for (const [resourceName, resource] of this._resources) {
+            map.set(resourceName, resource.loaded);
+        }
+
+        return map;
+    }
+
     dispose(): void {
         console.log(`[${this._activator.name} Resource Manager] dispose`);
         this._resources.forEach((resource) => {

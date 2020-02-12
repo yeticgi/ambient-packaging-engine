@@ -33,4 +33,20 @@ export namespace APEResources {
         textures.dispose();
         images.dispose();
     }
+
+    /**
+     * Print out all resource manager load states to the console.
+     */
+    export function printLoadStates(): void {
+        console.groupCollapsed(`[APEResource] Resource Manager Load States`);
+        console.log('Audio');
+        console.log(audio.loadState());
+        console.log('GLTF');
+        console.log(gltf.loadState());
+        console.log('Textures');
+        console.log(textures.loadState());
+        console.log('Images');
+        console.log(images.loadState());
+        console.groupEnd();
+    }
 }

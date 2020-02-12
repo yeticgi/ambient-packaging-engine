@@ -1,4 +1,4 @@
-import { Vector3, Vector2, Math as ThreeMath } from "three";
+import { Vector3, Vector2, MathUtils } from "three";
 
 export function getOptionalValue(obj: any, defaultValue: any): any {
     return obj !== undefined && obj !== null ? obj : defaultValue;
@@ -29,9 +29,9 @@ export function pointOnSphere (center: Vector3, radius: number, rotation: Vector
      */
 
      const pos = new Vector3();
-     pos.x = center.x + radius * Math.cos(ThreeMath.DEG2RAD * rotation.y) * Math.cos(ThreeMath.DEG2RAD * rotation.x);
-     pos.y = center.y + radius * Math.sin(ThreeMath.DEG2RAD * rotation.x);
-     pos.z = center.z + radius * Math.sin(ThreeMath.DEG2RAD * rotation.y) * Math.cos(ThreeMath.DEG2RAD * rotation.x);
+     pos.x = center.x + radius * Math.cos(MathUtils.DEG2RAD * rotation.y) * Math.cos(MathUtils.DEG2RAD * rotation.x);
+     pos.y = center.y + radius * Math.sin(MathUtils.DEG2RAD * rotation.x);
+     pos.z = center.z + radius * Math.sin(MathUtils.DEG2RAD * rotation.y) * Math.cos(MathUtils.DEG2RAD * rotation.x);
 
      return pos;
 }

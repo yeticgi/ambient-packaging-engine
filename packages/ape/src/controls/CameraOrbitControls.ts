@@ -1,8 +1,7 @@
 import {
     PerspectiveCamera,
     Vector3,
-    Vector2,
-    Math as ThreeMath,
+    Vector2
 } from 'three';
 import { InputType } from '../input/Input';
 import { clampDegAngle, pointOnSphere, clamp } from '../utils/Utils';

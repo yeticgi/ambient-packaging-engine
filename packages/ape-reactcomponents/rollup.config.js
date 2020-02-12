@@ -38,7 +38,10 @@ export default {
         },
       }),
       typescript({
-        objectHashIgnoreUnknownHack: true
+        objectHashIgnoreUnknownHack: true,
+        check: true,
+        clean: true,
+        verbosity: 2
       }),
       postcss(),
       url({

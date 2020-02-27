@@ -155,10 +155,33 @@ export class GameObject extends Object3D {
         }
     }
 
+    getDecoratorInChildren<T extends Decorator>(type: { new(): T }, includeInvisible?: boolean): T {
+        // Check this gameObject for matching decorator.
+        if (includeInvisible || this.visible) {
+            const decorator = this.getDecorator(type);
+            if (decorator) {
+                return decorator;
+            }
+        }
+
+        // Recursively search through child gameObjects for matching decorator.
+        for (const child of this.children) {
+            if (child instanceof GameObject) {
+                const decorator = child.getDecoratorInChildren(type, includeInvisible);
+                if (decorator) {
+                    return decorator;
+                }
+            }
+        }
+
+        // No matching decorator found in this gameObject or its children.
+        return null;
+    }
+
     getDecoratorsInChildren<T extends Decorator>(type: { new(): T }, includeInvisible?: boolean): T[] {
         const decorators: T[] = [];
 
-        if (includeInvisible) {
+        if (!includeInvisible) {
             this.traverseVisible((o) => {
                 if (o instanceof GameObject) {
                     const decs = o.getDecorators(type);

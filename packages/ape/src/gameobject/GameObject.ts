@@ -47,7 +47,6 @@ export class GameObject extends Object3D {
                 if (gameObject && gameObject._destroyState === DestroyState.WillDestroy) {
                     // Infrom the gameobject that it is being destroyed.
                     gameObject.onDestroy();
-                    console.log(`[GameObject] ${gameObject.name} onDestroy`);
 
                     gameObject._destroyState = DestroyState.Destroyed;
                 }

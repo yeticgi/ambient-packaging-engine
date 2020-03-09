@@ -1,5 +1,5 @@
 
-import { IDisposable } from './IDisposable';
+import { IDisposable } from '../misc/IDisposable';
 import { waitForCondition, waitForSeconds } from '../utils/WaitPromises';
 
 export interface IVideoStreamStartResult {

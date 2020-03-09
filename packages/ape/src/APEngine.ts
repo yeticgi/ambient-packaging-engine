@@ -9,7 +9,7 @@ import { GameObject } from "./gameobject/GameObject";
 import { Event } from "./misc/Events";
 import { XRInput } from './input/XRInput';
 import { PerformanceStats } from './misc/PerformanceStats';
-import { DeviceCamera } from './misc/DeviceCamera';
+import { DeviceCamera } from './deviceCamera/DeviceCamera';
 import { PointerEventSystem } from './input/PointerEventSystem';
 
 export namespace APEngine {

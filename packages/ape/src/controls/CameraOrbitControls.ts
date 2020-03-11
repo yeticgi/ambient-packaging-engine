@@ -137,7 +137,7 @@ export class CameraOrbitControls {
     }
 
     setZoomDistance(zoom: number) {
-        if (this._zoomDistance != zoom) {
+        if (this._zoomDistance !== zoom) {
             this._zoomDistance = zoom;
             this._updateCamera();
         }

@@ -6,6 +6,13 @@ import {
 import { InputType } from '../input/Input';
 import { clampDegAngle, pointOnSphere, clamp } from '../utils/Utils';
 import { APEngine } from '../APEngine';
+import clone from 'lodash/clone';
+
+export interface IDefaultSettings {
+    zoomDistance: number;
+    x: number;
+    y: number;
+}
 
 export class CameraOrbitControls {
 
@@ -13,11 +20,6 @@ export class CameraOrbitControls {
      * The world position that the camera is looking at.
      */
     target: Vector3 = new Vector3();
-
-    /**
-     * The distance that camera is from the target.
-     */
-    zoomDistance: number = 20.0;
 
     /**
      * The distance in pixels that needs to be crossed in order for dragging to start.
@@ -42,9 +44,11 @@ export class CameraOrbitControls {
     private _isDragging: boolean = false;
     private _x: number = 0;
     private _y: number = 0;
+    private _zoomDistance: number = 0;
     private _inputDown: boolean = false;
     private _inputDownStartPos: Vector2 = new Vector2();
     private _inputDragLastPos: Vector2 = new Vector2();
+    private _defaultSettings: IDefaultSettings;
     
     get inputEnabled(): boolean { return this._inputEnabled; }
     set inputEnabled(value: boolean) { 
@@ -62,6 +66,12 @@ export class CameraOrbitControls {
 
     constructor(camera: PerspectiveCamera) {
         this._camera = camera;
+
+        this.setDefaults({
+            zoomDistance: this._zoomDistance,
+            x: this._x,
+            y: this._y
+        });
     }
 
     update(): void {
@@ -69,6 +79,23 @@ export class CameraOrbitControls {
             this._rotateControls();
             this._zoomControls();
             this._updateCamera();
+        }
+    }
+
+    setDefaults(defaults: IDefaultSettings): void {
+        this._defaultSettings = clone(defaults);
+    }
+
+    getDefaults(): Readonly<IDefaultSettings> {
+        return this._defaultSettings;
+    }
+
+    setToDefaults(): void {
+        if (this._defaultSettings) {
+            this.setZoomDistance(this._defaultSettings.zoomDistance);
+            this.setOrbit(this._defaultSettings.x, this._defaultSettings.y);
+        } else {
+            console.error(`[CameraOrbitControls] Cannot set camera back to defaults because there are no default settings set.`);
         }
     }
 
@@ -85,6 +112,39 @@ export class CameraOrbitControls {
         if (set) {
             this._updateCamera();
         }
+    }
+
+    setOrbitFromGeoCoord(latitude?: number, longitude?: number): void {
+        let set = false;
+        if (typeof longitude === 'number') {
+            this._x = -90 + longitude;
+            set = true;
+        }
+        if (typeof latitude === 'number') {
+            this._y = -latitude;
+            set = true;
+        }
+        if (set) {
+            this._updateCamera();
+        }
+    }
+
+    getOrbit(): { x: number, y: number } {
+        return {
+            x: this._x,
+            y: this._y
+        }
+    }
+
+    setZoomDistance(zoom: number) {
+        if (this._zoomDistance != zoom) {
+            this._zoomDistance = zoom;
+            this._updateCamera();
+        }
+    }
+
+    getZoomDistance(): number {
+        return this._zoomDistance;
     }
 
     private _rotateControls(): void {
@@ -158,7 +218,7 @@ export class CameraOrbitControls {
 
         const position = pointOnSphere(
             this.target, 
-            this.zoomDistance, 
+            this._zoomDistance, 
             new Vector2(
                 this.invertY ? -this._y : this._y,
                 this.invertX ? -this._x : this._x,

@@ -74,6 +74,7 @@ export class GLTFResource extends Resource<Object3DPrefab> {
             gltfLoader.load(
                 this._gltfUrl,
                 (gltf) => {
+                    console.log(`[GLTFResource] ${this.name} Loaded.`);
                     const gltfGroup = new Group();
                     gltfGroup.name = this.name;
 
@@ -95,6 +96,7 @@ export class GLTFResource extends Resource<Object3DPrefab> {
                     resolve(prefab);
                 },
                 (progressEvent) => {
+                    console.log(`[GLTFResource] ${this.name} Load progress: ${progressEvent.loaded} / ${progressEvent.total}`);
                 },
                 (errorEvent) => {
                     reject(errorEvent);

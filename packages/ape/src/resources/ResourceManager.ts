@@ -54,6 +54,8 @@ export class ResourceManager<T extends Resource<{}>> implements IDisposable {
                 }
             }
         }
+
+        console.log(`[${this._activator.name} Resource Manager] finished preload`);
     }
 
     /**

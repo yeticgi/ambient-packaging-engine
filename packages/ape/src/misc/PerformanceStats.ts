@@ -51,8 +51,6 @@ export class PerformanceStats implements IDisposable {
     }
 
     private _onEnable() {
-        console.log(`[PerformanceStats] Enabled`);
-
         this._stats = new Stats();
         this._stats.showPanel(0);
         document.body.appendChild(this._stats.dom);
@@ -60,8 +58,6 @@ export class PerformanceStats implements IDisposable {
     }
 
     private _onDisable() {
-        console.log(`[PerformanceStats] Disabled`);
-
         document.body.removeChild(this._stats.dom);
         this._stats = null;
     }

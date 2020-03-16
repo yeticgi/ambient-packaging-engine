@@ -1,8 +1,8 @@
 import { ResourceManager } from './ResourceManager';
-import { AudioResource, IAudioConfig } from './AudioResource';
-import { GLTFResource, IGLTFConfig } from './GLTFResource';
-import { TextureResource, ITextureConfig } from './TextureResource';
-import { ImageResource, IImageConfig } from './ImageResource';
+import { AudioResource } from './AudioResource';
+import { GLTFResource } from './GLTFResource';
+import { TextureResource } from './TextureResource';
+import { ImageResource } from './ImageResource';
 
 /**
  * Contains all the core APEngine Resource Managers and related objects.
@@ -18,10 +18,12 @@ export namespace APEResources {
      * Preload all resource managers.
      */
     export async function preloadResources(): Promise<void> {
-        await audio.preload();
-        await gltf.preload();
-        await textures.preload();
-        await images.preload();
+        await Promise.all([
+            audio.preload(),
+            gltf.preload(),
+            textures.preload(),
+            images.preload()
+        ]);
     }
 
     /**

@@ -1,9 +1,6 @@
-import { APEResources } from "./APEResources";
-import { APEAssetTracker } from "./APEAssetTracker";
 import { Resource, IResourceConfig } from "./Resource";
-import { Group, Object3D, LoadingManager } from "three";
-import { GLTFLoader, GLTF } from "three/examples/jsm/loaders/GLTFLoader";
-import { IDisposable } from "../misc/IDisposable";
+import { Group, LoadingManager } from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 import { Object3DPrefab } from "./Object3DPrefab";
 import { getFilename, getExtension } from "../utils/Utils";
@@ -31,14 +28,14 @@ export class GLTFResource extends Resource<Object3DPrefab> {
 
     protected _loadObject(): Promise<Object3DPrefab> {
         return new Promise<Object3DPrefab>((resolve: (value: Object3DPrefab) => void, reject) => {
-            const loader = new LoadingManager();
+            const loadingManager = new LoadingManager();
 
-            loader.setURLModifier((url): string => {
+            loadingManager.setURLModifier((url): string => {
                 //Redirect gltf relative url to CDN asset location.
                 const filename = getFilename(url);
                 const ext = getExtension(url);
 
-                if (filename === 'draco_wasm_wrapper.js' || filename === 'draco_decoder.wasm') {
+                if (filename === 'draco_wasm_wrapper.js' || filename === 'draco_decoder.wasm' || filename === 'draco_decoder.js') {
                     // Do not redirect draco specific files.
                     return url;
                 }
@@ -65,16 +62,16 @@ export class GLTFResource extends Resource<Object3DPrefab> {
                 return redirectUrl;
             });
 
-            const gltfLoader = new GLTFLoader(loader);
+            const gltfLoader = new GLTFLoader(loadingManager);
 
-            const dracoLoader = new DRACOLoader(loader);
+            const dracoLoader = new DRACOLoader(loadingManager);
             dracoLoader.setDecoderPath('public/draco/');
+            dracoLoader.setDecoderConfig({ type: 'js' });
             gltfLoader.setDRACOLoader(dracoLoader);
 
             gltfLoader.load(
                 this._gltfUrl,
                 (gltf) => {
-                    console.log(`[GLTFResource] ${this.name} Loaded.`);
                     const gltfGroup = new Group();
                     gltfGroup.name = this.name;
 
@@ -95,10 +92,10 @@ export class GLTFResource extends Resource<Object3DPrefab> {
                     const prefab = new Object3DPrefab(gltfGroup);
                     resolve(prefab);
                 },
-                (progressEvent) => {
-                    console.log(`[GLTFResource] ${this.name} Load progress: ${progressEvent.loaded} / ${progressEvent.total}`);
+                () => {
                 },
                 (errorEvent) => {
+                    console.error(`[GLTFResource] ${this.name} Error: ${errorEvent}`);
                     reject(errorEvent);
                 }
             );

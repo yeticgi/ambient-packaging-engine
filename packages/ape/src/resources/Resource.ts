@@ -1,4 +1,3 @@
-import { ArgEvent } from "../misc/Events";
 import { IDisposable } from "../misc/IDisposable";
 
 export interface IResourceConfig {
@@ -32,7 +31,6 @@ export abstract class Resource<K> implements IDisposable {
 
     async load(): Promise<Resource<K>> {
         try {
-            console.log(`[${this.constructor.name}] load ${this._name}`);
             if (!this._loaded) {
                 this._object = await this._loadObject();
                 this._loaded = true;

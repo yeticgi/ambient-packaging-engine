@@ -1,6 +1,4 @@
 import { Resource } from "./Resource";
-import { getOptionalValue } from "../utils/Utils";
-import { Texture, TextureLoader } from "three";
 
 export interface IImageConfig {
     url: string

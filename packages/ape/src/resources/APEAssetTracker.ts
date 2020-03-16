@@ -1,5 +1,4 @@
 import { Geometry, Material, Texture, Object3D, Mesh, BufferGeometry } from "three";
-import { IDisposable } from "../misc/IDisposable";
 
 declare type Trackable = Object3D | Geometry | BufferGeometry | Material | Texture;
 

@@ -7,6 +7,7 @@ import { InputType } from '../input/Input';
 import { clampDegAngle, pointOnSphere, clamp } from '../utils/Utils';
 import { APEngine } from '../APEngine';
 import clone from 'lodash/clone';
+import { Time } from '../Time';
 
 export interface IDefaultSettings {
     zoomDistance: number;
@@ -29,19 +30,25 @@ export class CameraOrbitControls {
     invertY: boolean = true;
     invertX: boolean = true;
 
-    xMouseSpeed = 1.0;
-    yMouseSpeed = 1.0;
-    xTouchSpeed = 1.0;
-    yTouchSpeed = 1.0;
+    xMouseSpeed = 10.0;
+    yMouseSpeed = 10.0;
+    xTouchSpeed = 10.0;
+    yTouchSpeed = 10.0;
 
     xMinDeg = -360.0;
     xMaxDeg = 360.0;
     yMinDeg = -90.0;
     yMaxDeg = 90.0;
 
+    zoomSpeed = 1.0;
+
+    zoomMin = 0.0;
+    zoomMax = 40.0;
+
     private _camera: PerspectiveCamera = null;
     private _inputEnabled: boolean = true;
     private _isDragging: boolean = false;
+    private _isZooming: boolean = false;
     private _x: number = 0;
     private _y: number = 0;
     private _zoomDistance: number = 0;
@@ -63,12 +70,13 @@ export class CameraOrbitControls {
     }
     get camera(): PerspectiveCamera { return this._camera; } 
     get isDragging(): boolean { return this._isDragging; } 
+    get isZooming(): boolean { return this._isZooming; }
 
     constructor(camera: PerspectiveCamera) {
         this._camera = camera;
 
         this.setDefaults({
-            zoomDistance: this._zoomDistance,
+            zoomDistance: this.zoomMin,
             x: this._x,
             y: this._y
         });
@@ -137,6 +145,8 @@ export class CameraOrbitControls {
     }
 
     setZoomDistance(zoom: number) {
+        zoom = clamp(zoom, this.zoomMin, this.zoomMax);
+
         if (this._zoomDistance !== zoom) {
             this._zoomDistance = zoom;
             this._updateCamera();
@@ -153,7 +163,7 @@ export class CameraOrbitControls {
         }
 
         const input = APEngine.input;
-        
+        const time = APEngine.time;
 
         if (input.currentInputType === InputType.Touch && input.getTouchDown(0)) {
             this._inputDown = true;
@@ -194,13 +204,13 @@ export class CameraOrbitControls {
         if (this._isDragging) {
             if (input.currentInputType === InputType.Touch && input.getTouchHeld(0)) {
                 const delta = this._inputDragLastPos.clone().sub(input.getTouchClientPos(0));
-                this._x += delta.x * this.xTouchSpeed;
-                this._y += delta.y * this.yTouchSpeed;
+                this._x += delta.x * this.xTouchSpeed * time.deltaTime;
+                this._y += delta.y * this.yTouchSpeed * time.deltaTime;
                 this._inputDragLastPos.copy(input.getTouchClientPos(0));
             } else if (input.currentInputType === InputType.Mouse && input.getMouseButtonHeld(0)) {
                 const delta = this._inputDragLastPos.clone().sub(input.getMouseClientPos());
-                this._x += delta.x * this.xMouseSpeed;
-                this._y += delta.y * this.yMouseSpeed;
+                this._x += delta.x * this.xMouseSpeed * time.deltaTime;
+                this._y += delta.y * this.yMouseSpeed * time.deltaTime;
                 this._inputDragLastPos.copy(input.getMouseClientPos());
             }
         }
@@ -209,6 +219,18 @@ export class CameraOrbitControls {
     private _zoomControls(): void {
         if (!this.inputEnabled) {
             return;
+        }
+
+        this._isZooming = false;
+
+        const input = APEngine.input;
+        const time = APEngine.time;
+
+        if (input.getWheelMoved()) {
+            this._isZooming = true;
+            const wheelData = input.getWheelData();
+
+            this._zoomDistance = clamp(this._zoomDistance + (wheelData.delta.y * time.deltaTime), this.zoomMin, this.zoomMax);
         }
     }
 

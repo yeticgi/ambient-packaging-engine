@@ -40,13 +40,17 @@ export class CameraOrbitControls {
     yMinDeg = -90.0;
     yMaxDeg = 90.0;
 
-    zoomSpeed = 1.0;
+    zoomMouseSpeed = 1.0;
+    zoomTouchSpeed = 2.0;
 
     zoomMin = 0.0;
     zoomMax = 40.0;
 
+    rotateWhileZooming: boolean = false;
+
     private _camera: PerspectiveCamera = null;
     private _inputEnabled: boolean = true;
+    private _zoomEnabled: boolean = true;
     private _isDragging: boolean = false;
     private _isZooming: boolean = false;
     private _x: number = 0;
@@ -55,6 +59,7 @@ export class CameraOrbitControls {
     private _inputDown: boolean = false;
     private _inputDownStartPos: Vector2 = new Vector2();
     private _inputDragLastPos: Vector2 = new Vector2();
+    private _inputTouchZoomDist: number = 0;
     private _defaultSettings: IDefaultSettings;
     
     get inputEnabled(): boolean { return this._inputEnabled; }
@@ -64,10 +69,23 @@ export class CameraOrbitControls {
         if (!this.inputEnabled) {
             this._inputDown = false;
             this._isDragging = false;
+            this._isZooming = false;
             this._inputDownStartPos.set(0, 0);
             this._inputDragLastPos.set(0, 0);
+            this._inputTouchZoomDist = 0;
         }
     }
+
+    get zoomEnabled(): boolean { return this._zoomEnabled; }
+    set zoomEnabled(value: boolean) {
+        this._zoomEnabled = value;
+
+        if (!this._zoomEnabled) {
+            this._isZooming = false;
+            this._inputTouchZoomDist = 0;
+        }
+    }
+
     get camera(): PerspectiveCamera { return this._camera; } 
     get isDragging(): boolean { return this._isDragging; } 
     get isZooming(): boolean { return this._isZooming; }
@@ -167,9 +185,11 @@ export class CameraOrbitControls {
 
         if (input.currentInputType === InputType.Touch && input.getTouchDown(0)) {
             this._inputDown = true;
+            this._isDragging = false;
             this._inputDownStartPos.copy(input.getTouchClientPos(0));
         } else if (input.currentInputType === InputType.Mouse && input.getMouseButtonDown(0)) {
             this._inputDown = true;
+            this._isDragging = false;
             this._inputDownStartPos.copy(input.getMouseClientPos());
         }
         
@@ -202,15 +222,21 @@ export class CameraOrbitControls {
         }
 
         if (this._isDragging) {
+            const rotateAllowed = !this.isZooming || (this.isZooming && this.rotateWhileZooming);
+
             if (input.currentInputType === InputType.Touch && input.getTouchHeld(0)) {
-                const delta = this._inputDragLastPos.clone().sub(input.getTouchClientPos(0));
-                this._x += delta.x * this.xTouchSpeed * time.deltaTime;
-                this._y += delta.y * this.yTouchSpeed * time.deltaTime;
+                if (rotateAllowed) {
+                    const delta = this._inputDragLastPos.clone().sub(input.getTouchClientPos(0));
+                    this._x += delta.x * this.xTouchSpeed * time.deltaTime;
+                    this._y += delta.y * this.yTouchSpeed * time.deltaTime;
+                }
                 this._inputDragLastPos.copy(input.getTouchClientPos(0));
             } else if (input.currentInputType === InputType.Mouse && input.getMouseButtonHeld(0)) {
-                const delta = this._inputDragLastPos.clone().sub(input.getMouseClientPos());
-                this._x += delta.x * this.xMouseSpeed * time.deltaTime;
-                this._y += delta.y * this.yMouseSpeed * time.deltaTime;
+                if (rotateAllowed) {
+                    const delta = this._inputDragLastPos.clone().sub(input.getMouseClientPos());
+                    this._x += delta.x * this.xMouseSpeed * time.deltaTime;
+                    this._y += delta.y * this.yMouseSpeed * time.deltaTime;
+                }
                 this._inputDragLastPos.copy(input.getMouseClientPos());
             }
         }
@@ -220,17 +246,40 @@ export class CameraOrbitControls {
         if (!this.inputEnabled) {
             return;
         }
-
-        this._isZooming = false;
+        if (!this._zoomEnabled) {
+            return;
+        }
 
         const input = APEngine.input;
         const time = APEngine.time;
 
-        if (input.getWheelMoved()) {
-            this._isZooming = true;
-            const wheelData = input.getWheelData();
+        let zoomDelta: number = 0;
 
-            this._zoomDistance = clamp(this._zoomDistance + (wheelData.delta.y * time.deltaTime), this.zoomMin, this.zoomMax);
+        if (input.currentInputType === InputType.Touch && input.getTouchCount() === 2) {
+            const posA = input.getTouchClientPos(0);
+            const posB = input.getTouchClientPos(1);
+            const distance = posA.distanceTo(posB);
+
+            if (input.getTouchDown(1)) {
+                // Pinch zoom start.
+                this._isZooming = true;
+                
+                // Calculate starting distance between the two touch points.
+                this._inputTouchZoomDist = distance;
+            } else {
+                zoomDelta = (this._inputTouchZoomDist - distance) * this.zoomTouchSpeed * time.deltaTime;
+                this._inputTouchZoomDist = distance;
+            }
+        } else if (input.currentInputType === InputType.Mouse && input.getWheelMoved()) {
+            this._isZooming = true;
+            zoomDelta = input.getWheelData().delta.y * this.zoomMouseSpeed * time.deltaTime;
+        } else {
+            this._isZooming = false;
+            this._inputTouchZoomDist = 0;
+        }
+
+        if (zoomDelta !== 0) {
+            this._zoomDistance = clamp(this._zoomDistance + zoomDelta, this.zoomMin, this.zoomMax);
         }
     }
 

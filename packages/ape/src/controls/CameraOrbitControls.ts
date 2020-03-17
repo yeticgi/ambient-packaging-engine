@@ -30,10 +30,10 @@ export class CameraOrbitControls {
     invertY: boolean = true;
     invertX: boolean = true;
 
-    xMouseSpeed = 10.0;
-    yMouseSpeed = 10.0;
-    xTouchSpeed = 10.0;
-    yTouchSpeed = 10.0;
+    xMouseSpeed = 1.0;
+    yMouseSpeed = 1.0;
+    xTouchSpeed = 1.0;
+    yTouchSpeed = 1.0;
 
     xMinDeg = -360.0;
     xMaxDeg = 360.0;
@@ -41,7 +41,7 @@ export class CameraOrbitControls {
     yMaxDeg = 90.0;
 
     zoomMouseSpeed = 1.0;
-    zoomTouchSpeed = 2.0;
+    zoomTouchSpeed = 1.0;
 
     zoomMin = 0.0;
     zoomMax = 40.0;
@@ -181,7 +181,6 @@ export class CameraOrbitControls {
         }
 
         const input = APEngine.input;
-        const time = APEngine.time;
 
         if (input.currentInputType === InputType.Touch && input.getTouchDown(0)) {
             this._inputDown = true;
@@ -227,15 +226,15 @@ export class CameraOrbitControls {
             if (input.currentInputType === InputType.Touch && input.getTouchHeld(0)) {
                 if (rotateAllowed) {
                     const delta = this._inputDragLastPos.clone().sub(input.getTouchClientPos(0));
-                    this._x += delta.x * this.xTouchSpeed * time.deltaTime;
-                    this._y += delta.y * this.yTouchSpeed * time.deltaTime;
+                    this._x += (delta.x * this.xTouchSpeed);
+                    this._y += (delta.y * this.yTouchSpeed);
                 }
                 this._inputDragLastPos.copy(input.getTouchClientPos(0));
             } else if (input.currentInputType === InputType.Mouse && input.getMouseButtonHeld(0)) {
                 if (rotateAllowed) {
                     const delta = this._inputDragLastPos.clone().sub(input.getMouseClientPos());
-                    this._x += delta.x * this.xMouseSpeed * time.deltaTime;
-                    this._y += delta.y * this.yMouseSpeed * time.deltaTime;
+                    this._x += (delta.x * this.xMouseSpeed);
+                    this._y += (delta.y * this.yMouseSpeed);
                 }
                 this._inputDragLastPos.copy(input.getMouseClientPos());
             }
@@ -251,7 +250,6 @@ export class CameraOrbitControls {
         }
 
         const input = APEngine.input;
-        const time = APEngine.time;
 
         let zoomDelta: number = 0;
 
@@ -267,12 +265,12 @@ export class CameraOrbitControls {
                 // Calculate starting distance between the two touch points.
                 this._inputTouchZoomDist = distance;
             } else {
-                zoomDelta = (this._inputTouchZoomDist - distance) * this.zoomTouchSpeed * time.deltaTime;
+                zoomDelta = ((this._inputTouchZoomDist - distance) * this.zoomTouchSpeed);
                 this._inputTouchZoomDist = distance;
             }
         } else if (input.currentInputType === InputType.Mouse && input.getWheelMoved()) {
             this._isZooming = true;
-            zoomDelta = input.getWheelData().delta.y * this.zoomMouseSpeed * time.deltaTime;
+            zoomDelta = (input.getWheelData().delta.y * this.zoomMouseSpeed);
         } else {
             this._isZooming = false;
             this._inputTouchZoomDist = 0;

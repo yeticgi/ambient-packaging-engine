@@ -21,7 +21,6 @@ export class GameObject extends Object3D {
     static destroy(gameObject: GameObject): void {
         // Get array of all child gameObjects in ascending order,
         // including the given gameObject.
-        let gameObjects: GameObject[] = [];
         gameObject.traverse((go) => {
             if (go instanceof GameObject) {
                 if (go._destroyState === DestroyState.None) {

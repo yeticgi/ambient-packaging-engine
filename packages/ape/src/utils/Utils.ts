@@ -1,5 +1,9 @@
 import { Vector3, Vector2, MathUtils } from "three";
 
+export function hasValue(obj: any): boolean {
+    return obj !== undefined && obj !== null;
+}
+
 export function getOptionalValue(obj: any, defaultValue: any): any {
     return obj !== undefined && obj !== null ? obj : defaultValue;
 }

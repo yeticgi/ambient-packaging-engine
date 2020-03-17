@@ -9,6 +9,7 @@ import { GameObject } from "./gameobject/GameObject";
 import { Event } from "./misc/Events";
 import { XRInput } from './input/XRInput';
 import { PerformanceStats } from './misc/PerformanceStats';
+import { PerformanceResolutionScalar } from './misc/PerformanceResolutionScalar';
 import { DeviceCamera } from './deviceCamera/DeviceCamera';
 import { PointerEventSystem } from './input/PointerEventSystem';
 
@@ -26,6 +27,7 @@ export namespace APEngine {
     export let input: Input;
     export let xrInput: XRInput;
     export let performanceStats: PerformanceStats;
+    export let performanceResolutionScalar: PerformanceResolutionScalar;
     export let deviceCamera: DeviceCamera;
     export let pointerEventSystem: PointerEventSystem;
 
@@ -59,7 +61,7 @@ export namespace APEngine {
         // Create renderer.
         webglRenderer = new WebGLRenderer({
             antialias: true,
-            alpha: true,
+            alpha: false,
         });
 
         const width = window.innerWidth;
@@ -68,7 +70,7 @@ export namespace APEngine {
         webglRenderer.setSize(width, height);
         webglRenderer.shadowMap.enabled = false;
         webglRenderer.domElement.style.display = "block";
-        webglRenderer.xr.enabled = true;
+        webglRenderer.xr.enabled = false;
         threeCanvasParent.appendChild(webglRenderer.domElement);
         
         // Create time module.
@@ -76,6 +78,11 @@ export namespace APEngine {
 
         // Create performance stats module.
         performanceStats = new PerformanceStats();
+
+        // Create performance resolution scalar.
+        performanceResolutionScalar = new PerformanceResolutionScalar(webglRenderer, {
+            startEnabled: false
+        });
         
         // Create input module.
         input = new Input({
@@ -109,6 +116,8 @@ export namespace APEngine {
     }
 
     function update(timestamp: any, frame: any) {
+        performanceResolutionScalar.update();
+
         _xrFrame = frame;
 
         // Track state of XR presentation.
@@ -198,9 +207,17 @@ export namespace APEngine {
     function resize() {
         const width = window.innerWidth;
         const height = window.innerHeight;
-        
-        webglRenderer.setPixelRatio(window.devicePixelRatio | 1);
+
         webglRenderer.setSize(width, height);
+
+        const maxPixelRatio = 2;
+        let pixelRatio = window.devicePixelRatio;
+
+        if (pixelRatio > maxPixelRatio) {
+            pixelRatio = maxPixelRatio;
+        }
+        
+        webglRenderer.setPixelRatio(pixelRatio);
 
         if (camera) {
             camera.aspect = width / height;

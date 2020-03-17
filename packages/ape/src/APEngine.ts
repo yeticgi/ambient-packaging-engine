@@ -40,6 +40,7 @@ export namespace APEngine {
     let _initialized: boolean = false;
     let _xrFrame: any;
     let _xrEnabled: boolean = false;
+    let _maxPixelRatio: number = 0;
 
     export function isXREnabled() {
         return _xrEnabled;
@@ -168,6 +169,15 @@ export namespace APEngine {
         performanceStats.update();
     }
 
+    export function getMaxPixelRatio() {
+        return _maxPixelRatio;
+    }
+
+    export function setMaxPixelRatio(pixelRatio: number) {
+        _maxPixelRatio = pixelRatio;
+        resize();
+    }
+
     export function dispose() {
         console.log("[APEngine] Dispose");
         window.removeEventListener('resize', resize);
@@ -210,11 +220,9 @@ export namespace APEngine {
 
         webglRenderer.setSize(width, height);
 
-        const maxPixelRatio = 2;
         let pixelRatio = window.devicePixelRatio;
-
-        if (pixelRatio > maxPixelRatio) {
-            pixelRatio = maxPixelRatio;
+        if ((_maxPixelRatio > 0) && (pixelRatio > _maxPixelRatio)) {
+            pixelRatio = _maxPixelRatio;
         }
         
         webglRenderer.setPixelRatio(pixelRatio);

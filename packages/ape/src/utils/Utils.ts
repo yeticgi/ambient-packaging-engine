@@ -16,6 +16,14 @@ export function clamp(value: number, min: number, max: number): number {
     return Math.max(min, Math.min(max, value));
 }
 
+export function inRange(value: number, min: number, max: number): boolean {
+    if (value <= max && value >= min) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 export function clampDegAngle(value: number, min: number, max: number): number {
     if (value < -360)
         value += 360;

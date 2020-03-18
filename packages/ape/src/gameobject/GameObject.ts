@@ -107,6 +107,7 @@ export class GameObject extends Object3D {
 
     private _decorators: Decorator[] = [];
     private _destroyState: DestroyState = DestroyState.None;
+    private _prevVisible: boolean = false;
 
     constructor() {
         super();
@@ -214,15 +215,24 @@ export class GameObject extends Object3D {
             return;
         }
 
+        let isVisible = GameObject.isGameObjectVisible(this);
+
         this._decorators.forEach((d) => {
-            if (!d.destroyed && GameObject.isGameObjectVisible(this)) {
+            if (!d.destroyed && isVisible) {
                 if (!d.started) {
+                    this._prevVisible = true;
+                    d.onVisible();
                     d.onStart();
                     if (!d.started) {
                         console.error(`Decorator ${d.constructor.name} does not have super.onStart() called.`);
                     }
+                } else {
+                    isVisible = this.visibleChangeCheck();
                 }
-                d.onUpdate();
+
+                if (isVisible) {
+                    d.onUpdate();
+                }
             }
         });
 
@@ -237,13 +247,37 @@ export class GameObject extends Object3D {
             return;
         }
 
-        this._decorators.forEach((c) => {
-            if (!c.destroyed && GameObject.isGameObjectVisible(this)) {
-                c.onLateUpdate();
+        const isVisible = this.visibleChangeCheck();
+
+        this._decorators.forEach((d) => {
+            if (!d.destroyed && isVisible) {
+                d.onLateUpdate();
             }
         });
 
         this.cleanupDestroyedDecorators();
+    }
+
+    /**
+     * Run a visibility change check. Returns the current state of gameobject visibility.
+     */
+    private visibleChangeCheck(): boolean {
+        const isVisible = GameObject.isGameObjectVisible(this);
+
+        if (this._prevVisible !== isVisible) {
+            this._decorators.forEach((d) => {
+                if (!d.destroyed) {
+                    if (isVisible) {
+                        d.onVisible();
+                    } else {
+                        d.onInvisible();
+                    }
+                }
+            });
+            this._prevVisible = isVisible;
+        }
+
+        return isVisible;
     }
 
     private onDestroy() {

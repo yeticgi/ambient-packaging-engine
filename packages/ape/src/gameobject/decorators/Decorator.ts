@@ -48,6 +48,20 @@ export abstract class Decorator {
     }
 
     /**
+     * Called when the GameObject that this Decorator is attached to becomes visible.
+     */
+    onVisible() {
+        // console.log(`[Decorator] ${this.constructor.name} on ${this.gameObject.name} onVisible`);
+    }
+
+    /**
+     * Called when the GameObject that this Decorator is attached to becomes invisible.
+     */
+    onInvisible() {
+        // console.log(`[Decorator] ${this.constructor.name} on ${this.gameObject.name} onInvisible`);
+    }
+
+    /**
      * Called once when the Decorator is first started.
      */
     onStart() {

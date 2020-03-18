@@ -10,9 +10,9 @@ import clone from 'lodash/clone';
 import { Time } from '../Time';
 
 export interface IDefaultSettings {
-    zoomDistance: number;
-    x: number;
-    y: number;
+    zoomDistance?: number;
+    x?: number;
+    y?: number;
 }
 
 export class CameraOrbitControls {
@@ -60,7 +60,6 @@ export class CameraOrbitControls {
     private _inputDownStartPos: Vector2 = new Vector2();
     private _inputDragLastPos: Vector2 = new Vector2();
     private _inputTouchZoomDist: number = 0;
-    private _defaultSettings: IDefaultSettings;
     
     get inputEnabled(): boolean { return this._inputEnabled; }
     set inputEnabled(value: boolean) { 
@@ -92,12 +91,6 @@ export class CameraOrbitControls {
 
     constructor(camera: PerspectiveCamera) {
         this._camera = camera;
-
-        this.setDefaults({
-            zoomDistance: this.zoomMin,
-            x: this._x,
-            y: this._y
-        });
     }
 
     update(): void {
@@ -105,23 +98,6 @@ export class CameraOrbitControls {
             this._rotateControls();
             this._zoomControls();
             this._updateCamera();
-        }
-    }
-
-    setDefaults(defaults: IDefaultSettings): void {
-        this._defaultSettings = clone(defaults);
-    }
-
-    getDefaults(): Readonly<IDefaultSettings> {
-        return this._defaultSettings;
-    }
-
-    setToDefaults(): void {
-        if (this._defaultSettings) {
-            this.setZoomDistance(this._defaultSettings.zoomDistance);
-            this.setOrbit(this._defaultSettings.x, this._defaultSettings.y);
-        } else {
-            console.error(`[CameraOrbitControls] Cannot set camera back to defaults because there are no default settings set.`);
         }
     }
 

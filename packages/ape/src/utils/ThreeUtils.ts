@@ -132,21 +132,23 @@ export function isObjectVisible(obj: Object3D) {
 }
 
 export function disposeObject3d(obj: Object3D) {
-    obj.traverse((o) => {
-        if (o instanceof Mesh) {
-            if (o.geometry) {
-                o.geometry.dispose();
+    if (obj) {
+        obj.traverse((o) => {
+            if (o instanceof Mesh) {
+                if (o.geometry) {
+                    o.geometry.dispose();
+                }
+                
+                if (Array.isArray(o.material)) {
+                    o.material.forEach((m) => m.dispose());
+                } else {
+                    o.material.dispose();
+                }
             }
-            
-            if (Array.isArray(o.material)) {
-                o.material.forEach((m) => m.dispose());
-            } else {
-                o.material.dispose();
+    
+            if (o.parent) {
+                o.parent.remove(o);
             }
-        }
-
-        if (o.parent) {
-            o.parent.remove(o);
-        }
-    });
+        });
+    }
 }

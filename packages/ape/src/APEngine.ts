@@ -1,6 +1,4 @@
 import {
-    Scene,
-    PerspectiveCamera,
     WebGLRenderer,
     WebGLRendererParameters
 } from 'three';
@@ -11,14 +9,15 @@ import { Event } from "./misc/Events";
 import { XRInput } from './input/XRInput';
 import { PerformanceStats } from './misc/PerformanceStats';
 import { PerformanceResolutionScalar } from './misc/PerformanceResolutionScalar';
-import { DeviceCamera } from './deviceCamera/DeviceCamera';
+import { DeviceCamera } from './device-camera/DeviceCamera';
 import { PointerEventSystem } from './input/PointerEventSystem';
 import { APEngineBuildInfo } from './APEngineBuildInfo';
+import { SceneManager } from './scene-management/SceneManager';
 
 export namespace APEngine {
 
-    export let scene: Scene;
-    export let camera: PerspectiveCamera;
+    export const sceneManager = new SceneManager();
+    
     export let webglRenderer: WebGLRenderer;
     export let time: Time;
     export let input: Input;
@@ -58,6 +57,10 @@ export namespace APEngine {
 
         // Create renderer.
         webglRenderer = new WebGLRenderer(webglParams);
+        webglRenderer.autoClear = false;
+        // webglRenderer.autoClearColor = false;
+        // webglRenderer.autoClearDepth = false;
+        // webglRenderer.autoClearStencil = false;
 
         const width = window.innerWidth;
         const height = window.innerHeight;
@@ -128,34 +131,17 @@ export namespace APEngine {
         input.update();
 
         // Update pointer event system.
-        pointerEventSystem.update(input, camera);
+        pointerEventSystem.update(input, sceneManager.primaryCamera);
         
-        // Update game objects.
-        let gameObjects: GameObject[] = [];
-        if (scene) {
-            scene.traverse((go) => {
-                if (go instanceof GameObject) {
-                    gameObjects.push(go);
-                    go.onUpdate();
-                }
-            });
-        }
-        
+        // Update game objects in scenes.
+        sceneManager.update();
         onUpdate.invoke();
-
-        if (scene) {
-            gameObjects.forEach((go) => {
-                go.onLateUpdate();
-            });
-        }
-
+        sceneManager.lateUpdate();
         onLateUpdate.invoke();
 
         GameObject.__APEngine_ProcessGameObjectDestroyQueue();
         
-        if (scene && camera) {
-            webglRenderer.render(scene, camera);
-        }
+        sceneManager.render(webglRenderer);
 
         time.update();
         performanceStats.update();
@@ -171,11 +157,9 @@ export namespace APEngine {
     }
 
     export function dispose() {
-        console.log("[APEngine] Dispose");
         window.removeEventListener('resize', resize);
 
-        scene.dispose();
-        scene = null;
+        sceneManager.dispose();
 
         webglRenderer.dispose();
         webglRenderer = null;
@@ -218,11 +202,7 @@ export namespace APEngine {
         }
         
         webglRenderer.setPixelRatio(pixelRatio);
-
-        if (camera) {
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
-        }
+        sceneManager.resizeCameras(width, height);
 
         onResize.invoke();
     }

@@ -13,13 +13,9 @@ import { PerformanceStats } from './misc/PerformanceStats';
 import { PerformanceResolutionScalar } from './misc/PerformanceResolutionScalar';
 import { DeviceCamera } from './deviceCamera/DeviceCamera';
 import { PointerEventSystem } from './input/PointerEventSystem';
+import { APEngineBuildInfo } from './APEngineBuildInfo';
 
 export namespace APEngine {
-    
-    /**
-     * Version number of the APEngine.
-     */
-    export const version: string = "__ape_version__";
 
     export let scene: Scene;
     export let camera: PerspectiveCamera;
@@ -56,7 +52,7 @@ export namespace APEngine {
             return;
         }
 
-        console.log(`APEngine v${version} init`);
+        console.info(`== APEngine v${APEngineBuildInfo.version} ==\nDate: ${APEngineBuildInfo.date().toString()}`);
 
         _initialized = true;
 

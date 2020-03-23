@@ -1,4 +1,5 @@
 export * from './APEngine';
+export * from './APEngineBuildInfo';
 export * from './Time';
 export * from './controls/CameraOrbitControls';
 export * from './dev/ThreeDevTools';

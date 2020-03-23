@@ -45,7 +45,8 @@ export default {
         verbose: true,
       }),
       replace({
-        '__ape_version__': pkg.version
+        '__ape_version__': pkg.version,
+        '__ape-build-time__': Date.now().toString(),
       })
     ],
     external: [

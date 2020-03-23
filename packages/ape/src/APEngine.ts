@@ -1,7 +1,8 @@
 import {
     Scene,
     PerspectiveCamera,
-    WebGLRenderer
+    WebGLRenderer,
+    WebGLRendererParameters
 } from 'three';
 import { Time } from './Time';
 import { Input } from './input/Input';
@@ -50,7 +51,7 @@ export namespace APEngine {
         return _xrFrame;
     }
 
-    export function init(appElement: HTMLDivElement, threeCanvasParent: HTMLDivElement) {
+    export function init(webglParams?: WebGLRendererParameters) {
         if (_initialized) {
             return;
         }
@@ -60,19 +61,14 @@ export namespace APEngine {
         _initialized = true;
 
         // Create renderer.
-        webglRenderer = new WebGLRenderer({
-            antialias: true,
-            alpha: false,
-        });
+        webglRenderer = new WebGLRenderer(webglParams);
 
         const width = window.innerWidth;
         const height = window.innerHeight;
 
         webglRenderer.setSize(width, height);
-        webglRenderer.shadowMap.enabled = false;
         webglRenderer.domElement.style.display = "block";
         webglRenderer.xr.enabled = false;
-        threeCanvasParent.appendChild(webglRenderer.domElement);
         
         // Create time module.
         time = new Time();

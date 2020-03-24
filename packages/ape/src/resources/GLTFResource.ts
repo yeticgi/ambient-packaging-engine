@@ -31,6 +31,15 @@ export class GLTFResource extends Resource<Object3DPrefab> {
             const loadingManager = new LoadingManager();
 
             loadingManager.setURLModifier((url): string => {
+                if (url.startsWith('data:')) {
+                    // Do not redirect data uris.
+                    return url;
+                }
+                if (url.startsWith('blob:')) {
+                    // Do not redirect blobs.
+                    return url;
+                }
+
                 //Redirect gltf relative url to CDN asset location.
                 const filename = getFilename(url);
                 const ext = getExtension(url);
@@ -39,7 +48,6 @@ export class GLTFResource extends Resource<Object3DPrefab> {
                     // Do not redirect draco specific files.
                     return url;
                 }
-                
                 let redirectUrl: string = null;
                 
                 if (ext === 'gltf') {

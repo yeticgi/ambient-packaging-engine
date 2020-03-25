@@ -6,8 +6,6 @@ import {
 import { InputType } from '../input/Input';
 import { clampDegAngle, pointOnSphere, clamp } from '../utils/Utils';
 import { APEngine } from '../APEngine';
-import clone from 'lodash/clone';
-import { Time } from '../Time';
 
 export interface IDefaultSettings {
     zoomDistance?: number;

@@ -58,9 +58,6 @@ export namespace APEngine {
         // Create renderer.
         webglRenderer = new WebGLRenderer(webglParams);
         webglRenderer.autoClear = false;
-        // webglRenderer.autoClearColor = false;
-        // webglRenderer.autoClearDepth = false;
-        // webglRenderer.autoClearStencil = false;
 
         const width = window.innerWidth;
         const height = window.innerHeight;

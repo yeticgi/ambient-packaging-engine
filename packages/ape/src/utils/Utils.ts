@@ -32,7 +32,7 @@ export function clampDegAngle(value: number, min: number, max: number): number {
     return clamp(value, min, max);
 }
 
-export function pointOnSphere (center: Vector3, radius: number, rotation: Vector2) {
+export function pointOnSphere(center: Vector3, radius: number, rotation: Vector2): Vector3 {
     /*
         Reference: https://stackoverflow.com/questions/11819833/finding-3d-coordinates-from-point-with-known-xyz-angles-radius-and-origin
         x = origin.x + radius * math.cos(math.rad(rotation.y)) * math.cos(math.rad(rotation.x))
@@ -40,12 +40,23 @@ export function pointOnSphere (center: Vector3, radius: number, rotation: Vector
         z = origin.z + radius * math.sin(math.rad(rotation.y)) * math.cos(math.rad(rotation.x))
      */
 
-     const pos = new Vector3();
-     pos.x = center.x + radius * Math.cos(MathUtils.DEG2RAD * rotation.y) * Math.cos(MathUtils.DEG2RAD * rotation.x);
-     pos.y = center.y + radius * Math.sin(MathUtils.DEG2RAD * rotation.x);
-     pos.z = center.z + radius * Math.sin(MathUtils.DEG2RAD * rotation.y) * Math.cos(MathUtils.DEG2RAD * rotation.x);
+    const pos = new Vector3();
+    pos.x = center.x + radius * Math.cos(MathUtils.DEG2RAD * rotation.y) * Math.cos(MathUtils.DEG2RAD * rotation.x);
+    pos.y = center.y + radius * Math.sin(MathUtils.DEG2RAD * rotation.x);
+    pos.z = center.z + radius * Math.sin(MathUtils.DEG2RAD * rotation.y) * Math.cos(MathUtils.DEG2RAD * rotation.x);
 
-     return pos;
+    return pos;
+}
+
+export function pointOnCircle(center: Vector2, radius: number, angle: number): Vector2 {
+    const angleRad: number = angle * MathUtils.DEG2RAD;
+
+    const point = new Vector2(
+        center.x + radius * Math.sin(angleRad),
+        center.y + radius * Math.cos(angleRad)
+    );
+
+    return point;
 }
 
 export function normalize(value: number, min: number, max: number): number {
@@ -112,7 +123,7 @@ export function getElementByClassName(element: Element, names: string): HTMLElem
         if (elementClassList.length > 0) {
             const classNames: string[] = names.split(' ');
             let classFoundCount: number = 0;
-            
+
             for (const className of classNames) {
                 if (elementClassList.contains(className)) {
                     classFoundCount++;
@@ -141,7 +152,7 @@ export function getElementByClassName(element: Element, names: string): HTMLElem
 export function getFilename(path: string): string | null {
     const lastSlashIndex = path.lastIndexOf('/');
 
-    let filename: string | null= null;
+    let filename: string | null = null;
     if (lastSlashIndex < 0) {
         filename = path;
     } else {
@@ -168,6 +179,6 @@ export function getExtension(path: string): string | null {
             }
         }
     }
-    
+
     return null;
 }

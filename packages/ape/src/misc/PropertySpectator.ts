@@ -1,5 +1,5 @@
 import { ArgEvent } from '../misc/Events';
-import { isEqual } from 'lodash';
+import isEqual from 'lodash/isEqual';
 
 export interface IPropertyChangedEvent<T> {
     newValue: T;

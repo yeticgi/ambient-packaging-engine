@@ -19,7 +19,7 @@ export default (args) => {
   let input = 'src/index.tsx';
   let output = {
     dir: 'dist',
-    format: 'cjs',
+    format: 'es',
     exports: 'named',
     sourcemap: true
   };

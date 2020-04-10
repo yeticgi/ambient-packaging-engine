@@ -1,7 +1,6 @@
 import { IDisposable } from "../misc/IDisposable";
 import { 
     Group,
-    Scene,
     WebGLRenderer
 } from "three";
 import { Event } from '../misc/Events';

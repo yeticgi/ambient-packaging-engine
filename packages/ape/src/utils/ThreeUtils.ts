@@ -7,8 +7,6 @@ import {
     Box3,
     Layers,
     Mesh,
-    Material,
-    MathUtils,
     SphereBufferGeometry,
     BoxBufferGeometry,
     MeshBasicMaterial

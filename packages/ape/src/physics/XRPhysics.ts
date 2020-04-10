@@ -1,12 +1,6 @@
 import {
-    Vector2,
-    Camera,
     Vector3,
     Ray,
-    Raycaster,
-    Object3D,
-    Intersection,
-    Plane,
     WebGLRenderer,
     Matrix4,
     Quaternion

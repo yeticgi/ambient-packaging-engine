@@ -1,5 +1,4 @@
-import React, { Component, Fragment } from "react";
-import { render } from "react-dom";
+import React, { Component } from "react";
 import './ThreeContainer.css';
 
 interface IThreeContainerProps {

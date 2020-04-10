@@ -1,5 +1,4 @@
-import { DeviceCamera } from '../DeviceCamera';
-import jsQR, { Options } from 'jsqr';
+import jsQR from 'jsqr';
 import { ArgEvent } from '../../misc/Events';
 import { IDeviceCameraReaderOptions, DeviceCameraReader } from './DeviceCameraReader';
 

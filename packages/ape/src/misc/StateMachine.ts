@@ -1,5 +1,6 @@
 import { ArgEvent } from "./Events";
 import { APEngine } from "../APEngine";
+import isEqual from "lodash/isEqual";
 
 export abstract class State {
     private _id: string;
@@ -15,8 +16,8 @@ export abstract class State {
     abstract onStateExit(): void;
 }
 
-export interface ITransition {
-    stateId: string,
+interface ITransition {
+    fromStateId: string,
     command: string,
     nextStateId: string
 }
@@ -78,11 +79,28 @@ export class StateMachine {
     }
 
     addState(state: State): void {
-        throw "not implemented";
+        if (this._active) {
+            throw new Error(`Cannot add states after the state machine has been started.`);
+        }
+
+        this._states.set(state.id, state);
     }
 
-    addStateTransition(transition: ITransition, nextStateId: string): void {
-        throw "not implemented";
+    addStateTransition(fromStateId: string, command: string, nextStateId: string): void {
+        if (this._active) {
+            throw new Error(`Cannot add state transitions after the state machine has been started.`);
+        }
+
+        const transition: ITransition = { fromStateId, command, nextStateId };
+
+        if (!this._states.has(nextStateId)) {
+            throw new Error(`Can't add transition for State '${nextStateId}'. This state does not exist on the state machine.`);
+        }
+
+        const alreadyAdded: boolean = this._transitions.some(t => isEqual(t, transition));
+        if (!alreadyAdded) {
+            this._transitions.push(transition);
+        }
     }
 
     getState(stateId: string) {
@@ -119,7 +137,7 @@ export class StateMachine {
             return null;
         }
 
-        const transition = this._transitions.find((t) => t.command === command);
+        const transition: ITransition = this._transitions.find(t => t.command === command && t.fromStateId === this._curState.id);
 
         if (!transition) {
             throw new Error(`[StateMachine::${this._name}] No transition found for State '${this._curState.id}' with command '${command}'`);

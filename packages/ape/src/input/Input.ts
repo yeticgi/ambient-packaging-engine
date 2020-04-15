@@ -949,6 +949,8 @@ export class Input implements IDisposable {
             this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
 
+        event.stopImmediatePropagation();
+
         if (
             this.isEventForAnyElement(event, [
                 this._options.canvasElement,
@@ -1003,6 +1005,8 @@ export class Input implements IDisposable {
         if (this._inputType == InputType.Undefined)
             this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
+
+        event.stopImmediatePropagation();
 
         const count = this._touchListenerCounts.get(evt.target) || 0;
         if (count <= evt.changedTouches.length) {
@@ -1080,6 +1084,8 @@ export class Input implements IDisposable {
         if (this._inputType == InputType.Undefined)
             this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
+
+        event.stopImmediatePropagation();
 
         const count = this._touchListenerCounts.get(evt.target) || 0;
         if (count <= evt.changedTouches.length) {

@@ -4,11 +4,13 @@ import { Texture, TextureLoader, sRGBEncoding, TextureEncoding } from "three";
 export interface ITextureConfig {
     url: string;
     encoding?: TextureEncoding;
+    flipY?: boolean;
 }
 
 export class TextureResource extends Resource<Texture> {
     private _url: string;
     private _encoding: TextureEncoding;
+    private _flipY: boolean;
 
     constructor(name: string, config: unknown) {
         super(name, config);
@@ -17,6 +19,7 @@ export class TextureResource extends Resource<Texture> {
 
         this._url = textureConfig.url;
         this._encoding = textureConfig.encoding;
+        this._flipY = textureConfig.flipY;
     }
 
     protected _loadObject(): Promise<Texture> {
@@ -26,7 +29,12 @@ export class TextureResource extends Resource<Texture> {
                 this._url, 
                 (texture) => {
                     if (this._encoding) {
-                        texture.encoding = sRGBEncoding;
+                        texture.encoding = this._encoding;
+                        texture.needsUpdate = true;
+                    }
+                    if (this._flipY) {
+                        texture.flipY = true;
+                        texture.needsUpdate = true;
                     }
                     resolve(texture);
                 },

@@ -9,7 +9,9 @@ import {
     Mesh,
     SphereBufferGeometry,
     BoxBufferGeometry,
-    MeshBasicMaterial
+    MeshBasicMaterial,
+    MeshStandardMaterial,
+    Material
 } from 'three';
 
 /**
@@ -154,20 +156,36 @@ export function disposeObject3d(obj: Object3D) {
     }
 }
 
-export function createDebugSphere(radius: number, color: string): Mesh {
+export function createDebugSphere(radius: number, color: string, lit?: boolean): Mesh {
     const geometry = new SphereBufferGeometry(radius, 24, 24);
-    const material = new MeshBasicMaterial({
-        color,
-    });
+    let material: Material;
+
+    if (lit) {
+        material = new MeshStandardMaterial({
+            color,
+        });
+    } else {
+        material = new MeshBasicMaterial({
+            color,
+        });
+    }
 
     return new Mesh(geometry, material);
 }
 
-export function createDebugCube(size: number, color: string): Mesh {
+export function createDebugCube(size: number, color: string, lit?: boolean): Mesh {
     const geometry = new BoxBufferGeometry(size, size, size);
-    const material = new MeshBasicMaterial({
-        color,
-    });
+    let material: Material;
+
+    if (lit) {
+        material = new MeshStandardMaterial({
+            color,
+        });
+    } else {
+        material = new MeshBasicMaterial({
+            color,
+        });
+    }
 
     return new Mesh(geometry, material);
 }

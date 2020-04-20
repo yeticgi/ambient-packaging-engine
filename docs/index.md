@@ -1,5 +1,14 @@
 # APE WebXR QA Builds
 
+## v0.0.3
+
+[APE WebXR QA v0.0.3 - Build](ape-webxr-qa/0.0.3/index.html)
+
+### Notes
+
+This build gets this demo running again after two+ months of development
+on the core APEngine.
+
 ## v0.0.2
 
 [APE WebXR QA v0.0.2 - Build](./ape-webxr-qa/0.0.2/index.html)

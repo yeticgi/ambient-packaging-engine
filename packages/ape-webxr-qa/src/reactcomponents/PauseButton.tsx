@@ -44,8 +44,8 @@ export class PauseButton extends Component<{}, IPauseButtonState> {
     onClick() {
         APEngine.time.paused = !APEngine.time.paused;
 
-        APEResources.getAudio('button').then(
-            (resource) => { resource.object.play(); }
+        APEResources.audio.get('button').then(
+            resource => resource.object.play()
         );
     }
 }

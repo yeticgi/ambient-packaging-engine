@@ -26,7 +26,7 @@ export class TestClick extends Decorator {
     onUpdate() {
         if (APEngine.input.getMouseButtonDown(MouseButtonId.Left)) {
             const screenPos = APEngine.input.getMouseScreenPos();
-            const results = Physics.raycastAtScreenPos(screenPos, [this.gameObject], APEngine.camera);
+            const results = Physics.raycastAtScreenPos(screenPos, [this.gameObject], APEngine.sceneManager.primaryCamera, true);
             const firstHit = Physics.firstRaycastHit(results);
 
             if (firstHit) {
@@ -40,7 +40,7 @@ export class TestClick extends Decorator {
 
         if (APEngine.input.getMouseButtonUp(MouseButtonId.Left) && this._down) {
             const screenPos = APEngine.input.getMouseScreenPos();
-            const results = Physics.raycastAtScreenPos(screenPos, [this.gameObject], APEngine.camera);
+            const results = Physics.raycastAtScreenPos(screenPos, [this.gameObject], APEngine.sceneManager.primaryCamera, true);
             const firstHit = Physics.firstRaycastHit(results);
 
             if (firstHit) {
@@ -64,8 +64,8 @@ export class TestClick extends Decorator {
             rotator.enabled = !rotator.enabled;
         }
         
-        APEResources.getAudio('cubeTap').then(
-            (resource) => { resource.object.play(); }
+        APEResources.audio.get('cubeTap').then(
+            resource => resource.object.play()
         );
     }
 }

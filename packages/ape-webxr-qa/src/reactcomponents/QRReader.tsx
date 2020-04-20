@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { QRStreamReader, APEngine } from '@yeticgi/ape';
+import { APEngine, DeviceCameraQRReader } from '@yeticgi/ape';
 import { Overlay, DeviceCameraFeed } from '@yeticgi/ape-reactcomponents';
 
 import './QRReader.css';
@@ -27,7 +27,7 @@ interface IQRReaderState {
 
 export class QRReader extends Component<IQRReaderProps, IQRReaderState> {
 
-    private _qrStreamReader: QRStreamReader;
+    private _qrStreamReader: DeviceCameraQRReader;
 
     constructor(props: IQRReaderProps) {
         super(props);
@@ -49,7 +49,7 @@ export class QRReader extends Component<IQRReaderProps, IQRReaderState> {
         
         if (result.started) {
             // Create QR Stream Reader and start scanning the video stream.
-            this._qrStreamReader = new QRStreamReader();
+            this._qrStreamReader = new DeviceCameraQRReader();
             this._qrStreamReader.onQRScanned.addListener((code) => {
                 this.props.onQRScanned(code);
             });

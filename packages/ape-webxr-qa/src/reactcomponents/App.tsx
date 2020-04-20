@@ -30,6 +30,7 @@ import { PauseButton } from './PauseButton';
 import { QRReader } from './QRReader';
 import { Version } from './Version';
 import { XRRetical } from '../decorators/XRRetical';
+import { BuildInfo } from '../BuildInfo';
 
 interface IAppState {
     engineInitialized: boolean,
@@ -38,23 +39,19 @@ interface IAppState {
 
 export class App extends Component<{}, IAppState> {
 
-    /**
-     * Version number of the APE WebXR QA app.
-     */
-    static readonly version: string = '__ape-webxr-qa-version__';
-
-    private appDivRef: React.RefObject<HTMLDivElement>;
-    private threeCanvasParentRef: React.RefObject<HTMLDivElement>;
-
     private sceneBackgroundColor: Color = new Color(0, 0, 0);
 
     constructor(props: any) {
         super(props);
 
-        console.log(`APE WebXR QA v${App.version}`);
+        console.log(`APE WebXR QA v${BuildInfo.version}`);
 
-        this.appDivRef = React.createRef<HTMLDivElement>();
-        this.threeCanvasParentRef = React.createRef<HTMLDivElement>();
+        // Initialize APEngine.
+        APEngine.init({
+            antialias: true,
+            alpha: true,
+            powerPreference: 'high-performance'
+        });
 
         this.onQRScanClick = this.onQRScanClick.bind(this);
 
@@ -65,15 +62,17 @@ export class App extends Component<{}, IAppState> {
     }
 
     async componentDidMount() {
-        APEngine.init(
-            this.appDivRef.current!,
-            this.threeCanvasParentRef.current!
-        );
-
-        // Add resources from manifest.
-        await APEResources.addResourcesFromManifest({
-            audioUrl: 'public/manifests/audio-manifest.json'
+        
+        // Add some audio resources.
+        APEResources.audio.add('button', {
+            url: 'public/sound/button.mp3',
+            loop: false,
         });
+        APEResources.audio.add('cubeTap', {
+            url: 'public/sound/cube_tap.mp3',
+            loop: false,
+        });
+
         // Preload resources.
         await APEResources.preloadResources();
 
@@ -93,23 +92,27 @@ export class App extends Component<{}, IAppState> {
 
     private createTestScene() {
         // Create scene.
-        APEngine.scene = new Scene();
-        const scene = APEngine.scene;
+        const scene = new Scene();
         scene.background = this.sceneBackgroundColor;
 
-        // Create camera.
-        const width = window.innerWidth;
-        const height = window.innerHeight;
+        // Add scene to the APEngine scene manager so that it and childed GameObjects 
+        // gets updated by APEngine during the update loop.
+        APEngine.sceneManager.addScene(scene);
 
-        let fov = 75;
-        let aspect = width / height;
-        let near = 0.1;
-        let far = 1000;
-        APEngine.camera = new PerspectiveCamera(fov, aspect, near, far);
-        const camera = APEngine.camera;
+        // Create camera.
+        const camera = createCamera();
         camera.position.y = 0.4;
         camera.position.z = 0.5;
         scene.add(camera);
+
+        // Add camera to scene manager so that APEngine will automatically resize it
+        // if the browser window gets resized.
+        APEngine.sceneManager.addCamera(camera);
+
+        // Add a render operation to APEngine scene manager using the just created
+        // scene and camera. This tells APEngine to draw the scene with the given camera
+        // every update frame.
+        APEngine.sceneManager.addRenderOperation(scene, camera);
 
         // Create ambient light.
         const ambient = new AmbientLight(0x222222);
@@ -120,11 +123,11 @@ export class App extends Component<{}, IAppState> {
         scene.add(dirLight);
 
         // Create cubes.
-        const redCube = this.createTestCube('#ff0000', 0.1, new Vector3(0, 0.6, 0));
+        const redCube = createCube('#ff0000', 0.1, new Vector3(0, 0.6, 0));
         redCube.name = 'redCube';
-        const greenCube = this.createTestCube('#00ff00', 0.1, new Vector3(0, 0.4, 0));
+        const greenCube = createCube('#00ff00', 0.1, new Vector3(0, 0.4, 0));
         greenCube.name = 'greenCube';
-        const blueCube = this.createTestCube('#0000ff', 0.1, new Vector3(0, 0.2, 0));
+        const blueCube = createCube('#0000ff', 0.1, new Vector3(0, 0.2, 0));
         blueCube.name = 'blueCube';
 
         // Create parent for cubes.
@@ -139,7 +142,7 @@ export class App extends Component<{}, IAppState> {
         cubeParent.add(greenCube);
         cubeParent.add(blueCube);
 
-        APEngine.scene.add(cubeParent);
+        scene.add(cubeParent);
 
         // Create xr retical.
         const retical = new GameObject();
@@ -159,49 +162,19 @@ export class App extends Component<{}, IAppState> {
         });
         retical.addDecorator(reticalMeshDecorator);
 
-        APEngine.scene.add(retical);
-    }
-
-    private createTestCube(color: Color | string | number, size: number, position: Vector3): GameObject {
-        // Create test cube game object.
-        const cubeGeometry = new BoxGeometry(size, size, size);
-        const cubeMaterial = new MeshStandardMaterial({
-            color
-        });
-        const cubeMesh = new Mesh(cubeGeometry, cubeMaterial);
-        const cube = new GameObject();
-        cube.position.copy(position);
-
-        const cubeMeshDecorator = new MeshDecorator();
-        cubeMeshDecorator.configure({
-            mesh: cubeMesh
-        });
-        cube.addDecorator(cubeMeshDecorator);
-
-        const cubeRotator = new Rotator();
-        cubeRotator.configure({
-            xSpeed: 1.0,
-            ySpeed: 1.0
-        });
-        cube.addDecorator(cubeRotator);
-
-        const cubeClick = new TestClick();
-        cubeClick.configure({});
-        cube.addDecorator(cubeClick);
-
-        return cube;
+        scene.add(retical);
     }
 
     private onEngineUpdate() {
-        APEngine.scene.background = APEngine.isXREnabled() ? null : this.sceneBackgroundColor;
+        APEngine.sceneManager.primaryScene.background = APEngine.isXREnabled() ? null : this.sceneBackgroundColor;
     }
 
     private onQRScanClick() {
         console.log(`[App] Turning QR Reader ${this.state.qrReaderOpen ? 'off' : 'on'}.`);
         
         // Play button sound.
-        APEResources.getAudio('button').then(
-            (resource) => { resource.object.play(); }
+        APEResources.audio.get('button').then(
+            resource => resource.object.play()
         );
         
         this.setState({
@@ -224,8 +197,8 @@ export class App extends Component<{}, IAppState> {
                         }}
                         onCloseClick={() => {
                             // Play button sound.
-                            APEResources.getAudio('button').then(
-                                (resource) => { resource.object.play(); }
+                            APEResources.audio.get('button').then(
+                                resource => resource.object.play()
                             );
 
                             this.setState({
@@ -248,29 +221,62 @@ export class App extends Component<{}, IAppState> {
             }
         };
 
-        const EngineComponents = () => {
-            if (this.state.engineInitialized) {
-                return (
-                    <div>
-                        <Version />
-                        <div id="hud-ul-grp">
-                            <PauseButton />
-                            <button className='appButton' onClick={this.onQRScanClick}>QR Scan</button>
-                        </div>
-                        <ARButton />
-                        <QR />
-                    </div>
-                );
-            } else {
-                return null;
-            }
-        };
-
         return (
-            <div className='app' ref={this.appDivRef} >
-                <ThreeContainer canvasParentRef={this.threeCanvasParentRef} />
-                <EngineComponents />
+            <div className='app'>
+                <ThreeContainer webglCanvas={APEngine.webglRenderer.domElement}/>
+                <div>
+                    <Version />
+                    <div id="hud-ul-grp">
+                        <PauseButton />
+                        <button className='appButton' onClick={this.onQRScanClick}>QR Scan</button>
+                    </div>
+                    <ARButton />
+                    <QR />
+                </div>
             </div>
         );
     }
+}
+
+function createCamera(): PerspectiveCamera {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    let fov = 75;
+    let aspect = width / height;
+    let near = 0.1;
+    let far = 1000;
+    const camera = new PerspectiveCamera(fov, aspect, near, far);
+
+    return camera;
+}
+
+function createCube(color: Color | string | number, size: number, position: Vector3): GameObject {
+    // Create test cube game object.
+    const cubeGeometry = new BoxGeometry(size, size, size);
+    const cubeMaterial = new MeshStandardMaterial({
+        color
+    });
+    const cubeMesh = new Mesh(cubeGeometry, cubeMaterial);
+    const cube = new GameObject();
+    cube.position.copy(position);
+
+    const cubeMeshDecorator = new MeshDecorator();
+    cubeMeshDecorator.configure({
+        mesh: cubeMesh
+    });
+    cube.addDecorator(cubeMeshDecorator);
+
+    const cubeRotator = new Rotator();
+    cubeRotator.configure({
+        xSpeed: 1.0,
+        ySpeed: 1.0
+    });
+    cube.addDecorator(cubeRotator);
+
+    const cubeClick = new TestClick();
+    cubeClick.configure({});
+    cube.addDecorator(cubeClick);
+
+    return cube;
 }

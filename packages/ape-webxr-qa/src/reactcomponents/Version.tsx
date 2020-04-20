@@ -1,13 +1,11 @@
 import React, { Component, version } from "react";
 import "./Version.css";
 import { 
-    APEngine,
+    APEngineBuildInfo
 } from '@yeticgi/ape';
-import { App } from './App';
+import { BuildInfo } from "../BuildInfo";
 
 export class Version extends Component {
-
-    private _interval: number;
 
     constructor(props: any) {
         super(props);
@@ -16,7 +14,8 @@ export class Version extends Component {
     render() {
         return (
             <div className="version">
-                APEngine v{APEngine.version}
+                APE WebXR QA v{BuildInfo.version}<br/>
+                APEngine v{APEngineBuildInfo.version}
             </div>
         );
     }

@@ -1,0 +1,12 @@
+import { Decorator, IDecoratorOptions, GameObject } from "@yeticgi/ape";
+export declare class XRRetical extends Decorator {
+    static instance: XRRetical | null;
+    private _meshDecorator;
+    private _raycasting;
+    get isVisible(): boolean;
+    configure(options: IDecoratorOptions): void;
+    onAttach(gameObject: GameObject): void;
+    onStart(): void;
+    onDestroy(): void;
+    onUpdate(): void;
+}

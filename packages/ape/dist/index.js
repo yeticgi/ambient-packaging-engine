@@ -5754,7 +5754,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.0.4';
-    const _time = '1587473900111';
+    const _time = '1587474289567';
     /**
      * The date that this version of the app was built.
      */
@@ -17334,7 +17334,7 @@ class Stopwatch {
     elapsed() {
         var _a;
         if (this._startTime) {
-            const endTime = (_a = this._stopTime) !== null && _a !== void 0 ? _a : Date.now();
+            const endTime = (_a = this._stopTime, (_a !== null && _a !== void 0 ? _a : Date.now()));
             return endTime - this._startTime;
         }
         else {

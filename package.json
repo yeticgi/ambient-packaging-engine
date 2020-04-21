@@ -4,7 +4,9 @@
     "workspaces": [
         "packages/*"
     ],
-    "scripts": {},
+    "scripts": {
+        "build": "yarn workspace @yeticgi/ape build && yarn workspace @yeticgi/ape-reactcomponents build && yarn workspace @yeticgi/ape-webxr-qa build"
+    },
     "repository": "git@github.com:yeticgi/ambient-packaging-engine.git",
     "license": "MIT"
 }

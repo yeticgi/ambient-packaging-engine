@@ -2,6 +2,7 @@ import { Vector3, Vector2 } from "three";
 export declare function hasValue(obj: any): boolean;
 export declare function getOptionalValue(obj: any, defaultValue: any): any;
 export declare function lerp(start: number, end: number, t: number): number;
+export declare function lerpClamped(start: number, end: number, t: number): number;
 export declare function clamp(value: number, min: number, max: number): number;
 export declare function inRange(value: number, min: number, max: number): boolean;
 export declare function clampDegAngle(value: number, min: number, max: number): number;

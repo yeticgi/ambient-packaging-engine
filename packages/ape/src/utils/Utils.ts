@@ -12,6 +12,11 @@ export function lerp(start: number, end: number, t: number): number {
     return (1.0 - t) * start + t * end;
 }
 
+export function lerpClamped(start: number, end: number, t: number): number {
+    const value = (1.0 - t) * start + t * end;
+    return clamp(value, start, end);
+}
+
 export function clamp(value: number, min: number, max: number): number {
     return Math.max(min, Math.min(max, value));
 }

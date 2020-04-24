@@ -259,7 +259,6 @@ export class AnimatorDecorator extends Decorator {
 
     private _onActionLoop(e: DispatcherEvent): void {
         const loopEvent = e as ActionLoopEvent;
-        console.log(`${loopEvent.action.getClip().name} loop`);
 
         this.onAnimationLoop.invoke({
             clipName: loopEvent.action.getClip().name
@@ -268,7 +267,6 @@ export class AnimatorDecorator extends Decorator {
 
     private _onActionFinished(e: DispatcherEvent): void {
         const finishEvent = e as ActionFinishedEvent;
-        console.log(`${finishEvent.action.getClip().name} finished`);
 
         this._activeActionTracker.remove(finishEvent.action);
 

@@ -5759,7 +5759,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.0.4';
-    const _time = '1587755532287';
+    const _time = '1587758843310';
     /**
      * The date that this version of the app was built.
      */
@@ -6544,14 +6544,12 @@ class AnimatorDecorator extends Decorator {
     }
     _onActionLoop(e) {
         const loopEvent = e;
-        console.log(`${loopEvent.action.getClip().name} loop`);
         this.onAnimationLoop.invoke({
             clipName: loopEvent.action.getClip().name
         });
     }
     _onActionFinished(e) {
         const finishEvent = e;
-        console.log(`${finishEvent.action.getClip().name} finished`);
         this._activeActionTracker.remove(finishEvent.action);
         this.onAnimationFinished.invoke({
             clipName: finishEvent.action.getClip().name

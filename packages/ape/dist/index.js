@@ -1,4 +1,4 @@
-import { Clock, Vector2, Vector3, Object3D, MathUtils, Plane, Raycaster, Matrix4, Scene, Box2, Layers, Mesh, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, BoxBufferGeometry, PerspectiveCamera, WebGLRenderer, Ray, Quaternion, Material, Texture, Geometry, BufferGeometry, LoadingManager, Group, TextureLoader } from 'three';
+import { Clock, Vector2, Vector3, Object3D, MathUtils, Plane, Raycaster, Matrix4, Scene, Box2, Layers, Mesh, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, BoxBufferGeometry, PerspectiveCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Ray, Quaternion, Material, Texture, Geometry, BufferGeometry, LoadingManager, Group, TextureLoader } from 'three';
 import { __awaiter } from 'tslib';
 import { Howl } from 'howler';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
@@ -5759,7 +5759,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.0.4';
-    const _time = '1587740972599';
+    const _time = '1587755532287';
     /**
      * The date that this version of the app was built.
      */
@@ -6356,6 +6356,227 @@ var ThreeDevTools;
     }
     ThreeDevTools.observe = observe;
 })(ThreeDevTools || (ThreeDevTools = {}));
+
+class ActionTracker {
+    constructor() {
+        this.debug = false;
+        this._actions = [];
+    }
+    get count() { return this._actions.length; }
+    contains(action) {
+        return this._actions.some(a => a === action);
+    }
+    get(index) {
+        return this._actions[index];
+    }
+    tryGet(index) {
+        if (index >= 0 && index < this._actions.length) {
+            return this._actions[index];
+        }
+        else {
+            return null;
+        }
+    }
+    add(action) {
+        let added = false;
+        if (!this.contains(action)) {
+            this._actions.push(action);
+            added = true;
+            this.print();
+        }
+        return added;
+    }
+    remove(action) {
+        let removed = false;
+        const startCount = this._actions.length;
+        this._actions = this._actions.filter((a) => {
+            return a !== action;
+        });
+        if (startCount !== this._actions.length) {
+            removed = true;
+            this.print();
+        }
+        return removed;
+    }
+    print() {
+        if (this.debug) {
+            let message = `actions: ${this._actions.length}`;
+            for (const action of this._actions) {
+                message += `\n  clipName: ${action.getClip().name}`;
+            }
+            console.log(message);
+        }
+    }
+}
+class AnimatorDecorator extends Decorator {
+    constructor() {
+        super(...arguments);
+        this._clips = new Map();
+        this._activeActionTracker = new ActionTracker();
+        this.onAnimationLoop = new ArgEvent();
+        this.onAnimationFinished = new ArgEvent();
+    }
+    get clips() { return Array.from(this._clips.values()); }
+    configure(options) {
+        super.configure(options);
+        if (options.clips) {
+            for (const clip of options.clips) {
+                this.addClip(clip);
+            }
+        }
+    }
+    addClip(clip) {
+        if (!this._clips.has(clip.name)) {
+            this._clips.set(clip.name, clip);
+        }
+        else {
+            console.error(`Animator already has a clip named ${clip.name}. All clips on an Animator must have a unique name.`);
+        }
+    }
+    onAttach(gameObject) {
+        super.onAttach(gameObject);
+        this._onActionLoop = this._onActionLoop.bind(this);
+        this._onActionFinished = this._onActionFinished.bind(this);
+        this._mixer = new AnimationMixer(this.gameObject);
+        this._mixer.addEventListener('loop', this._onActionLoop);
+        this._mixer.addEventListener('finished', this._onActionFinished);
+    }
+    onVisible() {
+        super.onVisible();
+    }
+    onInvisible() {
+        super.onInvisible();
+    }
+    onStart() {
+        super.onStart();
+    }
+    playOnce(clipName) {
+        const clip = this._clips.get(clipName);
+        if (!clip) {
+            console.error(`There is no clip named ${clip} on the Animator ${this.gameObject.name}`);
+            return;
+        }
+        if (this._clipAlreadyPlaying(clip, LoopOnce)) {
+            // There is already an action that is playing the clip.
+            return;
+        }
+        this.stopAll();
+        const action = this._mixer.clipAction(clip).reset().setLoop(LoopOnce, 0).play();
+        action.clampWhenFinished = true;
+        this._activeActionTracker.add(action);
+    }
+    playLoop(clipName) {
+        const clip = this._clips.get(clipName);
+        if (!clip) {
+            console.error(`There is no clip named ${clip} on the Animator ${this.gameObject.name}`);
+            return;
+        }
+        if (this._clipAlreadyPlaying(clip, LoopRepeat)) {
+            // There is already an action that is playing the clip.
+            return;
+        }
+        this.stopAll();
+        const action = this._mixer.clipAction(clip).reset().setLoop(LoopRepeat, Infinity).play();
+        this._activeActionTracker.add(action);
+    }
+    playOnceCrossFade(clipName, duration) {
+        const clip = this._clips.get(clipName);
+        if (!clip) {
+            console.error(`There is no clip named ${clip} on the Animator ${this.gameObject.name}`);
+            return;
+        }
+        if (this._clipAlreadyPlaying(clip, LoopOnce)) {
+            // There is already an action that is playing the clip.
+            return;
+        }
+        // Get the action we are going to crossfade from.
+        const fromAction = this._activeActionTracker.tryGet(0);
+        if (fromAction) {
+            // From action is no longer considered active by Animator as it is being faded out.
+            this._activeActionTracker.remove(fromAction);
+            const action = this._mixer.clipAction(clip).reset();
+            action.crossFadeFrom(fromAction, duration, false).setLoop(LoopOnce, 0).play();
+            action.clampWhenFinished = true;
+            this._activeActionTracker.add(action);
+        }
+        else {
+            // No animation to crossfade from, do a normal play once.
+            this.playOnce(clipName);
+        }
+    }
+    playLoopCrossFade(clipName, duration) {
+        const clip = this._clips.get(clipName);
+        if (!clip) {
+            console.error(`There is no clip named ${clip} on the Animator ${this.gameObject.name}`);
+            return;
+        }
+        if (this._clipAlreadyPlaying(clip, LoopRepeat)) {
+            // There is already an action that is playing the clip.
+            return;
+        }
+        // Get the action we are going to crossfade from.
+        const fromAction = this._activeActionTracker.tryGet(0);
+        if (fromAction) {
+            // From action is no longer considered active by Animator as it is being faded out.
+            this._activeActionTracker.remove(fromAction);
+            const action = this._mixer.clipAction(clip).reset();
+            action.crossFadeFrom(fromAction, duration, false).setLoop(LoopRepeat, Infinity).play();
+            this._activeActionTracker.add(action);
+        }
+        else {
+            // No animation to crossfade from, do a normal play loop.
+            this.playLoop(clipName);
+        }
+    }
+    stopAll() {
+        for (let i = 0; i < this._activeActionTracker.count; i++) {
+            const action = this._activeActionTracker.get(i);
+            action.stop();
+            this._activeActionTracker.remove(action);
+        }
+    }
+    onUpdate() {
+        super.onUpdate();
+        this._mixer.update(APEngine.time.deltaTime);
+    }
+    onLateUpdate() {
+        super.onLateUpdate();
+    }
+    _onActionLoop(e) {
+        const loopEvent = e;
+        console.log(`${loopEvent.action.getClip().name} loop`);
+        this.onAnimationLoop.invoke({
+            clipName: loopEvent.action.getClip().name
+        });
+    }
+    _onActionFinished(e) {
+        const finishEvent = e;
+        console.log(`${finishEvent.action.getClip().name} finished`);
+        this._activeActionTracker.remove(finishEvent.action);
+        this.onAnimationFinished.invoke({
+            clipName: finishEvent.action.getClip().name
+        });
+    }
+    _clipAlreadyPlaying(clip, loop) {
+        const action = this._mixer.clipAction(clip);
+        if (action.isRunning() && action.loop === loop) {
+            return true;
+        }
+        return false;
+    }
+    onDestroy() {
+        super.onDestroy();
+        this.stopAll();
+        this.onAnimationLoop.dispose();
+        this.onAnimationFinished.dispose();
+        this._mixer.removeEventListener('loop', this._onActionLoop);
+        this._mixer.removeEventListener('finished', this._onActionFinished);
+        this._mixer.stopAllAction();
+        this._mixer.uncacheRoot(this._mixer.getRoot());
+        this._mixer = null;
+        this._clips.clear();
+    }
+}
 
 class MeshDecorator extends Decorator {
     configure(options) {
@@ -17355,5 +17576,5 @@ class Stopwatch {
     }
 }
 
-export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, ArgEvent, AudioResource, CameraOrbitControls, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, XRInput, XRPhysics, clamp, clampDegAngle, convertToBox2, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, isObjectVisible, lerp, lerpClamped, normalize, normalizeClamped, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds };
+export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, AnimatorDecorator, ArgEvent, AudioResource, CameraOrbitControls, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, XRInput, XRPhysics, clamp, clampDegAngle, convertToBox2, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, isObjectVisible, lerp, lerpClamped, normalize, normalizeClamped, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds };
 //# sourceMappingURL=index.js.map

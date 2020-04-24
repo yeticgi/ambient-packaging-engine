@@ -4,6 +4,7 @@ export * from './Time';
 export * from './controls/CameraOrbitControls';
 export * from './dev/ThreeDevTools';
 export * from './gameobject/decorators/Decorator';
+export * from './gameobject/decorators/AnimatorDecorator';
 export * from './gameobject/decorators/MeshDecorator';
 export * from './gameobject/GameObject';
 export * from './input/Input';

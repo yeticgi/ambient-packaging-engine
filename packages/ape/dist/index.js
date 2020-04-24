@@ -3,6 +3,7 @@ import { __awaiter } from 'tslib';
 import { Howl } from 'howler';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
+import { SkeletonUtils } from 'three/examples/jsm/utils/SkeletonUtils';
 
 // [Ryan] I would love to have multiple versions of Event and Listener that support more than one generic parameter.
 // However, this is not supported by JavaScript. TypeScript's compiler complains about the class name already being declared even though
@@ -5758,7 +5759,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.0.4';
-    const _time = '1587736971595';
+    const _time = '1587740972599';
     /**
      * The date that this version of the app was built.
      */
@@ -17098,7 +17099,8 @@ class GLTFPrefab {
         if (childObjectName) {
             const childObject = this.prefab.getObjectByName(childObjectName);
             if (childObject) {
-                const clone = childObject.clone();
+                // const clone = childObject.clone();
+                const clone = SkeletonUtils.clone(childObject);
                 clone.name = `${clone.name} (clone)`;
                 return clone;
             }
@@ -17107,7 +17109,8 @@ class GLTFPrefab {
             }
         }
         else {
-            const clone = this._prefab.clone();
+            // const clone = this._prefab.clone();
+            const clone = SkeletonUtils.clone(this._prefab);
             clone.name = `${clone.name} (clone)`;
             return clone;
         }

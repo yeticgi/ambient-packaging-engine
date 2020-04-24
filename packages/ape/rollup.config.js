@@ -53,6 +53,7 @@ export default {
       'three',
       'three/examples/jsm/loaders/GLTFLoader',
       'three/examples/jsm/loaders/DRACOLoader',
+      'three/examples/jsm/utils/SkeletonUtils',
       'three/examples/js/libs/draco',
       'howler',
       'lodash',

@@ -1,6 +1,7 @@
 import { APEAssetTracker } from "./APEAssetTracker";
 import { Object3D, AnimationClip } from "three";
 import { IDisposable } from "../misc/IDisposable";
+import { SkeletonUtils } from "three/examples/jsm/utils/SkeletonUtils";
 
 export class GLTFPrefab implements IDisposable {
     private _prefab: Object3D;
@@ -37,14 +38,16 @@ export class GLTFPrefab implements IDisposable {
         if (childObjectName) {
             const childObject = this.prefab.getObjectByName(childObjectName);
             if (childObject) {
-                const clone = childObject.clone();
+                // const clone = childObject.clone();
+                const clone = SkeletonUtils.clone(childObject) as Object3D;
                 clone.name = `${clone.name} (clone)`;
                 return clone;
             } else {
                 throw new Error(`Could not find child object named ${childObjectName} in the prefab ${this._prefab}`);
             }
         } else {
-            const clone = this._prefab.clone();
+            // const clone = this._prefab.clone();
+            const clone = SkeletonUtils.clone(this._prefab) as Object3D;
             clone.name = `${clone.name} (clone)`;
             return clone;
         }

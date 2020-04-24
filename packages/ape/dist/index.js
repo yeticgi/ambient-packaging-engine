@@ -5758,7 +5758,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.0.4';
-    const _time = '1587590813199';
+    const _time = '1587736971595';
     /**
      * The date that this version of the app was built.
      */
@@ -17069,17 +17069,22 @@ function findTrackables(asset, trackables) {
     }
 }
 
-class Object3DPrefab {
-    constructor(obj3d) {
+class GLTFPrefab {
+    constructor(obj3d, clips) {
         this._prefab = obj3d;
+        this._clips = clips;
         APEAssetTracker.track(this._prefab);
     }
     /**
-     * The SVG Mesh prefab object.
+     * The GLTF object3d prefab object.
      * It is NOT RECOMMENDED to use this in your scenes.
      * If you want a clone of the prefab use the clone() function instead.
      */
     get prefab() { return this._prefab; }
+    /**
+     * The animation clips for the GLTF model.
+     */
+    get clips() { return this._clips; }
     /**
      * Retrieve a clone of the Object3D.
      * This will clone all Object3Ds and Materials on the prefab.
@@ -17179,7 +17184,7 @@ class GLTFResource extends Resource {
                 }
                 // Dispose of the original GLTF scene.
                 scene.dispose();
-                const prefab = new Object3DPrefab(gltfGroup);
+                const prefab = new GLTFPrefab(gltfGroup, gltf.animations);
                 resolve(prefab);
             }, () => {
             }, (errorEvent) => {
@@ -17347,5 +17352,5 @@ class Stopwatch {
     }
 }
 
-export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, ArgEvent, AudioResource, CameraOrbitControls, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Object3DPrefab, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, XRInput, XRPhysics, clamp, clampDegAngle, convertToBox2, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, isObjectVisible, lerp, lerpClamped, normalize, normalizeClamped, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds };
+export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, ArgEvent, AudioResource, CameraOrbitControls, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, XRInput, XRPhysics, clamp, clampDegAngle, convertToBox2, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, isObjectVisible, lerp, lerpClamped, normalize, normalizeClamped, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds };
 //# sourceMappingURL=index.js.map

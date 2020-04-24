@@ -26,7 +26,7 @@ export * from './resources/ImageResource';
 export * from './resources/TextureResource';
 export * from './resources/Resource';
 export * from './resources/ResourceManager';
-export * from './resources/Object3DPrefab';
+export * from './resources/GLTFPrefab';
 export * from './utils/Utils';
 export * from './utils/WaitPromises';
 export * from './utils/ThreeUtils';

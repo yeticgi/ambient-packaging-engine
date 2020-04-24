@@ -2,8 +2,8 @@ import { Resource, IResourceConfig } from "./Resource";
 import { Group, LoadingManager } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
-import { Object3DPrefab } from "./Object3DPrefab";
 import { getFilename, getExtension } from "../utils/Utils";
+import { GLTFPrefab } from "./GLTFPrefab";
 
 export interface IGLTFConfig extends IResourceConfig {
     gltfUrl: string;
@@ -11,7 +11,7 @@ export interface IGLTFConfig extends IResourceConfig {
     textureUrls?: string[];
 }
 
-export class GLTFResource extends Resource<Object3DPrefab> {
+export class GLTFResource extends Resource<GLTFPrefab> {
     private _gltfUrl: string;
     private _binUrl?: string;
     private _textureUrls?: string[];
@@ -26,8 +26,8 @@ export class GLTFResource extends Resource<Object3DPrefab> {
         this._textureUrls = gltfConfig.textureUrls;
     }
 
-    protected _loadObject(): Promise<Object3DPrefab> {
-        return new Promise<Object3DPrefab>((resolve: (value: Object3DPrefab) => void, reject) => {
+    protected _loadObject(): Promise<GLTFPrefab> {
+        return new Promise<GLTFPrefab>((resolve: (value: GLTFPrefab) => void, reject) => {
             const loadingManager = new LoadingManager();
 
             loadingManager.setURLModifier((url): string => {
@@ -97,7 +97,7 @@ export class GLTFResource extends Resource<Object3DPrefab> {
                     // Dispose of the original GLTF scene.
                     scene.dispose();
 
-                    const prefab = new Object3DPrefab(gltfGroup);
+                    const prefab = new GLTFPrefab(gltfGroup, gltf.animations);
                     resolve(prefab);
                 },
                 () => {

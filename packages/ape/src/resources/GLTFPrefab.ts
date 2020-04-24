@@ -1,19 +1,26 @@
 import { APEAssetTracker } from "./APEAssetTracker";
-import { Object3D } from "three";
+import { Object3D, AnimationClip } from "three";
 import { IDisposable } from "../misc/IDisposable";
 
-export class Object3DPrefab implements IDisposable {
+export class GLTFPrefab implements IDisposable {
     private _prefab: Object3D;
+    private _clips: AnimationClip[];
 
     /**
-     * The SVG Mesh prefab object.
+     * The GLTF object3d prefab object.
      * It is NOT RECOMMENDED to use this in your scenes. 
      * If you want a clone of the prefab use the clone() function instead.
      */
     get prefab(): Object3D { return this._prefab; }
 
-    constructor(obj3d: Object3D) {
+    /**
+     * The animation clips for the GLTF model.
+     */
+    get clips(): AnimationClip[] { return this._clips; }
+
+    constructor(obj3d: Object3D, clips: AnimationClip[]) {
         this._prefab = obj3d;
+        this._clips = clips;
         APEAssetTracker.track(this._prefab);
     }
 

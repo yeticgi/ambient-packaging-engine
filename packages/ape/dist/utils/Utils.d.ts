@@ -26,3 +26,8 @@ export declare function postJsonData(url: string, data: any): Promise<Response>;
 export declare function getElementByClassName(element: Element, names: string): HTMLElement;
 export declare function getFilename(path: string): string | null;
 export declare function getExtension(path: string): string | null;
+/**
+ * Load the image from the given url (or from the cache if the browser as it stored).
+ * @param url Location of the image to load.
+ */
+export declare function loadImage(url: string): Promise<HTMLImageElement>;

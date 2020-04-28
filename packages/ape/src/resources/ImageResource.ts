@@ -1,10 +1,11 @@
 import { Resource } from "./Resource";
+import { loadImage } from "../utils/Utils";
 
 export interface IImageConfig {
     url: string
 }
 
-export class ImageResource extends Resource<string> {
+export class ImageResource extends Resource<HTMLImageElement> {
     private _url: string;
 
     constructor(name: string, config: unknown) {
@@ -15,20 +16,8 @@ export class ImageResource extends Resource<string> {
         this._url = textureConfig.url;
     }
 
-    protected _loadObject(): Promise<string> {
-        return new Promise<string>(((resolve: (value: string) => void, reject) => {
-            const img = new Image();
-
-            img.addEventListener('load', (event) => {
-                resolve(this._url);
-            });
-
-            img.addEventListener('error', (event) => {
-                reject(event);
-            });
-            
-            img.src = this._url;
-        }));
+    protected _loadObject(): Promise<HTMLImageElement> {
+        return loadImage(this._url);
     }
 
     protected _unloadObject(): void {

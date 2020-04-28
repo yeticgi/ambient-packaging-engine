@@ -5076,6 +5076,24 @@ function getExtension(path) {
     }
     return null;
 }
+/**
+ * Load the image from the given url (or from the cache if the browser as it stored).
+ * @param url Location of the image to load.
+ */
+function loadImage(url) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise(((resolve, reject) => {
+            const img = new Image();
+            img.addEventListener('load', (event) => {
+                resolve(img);
+            });
+            img.addEventListener('error', (event) => {
+                reject(event);
+            });
+            img.src = url;
+        }));
+    });
+}
 
 class PerformanceResolutionScalar {
     constructor(renderer, options) {
@@ -5759,7 +5777,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.0.4';
-    const _time = '1587758843310';
+    const _time = '1588085417342';
     /**
      * The date that this version of the app was built.
      */
@@ -17460,16 +17478,7 @@ class ImageResource extends Resource {
         this._url = textureConfig.url;
     }
     _loadObject() {
-        return new Promise(((resolve, reject) => {
-            const img = new Image();
-            img.addEventListener('load', (event) => {
-                resolve(this._url);
-            });
-            img.addEventListener('error', (event) => {
-                reject(event);
-            });
-            img.src = this._url;
-        }));
+        return loadImage(this._url);
     }
     _unloadObject() {
     }
@@ -17574,5 +17583,5 @@ class Stopwatch {
     }
 }
 
-export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, AnimatorDecorator, ArgEvent, AudioResource, CameraOrbitControls, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, XRInput, XRPhysics, clamp, clampDegAngle, convertToBox2, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, isObjectVisible, lerp, lerpClamped, normalize, normalizeClamped, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds };
+export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, AnimatorDecorator, ArgEvent, AudioResource, CameraOrbitControls, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, XRInput, XRPhysics, clamp, clampDegAngle, convertToBox2, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, isObjectVisible, lerp, lerpClamped, loadImage, normalize, normalizeClamped, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds };
 //# sourceMappingURL=index.js.map

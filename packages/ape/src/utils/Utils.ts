@@ -187,3 +187,23 @@ export function getExtension(path: string): string | null {
 
     return null;
 }
+
+/**
+ * Load the image from the given url (or from the cache if the browser as it stored).
+ * @param url Location of the image to load.
+ */
+export async function loadImage(url: string): Promise<HTMLImageElement> {
+    return new Promise<HTMLImageElement>(((resolve: (value: HTMLImageElement) => void, reject) => {
+        const img: HTMLImageElement = new Image();
+
+        img.addEventListener('load', (event) => {
+            resolve(img);
+        });
+
+        img.addEventListener('error', (event) => {
+            reject(event);
+        });
+        
+        img.src = url;
+    }));
+}

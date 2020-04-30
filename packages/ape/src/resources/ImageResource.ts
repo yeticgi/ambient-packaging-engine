@@ -1,5 +1,5 @@
 import { Resource } from "./Resource";
-import { loadImage } from "../utils/Utils";
+import { loadImage } from "../utils/MiscUtils";
 
 export interface IImageConfig {
     url: string

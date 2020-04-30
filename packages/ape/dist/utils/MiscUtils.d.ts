@@ -1,17 +1,5 @@
-import { Vector3, Vector2 } from "three";
 export declare function hasValue(obj: any): boolean;
 export declare function getOptionalValue(obj: any, defaultValue: any): any;
-export declare function lerp(start: number, end: number, t: number): number;
-export declare function lerpClamped(start: number, end: number, t: number): number;
-export declare function clamp(value: number, min: number, max: number): number;
-export declare function inRange(value: number, min: number, max: number): boolean;
-export declare function clampDegAngle(value: number, min: number, max: number): number;
-export declare function pointOnSphere(center: Vector3, radius: number, rotation: Vector2): Vector3;
-export declare function pointOnCircle(center: Vector2, radius: number, angle: number): Vector2;
-export declare function normalize(value: number, min: number, max: number): number;
-export declare function normalizeClamped(value: number, min: number, max: number): number;
-export declare function unnormalize(normal: number, min: number, max: number): number;
-export declare function unnormalizeClamped(normal: number, min: number, max: number): number;
 /**
  * Post the given data object as JSON to the provided URL.
  * @returns - Promise that resolves to a Response or null if an exception occured.

@@ -2,7 +2,7 @@ import { Resource, IResourceConfig } from "./Resource";
 import { Group, LoadingManager } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
-import { getFilename, getExtension } from "../utils/Utils";
+import { getFilename, getExtension } from "../utils/MiscUtils";
 import { GLTFPrefab } from "./GLTFPrefab";
 
 export interface IGLTFConfig extends IResourceConfig {

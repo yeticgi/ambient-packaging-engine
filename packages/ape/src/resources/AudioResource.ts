@@ -1,5 +1,5 @@
 import { Resource, IResourceConfig } from "./Resource";
-import { getOptionalValue } from "../utils/Utils";
+import { getOptionalValue } from "../utils/MiscUtils";
 import { Howl } from "howler";
 
 export interface IAudioConfig extends IResourceConfig {

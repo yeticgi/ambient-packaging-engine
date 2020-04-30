@@ -4,7 +4,7 @@ import {
     Vector2
 } from 'three';
 import { InputType } from '../input/Input';
-import { clampDegAngle, pointOnSphere, clamp } from '../utils/Utils';
+import { clampDegAngle, pointOnSphere, clamp } from '../utils/MathUtils';
 import { APEngine } from '../APEngine';
 
 export interface IDefaultSettings {

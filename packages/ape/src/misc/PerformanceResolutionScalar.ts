@@ -1,5 +1,6 @@
 import { WebGLRenderer } from "three";
-import { clamp, hasValue } from "../utils/Utils";
+import { clamp } from "../utils/MathUtils";
+import { hasValue } from '../utils/MiscUtils';
 
 export interface IParams {
     startEnabled?: boolean;

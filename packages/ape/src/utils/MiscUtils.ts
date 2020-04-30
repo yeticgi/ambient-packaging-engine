@@ -133,3 +133,29 @@ export async function loadImage(url: string): Promise<HTMLImageElement> {
         img.src = url;
     }));
 }
+
+export function copyToClipboard(text: string): void {
+    // Create text area element to contain text content.
+    const textArea = document.createElement('textarea');
+    textArea.style.position = 'fixed';
+    textArea.style.opacity = '0';
+    textArea.textContent = text;
+    document.body.appendChild(textArea);
+
+    // Select text area element and execute document's copy command.
+    textArea.select();
+    document.execCommand('copy');
+
+    // Remove text area element from document.
+    textArea.remove();
+}
+
+export function appendLine(text: string, line: string): string {
+    if (!text || text.length === 0) {
+        return line;
+    } else if (text.length > 0) {
+        text += `\n${line}`;
+    }
+
+    return text;
+}

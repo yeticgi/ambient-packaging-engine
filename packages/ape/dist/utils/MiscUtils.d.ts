@@ -19,3 +19,5 @@ export declare function getExtension(path: string): string | null;
  * @param url Location of the image to load.
  */
 export declare function loadImage(url: string): Promise<HTMLImageElement>;
+export declare function copyToClipboard(text: string): void;
+export declare function appendLine(text: string, line: string): string;

@@ -1,5 +1,6 @@
 import { Resource } from "./Resource";
 import { Texture, TextureLoader, sRGBEncoding, TextureEncoding } from "three";
+import { getOptionalValue } from "../utils/MiscUtils";
 
 export interface ITextureConfig {
     url: string;
@@ -19,7 +20,7 @@ export class TextureResource extends Resource<Texture> {
 
         this._url = textureConfig.url;
         this._encoding = textureConfig.encoding;
-        this._flipY = textureConfig.flipY;
+        this._flipY = getOptionalValue(this._flipY, true); // This is the defualt value as of ThreeJS r113
     }
 
     protected _loadObject(): Promise<Texture> {
@@ -32,10 +33,10 @@ export class TextureResource extends Resource<Texture> {
                         texture.encoding = this._encoding;
                         texture.needsUpdate = true;
                     }
-                    if (this._flipY) {
-                        texture.flipY = true;
-                        texture.needsUpdate = true;
-                    }
+
+                    texture.flipY = this._flipY ? true : false;
+                    texture.needsUpdate = true;
+
                     resolve(texture);
                 },
                 (progressEvent) => {

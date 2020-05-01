@@ -5102,7 +5102,6 @@ function copyToClipboard(text) {
     // Create text area element to contain text content.
     const textArea = document.createElement('textarea');
     textArea.style.position = 'fixed';
-    // textArea.style.visibility = 'hidden';
     textArea.style.opacity = '0';
     textArea.textContent = text;
     document.body.appendChild(textArea);
@@ -5804,7 +5803,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.0.4';
-    const _time = '1588274068350';
+    const _time = '1588361163834';
     /**
      * The date that this version of the app was built.
      */
@@ -17472,7 +17471,7 @@ class TextureResource extends Resource {
         const textureConfig = config;
         this._url = textureConfig.url;
         this._encoding = textureConfig.encoding;
-        this._flipY = textureConfig.flipY;
+        this._flipY = getOptionalValue(this._flipY, true); // This is the defualt value as of ThreeJS r113
     }
     _loadObject() {
         return new Promise(((resolve, reject) => {
@@ -17482,10 +17481,8 @@ class TextureResource extends Resource {
                     texture.encoding = this._encoding;
                     texture.needsUpdate = true;
                 }
-                if (this._flipY) {
-                    texture.flipY = true;
-                    texture.needsUpdate = true;
-                }
+                texture.flipY = this._flipY ? true : false;
+                texture.needsUpdate = true;
                 resolve(texture);
             }, (progressEvent) => {
             }, (errorEvent) => {

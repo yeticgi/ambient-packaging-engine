@@ -5802,8 +5802,8 @@ var APEngineBuildInfo;
     /**
      * Version number of the app.
      */
-    APEngineBuildInfo.version = '0.0.4';
-    const _time = '1588361163834';
+    APEngineBuildInfo.version = '0.1.0';
+    const _time = '1588627506053';
     /**
      * The date that this version of the app was built.
      */
@@ -6494,7 +6494,7 @@ class AnimatorDecorator extends Decorator {
     onStart() {
         super.onStart();
     }
-    playOnce(clipName) {
+    play(clipName, options) {
         const clip = this._clips.get(clipName);
         if (!clip) {
             console.error(`There is no clip named ${clip} on the Animator ${this.gameObject.name}`);
@@ -6504,73 +6504,38 @@ class AnimatorDecorator extends Decorator {
             // There is already an action that is playing the clip.
             return;
         }
-        this.stopAll();
-        const action = this._mixer.clipAction(clip).reset().setLoop(LoopOnce, 0).play();
-        action.clampWhenFinished = true;
-        this._activeActionTracker.add(action);
-    }
-    playLoop(clipName) {
-        const clip = this._clips.get(clipName);
-        if (!clip) {
-            console.error(`There is no clip named ${clip} on the Animator ${this.gameObject.name}`);
-            return;
+        if (!options) {
+            options = {};
         }
-        if (this._clipAlreadyPlaying(clip, LoopRepeat)) {
-            // There is already an action that is playing the clip.
-            return;
-        }
-        this.stopAll();
-        const action = this._mixer.clipAction(clip).reset().setLoop(LoopRepeat, Infinity).play();
-        this._activeActionTracker.add(action);
-    }
-    playOnceCrossFade(clipName, duration) {
-        const clip = this._clips.get(clipName);
-        if (!clip) {
-            console.error(`There is no clip named ${clip} on the Animator ${this.gameObject.name}`);
-            return;
-        }
-        if (this._clipAlreadyPlaying(clip, LoopOnce)) {
-            // There is already an action that is playing the clip.
-            return;
-        }
-        // Get the action we are going to crossfade from.
-        const fromAction = this._activeActionTracker.tryGet(0);
-        if (fromAction) {
+        // Create action for clip.
+        const action = this._mixer.clipAction(clip).reset();
+        if (this._activeActionTracker.count > 0 && options.crossFadeDuration > 0) {
+            // Perform a crossfade from active action.
+            const fromAction = this._activeActionTracker.get(0);
+            action.crossFadeFrom(fromAction, options.crossFadeDuration, options.crossFadeWarping);
             // From action is no longer considered active by Animator as it is being faded out.
             this._activeActionTracker.remove(fromAction);
-            const action = this._mixer.clipAction(clip).reset();
-            action.crossFadeFrom(fromAction, duration, false).setLoop(LoopOnce, 0).play();
-            action.clampWhenFinished = true;
-            this._activeActionTracker.add(action);
         }
         else {
-            // No animation to crossfade from, do a normal play once.
-            this.playOnce(clipName);
+            // Stop all current actions.
+            this.stopAll();
         }
-    }
-    playLoopCrossFade(clipName, duration) {
-        const clip = this._clips.get(clipName);
-        if (!clip) {
-            console.error(`There is no clip named ${clip} on the Animator ${this.gameObject.name}`);
-            return;
-        }
-        if (this._clipAlreadyPlaying(clip, LoopRepeat)) {
-            // There is already an action that is playing the clip.
-            return;
-        }
-        // Get the action we are going to crossfade from.
-        const fromAction = this._activeActionTracker.tryGet(0);
-        if (fromAction) {
-            // From action is no longer considered active by Animator as it is being faded out.
-            this._activeActionTracker.remove(fromAction);
-            const action = this._mixer.clipAction(clip).reset();
-            action.crossFadeFrom(fromAction, duration, false).setLoop(LoopRepeat, Infinity).play();
-            this._activeActionTracker.add(action);
+        // Set the loop properties.
+        if (options.loop) {
+            action.setLoop(LoopRepeat, Infinity);
         }
         else {
-            // No animation to crossfade from, do a normal play loop.
-            this.playLoop(clipName);
+            action.setLoop(LoopOnce, 0);
         }
+        action.clampWhenFinished = options.clampWhenFinished;
+        // Change start time if one is provided.
+        if (options.normalizedStartTime) {
+            options.normalizedStartTime = clamp(options.normalizedStartTime, 0, 1);
+            action.time = unnormalize(options.normalizedStartTime, 0, action.getClip().duration);
+        }
+        // Play the action.
+        action.play();
+        this._activeActionTracker.add(action);
     }
     stopAll() {
         for (let i = 0; i < this._activeActionTracker.count; i++) {

@@ -12,6 +12,7 @@ import { GameObject } from '../GameObject';
 import { APEngine } from '../../APEngine';
 import { ArgEvent } from '../../misc/Events';
 import { IDisposable } from '../../misc/IDisposable';
+import { clamp, unnormalize } from '../../utils/MathUtils';
 
 export interface IAnimatorDecoratorOptions extends IDecoratorOptions {
     clips?: AnimationClip[];
@@ -97,6 +98,35 @@ class ActionTracker {
     }
 }
 
+export interface PlayClipOptions {
+
+    /**
+     * Should the clip be set to loop.
+     */
+    loop?: boolean;
+
+    /**
+     * Should the animation clamp to the pose of the last frame when finished?
+     */
+    clampWhenFinished?: boolean;
+    
+    /**
+     * How long a crossfade should take (in seconds) if there is an animation currently playing.
+     * If this value is 0 or less, then all animations will be stopped before playing the clip.
+     */
+    crossFadeDuration?: number;
+
+    /**
+     * If true, additional warping (gradually changes of the time scales) will be applied.
+     */
+    crossFadeWarping?: boolean;
+
+    /**
+     * Time to start playing the clip at in normalized range (0.0 - 1.0).
+     */
+    normalizedStartTime?: number;
+}
+
 export class AnimatorDecorator extends Decorator {
 
     private _mixer: AnimationMixer;
@@ -149,7 +179,7 @@ export class AnimatorDecorator extends Decorator {
         super.onStart();
     }
 
-    playOnce(clipName: string): void {
+    play(clipName: string, options?: PlayClipOptions): void {
         const clip = this._clips.get(clipName);
         if (!clip) {
             console.error(`There is no clip named ${clip} on the Animator ${this.gameObject.name}`);
@@ -160,83 +190,44 @@ export class AnimatorDecorator extends Decorator {
             return;
         }
 
-        this.stopAll();
-
-        const action = this._mixer.clipAction(clip).reset().setLoop(LoopOnce, 0).play();
-        action.clampWhenFinished = true;
-        this._activeActionTracker.add(action);
-    }
-
-    playLoop(clipName: string): void {
-        const clip = this._clips.get(clipName);
-        if (!clip) {
-            console.error(`There is no clip named ${clip} on the Animator ${this.gameObject.name}`);
-            return;
-        }
-        if (this._clipAlreadyPlaying(clip, LoopRepeat)) {
-            // There is already an action that is playing the clip.
-            return;
+        if (!options) {
+            options = {};
         }
 
-        this.stopAll();
+        // Create action for clip.
+        const action = this._mixer.clipAction(clip).reset();
+
+        if (this._activeActionTracker.count > 0 && options.crossFadeDuration > 0) {
+            // Perform a crossfade from active action.
+            const fromAction = this._activeActionTracker.get(0);
+            action.crossFadeFrom(fromAction, options.crossFadeDuration, options.crossFadeWarping);
+
+            // From action is no longer considered active by Animator as it is being faded out.
+            this._activeActionTracker.remove(fromAction);
+        } else {
+            // Stop all current actions.
+            this.stopAll();
+        }
+
+        // Set the loop properties.
+        if (options.loop) {
+            action.setLoop(LoopRepeat, Infinity);
+        } else {
+            action.setLoop(LoopOnce, 0);
+        }
+
+        action.clampWhenFinished = options.clampWhenFinished;
+
+        // Change start time if one is provided.
+        if (options.normalizedStartTime) {
+            options.normalizedStartTime = clamp(options.normalizedStartTime, 0, 1);
+            action.time = unnormalize(options.normalizedStartTime, 0, action.getClip().duration);
+        }
         
-        const action = this._mixer.clipAction(clip).reset().setLoop(LoopRepeat, Infinity).play();
+        // Play the action.
+        action.play();
+        
         this._activeActionTracker.add(action);
-    }
-
-    playOnceCrossFade(clipName: string, duration: number): void {
-        const clip = this._clips.get(clipName);
-        if (!clip) {
-            console.error(`There is no clip named ${clip} on the Animator ${this.gameObject.name}`);
-            return;
-        }
-        if (this._clipAlreadyPlaying(clip, LoopOnce)) {
-            // There is already an action that is playing the clip.
-            return;
-        }
-
-        // Get the action we are going to crossfade from.
-        const fromAction: AnimationAction = this._activeActionTracker.tryGet(0);
-
-        if (fromAction) {
-            // From action is no longer considered active by Animator as it is being faded out.
-            this._activeActionTracker.remove(fromAction);
-            
-            const action = this._mixer.clipAction(clip).reset();
-            action.crossFadeFrom(fromAction, duration, false).setLoop(LoopOnce, 0).play();
-            action.clampWhenFinished = true;
-            this._activeActionTracker.add(action);
-        } else {
-            // No animation to crossfade from, do a normal play once.
-            this.playOnce(clipName);
-        }
-    }
-
-    playLoopCrossFade(clipName: string, duration: number): void {
-        const clip = this._clips.get(clipName);
-        if (!clip) {
-            console.error(`There is no clip named ${clip} on the Animator ${this.gameObject.name}`);
-            return;
-        }
-        if (this._clipAlreadyPlaying(clip, LoopRepeat)) {
-            // There is already an action that is playing the clip.
-            return;
-        }
-
-        // Get the action we are going to crossfade from.
-        const fromAction: AnimationAction = this._activeActionTracker.tryGet(0);
-
-        if (fromAction) {
-            // From action is no longer considered active by Animator as it is being faded out.
-            this._activeActionTracker.remove(fromAction);
-
-            const action = this._mixer.clipAction(clip).reset();
-            action.crossFadeFrom(fromAction, duration, false).setLoop(LoopRepeat, Infinity).play();
-            this._activeActionTracker.add(action);
-        } else {
-            // No animation to crossfade from, do a normal play loop.
-            this.playLoop(clipName);
-        }
     }
 
     stopAll(): void {

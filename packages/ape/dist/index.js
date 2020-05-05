@@ -1,5 +1,6 @@
 import { Clock, Vector2, Vector3, Object3D, MathUtils, Plane, Raycaster, Matrix4, Scene, Box2, Layers, Mesh, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, BoxBufferGeometry, PerspectiveCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Ray, Quaternion, Material, Texture, Geometry, BufferGeometry, LoadingManager, Group, TextureLoader } from 'three';
 import { __awaiter } from 'tslib';
+import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import { Howl } from 'howler';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
@@ -5683,13 +5684,16 @@ class PointerEventSystem {
             // Collect all active listener target objects.
             const allActiveListenerTargets = [];
             this._listeners.forEach((listener) => {
-                const activeTargets = listener.pointerTargets.filter((target) => {
-                    return isObjectVisible(target);
-                });
-                allActiveListenerTargets.push(...activeTargets);
+                const pointerTargets = listener.pointerTargets;
+                if (pointerTargets) {
+                    const activeTargets = pointerTargets.filter((target) => {
+                        return isObjectVisible(target);
+                    });
+                    allActiveListenerTargets.push(...activeTargets);
+                }
             });
             // Raycast againsts all pointer event listener target objects.
-            const hits = Physics.raycastAtScreenPos(pointerScreenPos, allActiveListenerTargets, camera);
+            const hits = Physics.raycastAtScreenPos(pointerScreenPos, allActiveListenerTargets, camera, false);
             closestIntersection = Physics.firstRaycastHit(hits);
             closestListener = closestIntersection ? this._findEventListenerForObject(closestIntersection.object) : null;
         }
@@ -5698,7 +5702,6 @@ class PointerEventSystem {
             closestIntersection = null;
             closestListener = null;
         }
-        const isPrimaryHeld = (input.currentInputType === InputType.Mouse) ? input.getMouseButtonHeld(0) : input.getTouchHeld(0);
         //
         // Pointer enter/exit events.
         //
@@ -5803,7 +5806,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.1.0';
-    const _time = '1588627506053';
+    const _time = '1588700007583';
     /**
      * The date that this version of the app was built.
      */
@@ -6600,6 +6603,99 @@ class MeshDecorator extends Decorator {
     onDestroy() {
         super.onDestroy();
         this.gameObject.remove(this.mesh);
+    }
+}
+
+var TransformTool;
+(function (TransformTool) {
+    var _controls;
+    TransformTool.onAttach = new ArgEvent();
+    TransformTool.onDetach = new ArgEvent();
+    function attach(object3d, camera) {
+        if (_controls) {
+            detach();
+        }
+        const transformCamera = (camera !== null && camera !== void 0 ? camera : APEngine.sceneManager.primaryCamera);
+        if (!transformCamera) {
+            console.error(`[TransformTool] There is no valid camera to create transfrom controls with.`);
+            return;
+        }
+        if (!APEngine.webglRenderer.domElement) {
+            console.error(`[TransformTool] There is no valid dom element to attach transfrom controls events to.`);
+            return;
+        }
+        _controls = new TransformControls(transformCamera, APEngine.webglRenderer.domElement);
+        _controls.attach(object3d);
+        const scene = findParentScene(object3d);
+        scene.add(_controls);
+    }
+    TransformTool.attach = attach;
+    function detach() {
+        if (_controls) {
+            _controls.parent.remove(_controls);
+            _controls.detach();
+            _controls.dispose();
+            _controls = null;
+        }
+    }
+    TransformTool.detach = detach;
+    function getAttachedObject() {
+        if (_controls) {
+            return _controls.object;
+        }
+        else {
+            return null;
+        }
+    }
+    TransformTool.getAttachedObject = getAttachedObject;
+})(TransformTool || (TransformTool = {}));
+
+class TransformPickerDecorator extends Decorator {
+    get pointerTargets() {
+        const children = [];
+        this.gameObject.traverse(obj => children.push(obj));
+        return children;
+    }
+    configure(options) {
+        super.configure(options);
+    }
+    onAttach(gameObject) {
+        super.onAttach(gameObject);
+    }
+    onVisible() {
+        super.onVisible();
+        APEngine.pointerEventSystem.addListener(this);
+    }
+    onInvisible() {
+        super.onInvisible();
+        APEngine.pointerEventSystem.removeListener(this);
+    }
+    onStart() {
+        super.onStart();
+    }
+    onPointerEnter(event) {
+    }
+    onPointerExit(event) {
+    }
+    onPointerDown(event) {
+    }
+    onPointerUp(event) {
+    }
+    onPointerClick(event) {
+        TransformTool.attach(this.gameObject);
+    }
+    onUpdate() {
+        super.onUpdate();
+    }
+    onLateUpdate() {
+        super.onLateUpdate();
+    }
+    onDestroy() {
+        super.onDestroy();
+        if (TransformTool.getAttachedObject() === this.gameObject) {
+            TransformTool.detach();
+        }
+        APEngine.pointerEventSystem.removeListener(this);
     }
 }
 
@@ -17714,5 +17810,5 @@ class Stopwatch {
     }
 }
 
-export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, AnimatorDecorator, ArgEvent, AudioResource, CameraOrbitControls, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, XRInput, XRPhysics, appendLine, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isObjectVisible, loadImage, normalize, normalizeClamped, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds };
+export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, AnimatorDecorator, ArgEvent, AudioResource, CameraOrbitControls, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, XRInput, XRPhysics, appendLine, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isObjectVisible, loadImage, normalize, normalizeClamped, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds };
 //# sourceMappingURL=index.js.map

@@ -54,6 +54,7 @@ export default {
       'three/examples/jsm/loaders/GLTFLoader',
       'three/examples/jsm/loaders/DRACOLoader',
       'three/examples/jsm/utils/SkeletonUtils',
+      'three/examples/jsm/controls/TransformControls',
       'three/examples/js/libs/draco',
       'howler',
       'lodash',

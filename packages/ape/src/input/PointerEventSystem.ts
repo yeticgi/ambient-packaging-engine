@@ -118,15 +118,18 @@ export class PointerEventSystem implements IDisposable {
             // Collect all active listener target objects.
             const allActiveListenerTargets: Object3D[] = [];
             this._listeners.forEach((listener) => {
-                const activeTargets = listener.pointerTargets.filter((target) => {
-                    return isObjectVisible(target);
-                });
-
-                allActiveListenerTargets.push(...activeTargets);
+                const pointerTargets = listener.pointerTargets;
+                if (pointerTargets) {
+                    const activeTargets = pointerTargets.filter((target) => {
+                        return isObjectVisible(target);
+                    });
+    
+                    allActiveListenerTargets.push(...activeTargets);
+                }
             });
     
             // Raycast againsts all pointer event listener target objects.
-            const hits = Physics.raycastAtScreenPos(pointerScreenPos, allActiveListenerTargets, camera);
+            const hits = Physics.raycastAtScreenPos(pointerScreenPos, allActiveListenerTargets, camera, false);
             closestIntersection = Physics.firstRaycastHit(hits);
             closestListener = closestIntersection ? this._findEventListenerForObject(closestIntersection.object) : null;
         } else {
@@ -134,8 +137,6 @@ export class PointerEventSystem implements IDisposable {
             closestIntersection = null;
             closestListener = null;
         }
-        
-        const isPrimaryHeld: boolean = (input.currentInputType === InputType.Mouse) ? input.getMouseButtonHeld(0) : input.getTouchHeld(0);
 
         //
         // Pointer enter/exit events.

@@ -1,7 +1,7 @@
 import { TransformControls } from "three/examples/jsm/controls/TransformControls";
 import { IDisposable } from "./IDisposable";
 import { ArgEvent } from "../misc/Events";
-import { Vector3, Euler } from "three";
+import { Vector3, Euler, MathUtils } from "three";
 
 const VectorFields: string[] = ['x', 'y', 'z'];
 
@@ -40,13 +40,20 @@ export class TransformControlsGUI implements IDisposable {
         this._addParagraph('object-name');
         this._addSpacer();
         this._addHeader('Local Position');
-        this._addVector3('local-position');
+        this._addVector3('local-position', (vector) => {
+            this._controls.object.position.copy(vector);
+        });
         this._addSpacer();
         this._addHeader('Local Rotation');
-        this._addVector3('local-rotation');
+        this._addVector3('local-rotation', (vector) => {
+            const rad = vector.clone().multiplyScalar(MathUtils.DEG2RAD);
+            this._controls.object.rotation.setFromVector3(rad);
+        });
         this._addSpacer();
         this._addHeader('Local Scale');
-        this._addVector3('local-scale');
+        this._addVector3('local-scale', (vector) => {
+            this._controls.object.scale.copy(vector);
+        });
         this._addSpacer();
         this._addHeader('Transform Mode');
         this._addButtonRow([
@@ -122,7 +129,7 @@ export class TransformControlsGUI implements IDisposable {
         paragraphEl.style.margin = '4px 4px 0px 4px';
     }
 
-    private _setParagraph(id: string, text: string): void {
+    private _refreshParagraph(id: string, text: string): void {
         const paragraphEl = document.querySelector(`#${id}`) as HTMLParamElement;
         if (paragraphEl) {
             paragraphEl.textContent = text;
@@ -160,7 +167,7 @@ export class TransformControlsGUI implements IDisposable {
         }
     }
 
-    private _addVector3(id: string): void {
+    private _addVector3(id: string, callback: (vector: Vector3) => void): void {
         const vectorEl = document.createElement('div');
         this._rootEl.appendChild(vectorEl);
         vectorEl.id = id;
@@ -179,14 +186,31 @@ export class TransformControlsGUI implements IDisposable {
             const inputEl = document.createElement('input');
             vectorEl.appendChild(inputEl);
             inputEl.type = 'number';
-            inputEl.readOnly = true;
+            inputEl.onchange = () => callback(this._getVector3(id));
             inputEl.style.width = '75px';
             inputEl.id = field;
-            inputEl.name = field;    
+            inputEl.name = field;
         }
     }
 
-    private _setVector3(id: string, vector: Vector3): void {
+    private _getVector3(id: string): Vector3 {
+        const vectorEl = document.querySelector(`#${id}`);
+        if (vectorEl) {
+            const vector = new Vector3();
+            for (let i = 0; i < VectorFields.length; i++ ) {
+                const field = VectorFields[i];
+
+                const inputEl = vectorEl.querySelector(`#${field}`) as HTMLInputElement;
+                vector.setComponent(i, Number.parseFloat(inputEl.value));
+            }
+
+            return vector;
+        }
+
+        return null;
+    }
+
+    private _refreshVector3(id: string, vector: Vector3): void {
         const vectorEl = document.querySelector(`#${id}`);
         if (vectorEl) {
             for (let i = 0; i < VectorFields.length; i++ ) {
@@ -203,10 +227,14 @@ export class TransformControlsGUI implements IDisposable {
             return;
         }
 
-        this._setParagraph('object-name', this._controls.object.name);
-        this._setVector3('local-position', this._controls.object.position);
-        this._setVector3('local-rotation', this._controls.object.rotation.toVector3());
-        this._setVector3('local-scale', this._controls.object.scale);
+        this._refreshParagraph('object-name', this._controls.object.name);
+        this._refreshVector3('local-position', this._controls.object.position);
+        this._refreshVector3('local-rotation', new Vector3(
+            this._controls.object.rotation.x * MathUtils.RAD2DEG,
+            this._controls.object.rotation.y * MathUtils.RAD2DEG,
+            this._controls.object.rotation.z * MathUtils.RAD2DEG
+        ));
+        this._refreshVector3('local-scale', this._controls.object.scale);
     }
     
     private _controlsChange(): void {

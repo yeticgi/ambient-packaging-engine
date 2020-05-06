@@ -5806,7 +5806,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.1.0';
-    const _time = '1588797814022';
+    const _time = '1588799202118';
     /**
      * The date that this version of the app was built.
      */
@@ -6639,13 +6639,20 @@ class TransformControlsGUI {
         this._addParagraph('object-name');
         this._addSpacer();
         this._addHeader('Local Position');
-        this._addVector3('local-position');
+        this._addVector3('local-position', (vector) => {
+            this._controls.object.position.copy(vector);
+        });
         this._addSpacer();
         this._addHeader('Local Rotation');
-        this._addVector3('local-rotation');
+        this._addVector3('local-rotation', (vector) => {
+            const rad = vector.clone().multiplyScalar(MathUtils.DEG2RAD);
+            this._controls.object.rotation.setFromVector3(rad);
+        });
         this._addSpacer();
         this._addHeader('Local Scale');
-        this._addVector3('local-scale');
+        this._addVector3('local-scale', (vector) => {
+            this._controls.object.scale.copy(vector);
+        });
         this._addSpacer();
         this._addHeader('Transform Mode');
         this._addButtonRow([
@@ -6713,7 +6720,7 @@ class TransformControlsGUI {
         paragraphEl.style.boxSizing = 'border-box';
         paragraphEl.style.margin = '4px 4px 0px 4px';
     }
-    _setParagraph(id, text) {
+    _refreshParagraph(id, text) {
         const paragraphEl = document.querySelector(`#${id}`);
         if (paragraphEl) {
             paragraphEl.textContent = text;
@@ -6742,7 +6749,7 @@ class TransformControlsGUI {
             buttonEl.onclick = (e) => config.callback(e);
         }
     }
-    _addVector3(id) {
+    _addVector3(id, callback) {
         const vectorEl = document.createElement('div');
         this._rootEl.appendChild(vectorEl);
         vectorEl.id = id;
@@ -6757,13 +6764,26 @@ class TransformControlsGUI {
             const inputEl = document.createElement('input');
             vectorEl.appendChild(inputEl);
             inputEl.type = 'number';
-            inputEl.readOnly = true;
+            inputEl.onchange = () => callback(this._getVector3(id));
             inputEl.style.width = '75px';
             inputEl.id = field;
             inputEl.name = field;
         }
     }
-    _setVector3(id, vector) {
+    _getVector3(id) {
+        const vectorEl = document.querySelector(`#${id}`);
+        if (vectorEl) {
+            const vector = new Vector3();
+            for (let i = 0; i < VectorFields.length; i++) {
+                const field = VectorFields[i];
+                const inputEl = vectorEl.querySelector(`#${field}`);
+                vector.setComponent(i, Number.parseFloat(inputEl.value));
+            }
+            return vector;
+        }
+        return null;
+    }
+    _refreshVector3(id, vector) {
         const vectorEl = document.querySelector(`#${id}`);
         if (vectorEl) {
             for (let i = 0; i < VectorFields.length; i++) {
@@ -6777,10 +6797,10 @@ class TransformControlsGUI {
         if (!this._rootEl) {
             return;
         }
-        this._setParagraph('object-name', this._controls.object.name);
-        this._setVector3('local-position', this._controls.object.position);
-        this._setVector3('local-rotation', this._controls.object.rotation.toVector3());
-        this._setVector3('local-scale', this._controls.object.scale);
+        this._refreshParagraph('object-name', this._controls.object.name);
+        this._refreshVector3('local-position', this._controls.object.position);
+        this._refreshVector3('local-rotation', new Vector3(this._controls.object.rotation.x * MathUtils.RAD2DEG, this._controls.object.rotation.y * MathUtils.RAD2DEG, this._controls.object.rotation.z * MathUtils.RAD2DEG));
+        this._refreshVector3('local-scale', this._controls.object.scale);
     }
     _controlsChange() {
         this.refresh();

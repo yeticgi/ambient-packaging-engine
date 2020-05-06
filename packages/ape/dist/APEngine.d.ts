@@ -1,7 +1,7 @@
 import { WebGLRenderer, WebGLRendererParameters } from 'three';
 import { Time } from './Time';
 import { Input } from './input/Input';
-import { Event } from "./misc/Events";
+import { Event, ArgEvent } from "./misc/Events";
 import { XRInput } from './input/XRInput';
 import { PerformanceStats } from './misc/PerformanceStats';
 import { PerformanceResolutionScalar } from './misc/PerformanceResolutionScalar';
@@ -23,6 +23,7 @@ export declare namespace APEngine {
     const onResize: Event;
     const onXRSessionStarted: Event;
     const onXRSessionEnded: Event;
+    const onVisibilityChanged: ArgEvent<boolean>;
     function isXREnabled(): boolean;
     function getXRFrame(): any;
     function init(webglParams?: WebGLRendererParameters): void;

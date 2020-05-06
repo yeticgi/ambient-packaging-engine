@@ -5806,7 +5806,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.1.0';
-    const _time = '1588797509168';
+    const _time = '1588797814022';
     /**
      * The date that this version of the app was built.
      */
@@ -6036,6 +6036,7 @@ var APEngine;
     APEngine.onResize = new Event();
     APEngine.onXRSessionStarted = new Event();
     APEngine.onXRSessionEnded = new Event();
+    APEngine.onVisibilityChanged = new ArgEvent();
     let _initialized = false;
     let _xrFrame;
     let _xrEnabled = false;
@@ -6093,6 +6094,8 @@ var APEngine;
         resize();
         // Listen for window resize event so that we can update the webgl canvas accordingly.
         window.addEventListener('resize', resize);
+        // Listen for page visibility change event so we can disable sounds, etc
+        document.addEventListener('visibilitychange', visibilityChange);
     }
     APEngine.init = init;
     function update(timestamp, frame) {
@@ -6166,6 +6169,9 @@ var APEngine;
         APEngine.webglRenderer.setPixelRatio(pixelRatio);
         APEngine.sceneManager.resizeCameras(width, height);
         APEngine.onResize.invoke();
+    }
+    function visibilityChange() {
+        APEngine.onVisibilityChanged.invoke(document.hidden);
     }
 })(APEngine || (APEngine = {}));
 

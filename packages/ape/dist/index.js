@@ -1,5 +1,6 @@
 import { Clock, Vector2, Vector3, Object3D, MathUtils, Plane, Raycaster, Matrix4, Scene, Box2, Layers, Mesh, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, BoxBufferGeometry, PerspectiveCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Ray, Quaternion, Material, Texture, Geometry, BufferGeometry, LoadingManager, Group, TextureLoader } from 'three';
 import { __awaiter } from 'tslib';
+import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import { Howl } from 'howler';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
@@ -5683,13 +5684,16 @@ class PointerEventSystem {
             // Collect all active listener target objects.
             const allActiveListenerTargets = [];
             this._listeners.forEach((listener) => {
-                const activeTargets = listener.pointerTargets.filter((target) => {
-                    return isObjectVisible(target);
-                });
-                allActiveListenerTargets.push(...activeTargets);
+                const pointerTargets = listener.pointerTargets;
+                if (pointerTargets) {
+                    const activeTargets = pointerTargets.filter((target) => {
+                        return isObjectVisible(target);
+                    });
+                    allActiveListenerTargets.push(...activeTargets);
+                }
             });
             // Raycast againsts all pointer event listener target objects.
-            const hits = Physics.raycastAtScreenPos(pointerScreenPos, allActiveListenerTargets, camera);
+            const hits = Physics.raycastAtScreenPos(pointerScreenPos, allActiveListenerTargets, camera, false);
             closestIntersection = Physics.firstRaycastHit(hits);
             closestListener = closestIntersection ? this._findEventListenerForObject(closestIntersection.object) : null;
         }
@@ -5698,7 +5702,6 @@ class PointerEventSystem {
             closestIntersection = null;
             closestListener = null;
         }
-        const isPrimaryHeld = (input.currentInputType === InputType.Mouse) ? input.getMouseButtonHeld(0) : input.getTouchHeld(0);
         //
         // Pointer enter/exit events.
         //
@@ -5803,7 +5806,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.1.0';
-    const _time = '1588627506053';
+    const _time = '1588797509168';
     /**
      * The date that this version of the app was built.
      */
@@ -6600,6 +6603,329 @@ class MeshDecorator extends Decorator {
     onDestroy() {
         super.onDestroy();
         this.gameObject.remove(this.mesh);
+    }
+}
+
+const VectorFields = ['x', 'y', 'z'];
+class TransformControlsGUI {
+    constructor(controls) {
+        this.onUnselectClick = new ArgEvent();
+        this._controls = controls;
+        this._controlsChange = this._controlsChange.bind(this);
+        this._controlsObjectChange = this._controlsObjectChange.bind(this);
+        this._controls.addEventListener('change', this._controlsChange);
+        this._controls.addEventListener('objectChange', this._controlsObjectChange);
+        // Create the gui.
+        this._rootEl = document.createElement('div');
+        document.body.appendChild(this._rootEl);
+        this._rootEl.id = 'transform-controls-gui';
+        this._rootEl.style.position = 'fixed';
+        this._rootEl.style.right = '0';
+        this._rootEl.style.bottom = '0';
+        this._rootEl.style.minWidth = '250px';
+        this._rootEl.style.maxWidth = '50%';
+        this._rootEl.style.backgroundColor = '#333';
+        this._rootEl.style.color = '#fff';
+        this._rootEl.style.fontFamily = "Courier New";
+        this._rootEl.style.padding = '4px';
+        this._rootEl.style.fontSize = '14px';
+        this._addHeader('Object Name');
+        this._addParagraph('object-name');
+        this._addSpacer();
+        this._addHeader('Local Position');
+        this._addVector3('local-position');
+        this._addSpacer();
+        this._addHeader('Local Rotation');
+        this._addVector3('local-rotation');
+        this._addSpacer();
+        this._addHeader('Local Scale');
+        this._addVector3('local-scale');
+        this._addSpacer();
+        this._addHeader('Transform Mode');
+        this._addButtonRow([
+            {
+                text: 'Translate',
+                callback: (e) => {
+                    this._controls.setMode('translate');
+                }
+            },
+            {
+                text: 'Rotate',
+                callback: (e) => {
+                    this._controls.setMode('rotate');
+                }
+            },
+            {
+                text: 'Scale',
+                callback: (e) => {
+                    this._controls.setMode('scale');
+                }
+            },
+        ]);
+        this._addSpacer();
+        this._addHeader('Transform Space');
+        this._addButtonRow([
+            {
+                text: 'Local',
+                callback: (e) => {
+                    this._controls.setSpace('local');
+                }
+            },
+            {
+                text: 'World',
+                callback: (e) => {
+                    this._controls.setSpace('world');
+                }
+            },
+        ]);
+        this._addSpacer('24px');
+        this._addButton('Unselect Object', (e) => {
+            this.onUnselectClick.invoke(this);
+        });
+        this.refresh();
+    }
+    _addHeader(title) {
+        const headerEl = document.createElement('div');
+        this._rootEl.appendChild(headerEl);
+        headerEl.style.backgroundColor = '#555';
+        headerEl.style.width = '100%';
+        headerEl.style.textAlign = 'left';
+        headerEl.style.letterSpacing = '1px';
+        headerEl.style.padding = '4px';
+        headerEl.style.boxSizing = 'border-box';
+        headerEl.textContent = title;
+    }
+    _addSpacer(height) {
+        const spacerEl = document.createElement('div');
+        this._rootEl.appendChild(spacerEl);
+        spacerEl.style.height = (height !== null && height !== void 0 ? height : '16px');
+    }
+    _addParagraph(id) {
+        const paragraphEl = document.createElement('p');
+        this._rootEl.appendChild(paragraphEl);
+        paragraphEl.id = id;
+        paragraphEl.style.boxSizing = 'border-box';
+        paragraphEl.style.margin = '4px 4px 0px 4px';
+    }
+    _setParagraph(id, text) {
+        const paragraphEl = document.querySelector(`#${id}`);
+        if (paragraphEl) {
+            paragraphEl.textContent = text;
+        }
+    }
+    _addButton(text, callback) {
+        const buttonEl = document.createElement('button');
+        this._rootEl.appendChild(buttonEl);
+        buttonEl.style.width = '100%';
+        buttonEl.style.fontSize = '14px';
+        buttonEl.textContent = text;
+        buttonEl.onclick = (e) => callback(e);
+    }
+    _addButtonRow(configs) {
+        const rowEl = document.createElement('div');
+        this._rootEl.appendChild(rowEl);
+        rowEl.style.display = 'flex';
+        rowEl.style.flexDirection = 'row';
+        for (let i = 0; i < configs.length; i++) {
+            const config = configs[i];
+            const buttonEl = document.createElement('button');
+            rowEl.appendChild(buttonEl);
+            buttonEl.style.width = '100%';
+            buttonEl.style.fontSize = '14px';
+            buttonEl.textContent = config.text;
+            buttonEl.onclick = (e) => config.callback(e);
+        }
+    }
+    _addVector3(id) {
+        const vectorEl = document.createElement('div');
+        this._rootEl.appendChild(vectorEl);
+        vectorEl.id = id;
+        vectorEl.style.display = 'flex';
+        vectorEl.style.flexDirection = 'row';
+        for (let i = 0; i < VectorFields.length; i++) {
+            const field = VectorFields[i];
+            const labelEl = document.createElement('label');
+            vectorEl.appendChild(labelEl);
+            labelEl.htmlFor = field;
+            labelEl.textContent = `${field.toUpperCase()}:`;
+            const inputEl = document.createElement('input');
+            vectorEl.appendChild(inputEl);
+            inputEl.type = 'number';
+            inputEl.readOnly = true;
+            inputEl.style.width = '75px';
+            inputEl.id = field;
+            inputEl.name = field;
+        }
+    }
+    _setVector3(id, vector) {
+        const vectorEl = document.querySelector(`#${id}`);
+        if (vectorEl) {
+            for (let i = 0; i < VectorFields.length; i++) {
+                const field = VectorFields[i];
+                const inputEl = vectorEl.querySelector(`#${field}`);
+                inputEl.value = vector.getComponent(i).toFixed(3);
+            }
+        }
+    }
+    refresh() {
+        if (!this._rootEl) {
+            return;
+        }
+        this._setParagraph('object-name', this._controls.object.name);
+        this._setVector3('local-position', this._controls.object.position);
+        this._setVector3('local-rotation', this._controls.object.rotation.toVector3());
+        this._setVector3('local-scale', this._controls.object.scale);
+    }
+    _controlsChange() {
+        this.refresh();
+    }
+    _controlsObjectChange() {
+        this.refresh();
+    }
+    dispose() {
+        this._controls.removeEventListener('change', this._controlsChange);
+        this._controls.removeEventListener('objectChange', this._controlsObjectChange);
+        if (this._rootEl) {
+            this._rootEl.remove();
+            this._rootEl = null;
+        }
+    }
+}
+
+var TransformTool;
+(function (TransformTool) {
+    var _controls;
+    var _gui;
+    var _mouseDown;
+    TransformTool.onAttach = new ArgEvent();
+    TransformTool.onDetach = new ArgEvent();
+    TransformTool.onMouseDown = new Event();
+    TransformTool.onMouseUp = new Event();
+    TransformTool.onObjectChange = new ArgEvent();
+    function attach(object3d, camera) {
+        if (_controls || _gui) {
+            detach();
+        }
+        const transformCamera = (camera !== null && camera !== void 0 ? camera : APEngine.sceneManager.primaryCamera);
+        if (!transformCamera) {
+            console.error(`[TransformTool] There is no valid camera to create transfrom controls with.`);
+            return;
+        }
+        if (!APEngine.webglRenderer.domElement) {
+            console.error(`[TransformTool] There is no valid dom element to attach transfrom controls events to.`);
+            return;
+        }
+        _controls = new TransformControls(transformCamera, APEngine.webglRenderer.domElement);
+        _controls.attach(object3d);
+        _controls.setSpace('local');
+        _controls.setMode('translate');
+        _controls.addEventListener('change', controlsChange);
+        _controls.addEventListener('mouseDown', controlsMouseDown);
+        _controls.addEventListener('mouseUp', controlsMouseUp);
+        _controls.addEventListener('objectChange', controlsObjectChange);
+        // window.addEventListener('keydown', handleKeyDown);
+        const scene = findParentScene(object3d);
+        scene.add(_controls);
+        _gui = new TransformControlsGUI(_controls);
+        _gui.onUnselectClick.addListener(guiUnselectClick);
+    }
+    TransformTool.attach = attach;
+    function detach() {
+        if (_gui) {
+            _gui.onUnselectClick.removeListener(guiUnselectClick);
+            _gui.dispose();
+            _gui = null;
+        }
+        if (_controls) {
+            _controls.removeEventListener('change', controlsChange);
+            _controls.removeEventListener('mouseDown', controlsMouseDown);
+            _controls.removeEventListener('mouseUp', controlsMouseUp);
+            _controls.removeEventListener('objectChange', controlsObjectChange);
+            // window.removeEventListener('keydown', handleKeyDown;
+            _controls.parent.remove(_controls);
+            _controls.detach();
+            _controls.dispose();
+            _controls = null;
+        }
+    }
+    TransformTool.detach = detach;
+    function getAttachedObject() {
+        if (_controls) {
+            return _controls.object;
+        }
+        else {
+            return null;
+        }
+    }
+    TransformTool.getAttachedObject = getAttachedObject;
+    function isMouseDown() {
+        return _mouseDown;
+    }
+    TransformTool.isMouseDown = isMouseDown;
+    function guiUnselectClick() {
+        detach();
+    }
+    function controlsChange() {
+    }
+    function controlsObjectChange() {
+        TransformTool.onObjectChange.invoke(getAttachedObject());
+    }
+    function controlsMouseDown() {
+        _mouseDown = true;
+        TransformTool.onMouseDown.invoke();
+    }
+    function controlsMouseUp() {
+        _mouseDown = false;
+        TransformTool.onMouseUp.invoke();
+    }
+})(TransformTool || (TransformTool = {}));
+
+class TransformPickerDecorator extends Decorator {
+    get pointerTargets() {
+        const children = [];
+        this.gameObject.traverse(obj => children.push(obj));
+        return children;
+    }
+    configure(options) {
+        super.configure(options);
+    }
+    onAttach(gameObject) {
+        super.onAttach(gameObject);
+    }
+    onVisible() {
+        super.onVisible();
+        APEngine.pointerEventSystem.addListener(this);
+    }
+    onInvisible() {
+        super.onInvisible();
+        APEngine.pointerEventSystem.removeListener(this);
+    }
+    onStart() {
+        super.onStart();
+    }
+    onPointerEnter(event) {
+    }
+    onPointerExit(event) {
+    }
+    onPointerDown(event) {
+    }
+    onPointerUp(event) {
+    }
+    onPointerClick(event) {
+        TransformTool.attach(this.gameObject);
+    }
+    onUpdate() {
+        super.onUpdate();
+    }
+    onLateUpdate() {
+        super.onLateUpdate();
+    }
+    onDestroy() {
+        super.onDestroy();
+        if (TransformTool.getAttachedObject() === this.gameObject) {
+            TransformTool.detach();
+        }
+        APEngine.pointerEventSystem.removeListener(this);
     }
 }
 
@@ -17714,5 +18040,5 @@ class Stopwatch {
     }
 }
 
-export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, AnimatorDecorator, ArgEvent, AudioResource, CameraOrbitControls, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, XRInput, XRPhysics, appendLine, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isObjectVisible, loadImage, normalize, normalizeClamped, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds };
+export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, AnimatorDecorator, ArgEvent, AudioResource, CameraOrbitControls, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, XRInput, XRPhysics, appendLine, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isObjectVisible, loadImage, normalize, normalizeClamped, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds };
 //# sourceMappingURL=index.js.map

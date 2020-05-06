@@ -5,7 +5,7 @@ import {
 import { Time } from './Time';
 import { Input } from './input/Input';
 import { GameObject } from "./gameobject/GameObject";
-import { Event } from "./misc/Events";
+import { Event, ArgEvent } from "./misc/Events";
 import { XRInput } from './input/XRInput';
 import { PerformanceStats } from './misc/PerformanceStats';
 import { PerformanceResolutionScalar } from './misc/PerformanceResolutionScalar';
@@ -32,6 +32,7 @@ export namespace APEngine {
     export const onResize: Event = new Event();
     export const onXRSessionStarted: Event = new Event();
     export const onXRSessionEnded: Event = new Event();
+    export const onVisibilityChanged: ArgEvent<boolean> = new ArgEvent();
 
     let _initialized: boolean = false;
     let _xrFrame: any;
@@ -106,6 +107,9 @@ export namespace APEngine {
 
         // Listen for window resize event so that we can update the webgl canvas accordingly.
         window.addEventListener('resize', resize);
+
+        // Listen for page visibility change event so we can disable sounds, etc
+        document.addEventListener('visibilitychange', visibilityChange);
     }
 
     function update(timestamp: any, frame: any) {
@@ -202,5 +206,9 @@ export namespace APEngine {
         sceneManager.resizeCameras(width, height);
 
         onResize.invoke();
+    }
+
+    function visibilityChange() {
+        onVisibilityChanged.invoke(document.hidden);
     }
 }

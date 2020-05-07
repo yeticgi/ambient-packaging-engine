@@ -30,4 +30,5 @@ export declare namespace APEngine {
     function getMaxPixelRatio(): number;
     function setMaxPixelRatio(pixelRatio: number): void;
     function dispose(): void;
+    function setAudioMuted(muted: boolean): void;
 }

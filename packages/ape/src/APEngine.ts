@@ -209,6 +209,13 @@ export namespace APEngine {
     }
 
     function visibilityChange() {
+        setAudioMuted(document.hidden);
+
         onVisibilityChanged.invoke(document.hidden);
     }
+
+    export function setAudioMuted(muted:boolean) {
+        Howler.mute(muted);
+    }
+
 }

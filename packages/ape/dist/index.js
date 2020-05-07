@@ -5806,7 +5806,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.1.0';
-    const _time = '1588799202118';
+    const _time = '1588866385406';
     /**
      * The date that this version of the app was built.
      */
@@ -6171,8 +6171,13 @@ var APEngine;
         APEngine.onResize.invoke();
     }
     function visibilityChange() {
+        setAudioMuted(document.hidden);
         APEngine.onVisibilityChanged.invoke(document.hidden);
     }
+    function setAudioMuted(muted) {
+        Howler.mute(muted);
+    }
+    APEngine.setAudioMuted = setAudioMuted;
 })(APEngine || (APEngine = {}));
 
 class CameraOrbitControls {

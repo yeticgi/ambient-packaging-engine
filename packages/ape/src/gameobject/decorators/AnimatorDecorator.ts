@@ -182,7 +182,7 @@ export class AnimatorDecorator extends Decorator {
     play(clipName: string, options?: PlayClipOptions): void {
         const clip = this._clips.get(clipName);
         if (!clip) {
-            console.error(`There is no clip named ${clip} on the Animator ${this.gameObject.name}`);
+            console.error(`There is no clip named ${clipName} on the Animator ${this.gameObject.name}`);
             return;
         }
         if (this._clipAlreadyPlaying(clip, LoopOnce)) {

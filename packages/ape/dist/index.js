@@ -5806,7 +5806,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.1.0';
-    const _time = '1588866385406';
+    const _time = '1588874388985';
     /**
      * The date that this version of the app was built.
      */
@@ -6511,7 +6511,7 @@ class AnimatorDecorator extends Decorator {
     play(clipName, options) {
         const clip = this._clips.get(clipName);
         if (!clip) {
-            console.error(`There is no clip named ${clip} on the Animator ${this.gameObject.name}`);
+            console.error(`There is no clip named ${clipName} on the Animator ${this.gameObject.name}`);
             return;
         }
         if (this._clipAlreadyPlaying(clip, LoopOnce)) {

@@ -152,7 +152,7 @@ export class AnimatorDecorator extends Decorator {
         if (!this._clips.has(clip.name)) {
             this._clips.set(clip.name, clip);
         } else {
-            console.error(`Animator already has a clip named ${clip.name}. All clips on an Animator must have a unique name.`);
+            console.error(`Animator already has a clip named ${clip.name} on GameObject ${this.gameObject.name}. All clips on an Animator must have a unique name.`);
         }
     }
 
@@ -182,7 +182,7 @@ export class AnimatorDecorator extends Decorator {
     play(clipName: string, options?: PlayClipOptions): void {
         const clip = this._clips.get(clipName);
         if (!clip) {
-            console.error(`There is no clip named ${clipName} on the Animator ${this.gameObject.name}`);
+            console.error(`There is no clip named ${clipName} in the Animator ${this.gameObject.name} for GameObject ${this.gameObject.name}`);
             return;
         }
         if (this._clipAlreadyPlaying(clip, LoopOnce)) {

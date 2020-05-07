@@ -5803,7 +5803,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.1.0';
-    const _time = '1588627506053';
+    const _time = '1588861934745';
     /**
      * The date that this version of the app was built.
      */
@@ -6033,6 +6033,7 @@ var APEngine;
     APEngine.onResize = new Event();
     APEngine.onXRSessionStarted = new Event();
     APEngine.onXRSessionEnded = new Event();
+    APEngine.onVisibilityChanged = new ArgEvent();
     let _initialized = false;
     let _xrFrame;
     let _xrEnabled = false;
@@ -6090,6 +6091,8 @@ var APEngine;
         resize();
         // Listen for window resize event so that we can update the webgl canvas accordingly.
         window.addEventListener('resize', resize);
+        // Listen for page visibility change event so we can disable sounds, etc
+        document.addEventListener('visibilitychange', visibilityChange);
     }
     APEngine.init = init;
     function update(timestamp, frame) {
@@ -6164,6 +6167,14 @@ var APEngine;
         APEngine.sceneManager.resizeCameras(width, height);
         APEngine.onResize.invoke();
     }
+    function visibilityChange() {
+        setAudioMuted(document.hidden);
+        APEngine.onVisibilityChanged.invoke(document.hidden);
+    }
+    function setAudioMuted(muted) {
+        Howler.mute(muted);
+    }
+    APEngine.setAudioMuted = setAudioMuted;
 })(APEngine || (APEngine = {}));
 
 class CameraOrbitControls {

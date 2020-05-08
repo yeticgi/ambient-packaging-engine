@@ -1,10 +1,14 @@
 import { Clock } from 'three';
 import { IDisposable } from './misc/IDisposable';
 import { ArgEvent } from './misc/Events';
+import { PropertySpectator } from './misc/PropertySpectator';
 
 export class Time implements IDisposable {
-    
-    paused: boolean;
+
+    /**
+     * Scalar value for how fast time passes. 0 = paused, 1.0 = normal, 2.0 = 2x fast, 4.0 = 4x fast, etc.
+     */
+    timeScale: number = 1.0;
 
     onUpdate: ArgEvent<Time> = new ArgEvent();
     
@@ -28,14 +32,14 @@ export class Time implements IDisposable {
     }
 
     /**
-     * Number of seconds that have passed since this game view was created.
+     * Number of seconds that have passed since this game view was created. This is affected by timeScale.
      */
     get timeSinceStart(): number {
         return this._timeSinceStart;
     }
 
     /**
-     * Time in seconds that has passed since the last frame.
+     * Time in seconds that has passed since the last frame. This is affected by timeScale.
      */
     get deltaTime(): number {
         return this._deltaTime;
@@ -46,7 +50,7 @@ export class Time implements IDisposable {
         this._frameCount += 1;
 
         const clockDelta = this._clock.getDelta();
-        this._deltaTime = !this.paused ? clockDelta : 0;
+        this._deltaTime = clockDelta * this.timeScale;
         
         this._timeSinceStart += this._deltaTime;
 

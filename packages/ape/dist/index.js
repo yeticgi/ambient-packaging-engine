@@ -125,6 +125,10 @@ var Shout;
 
 class Time {
     constructor() {
+        /**
+         * Scalar value for how fast time passes. 0 = paused, 1.0 = normal, 2.0 = 2x fast, 4.0 = 4x fast, etc.
+         */
+        this.timeScale = 1.0;
         this.onUpdate = new ArgEvent();
         this._frameCount = 0;
         this._timeSinceStart = 0;
@@ -141,13 +145,13 @@ class Time {
         return this._frameCount;
     }
     /**
-     * Number of seconds that have passed since this game view was created.
+     * Number of seconds that have passed since this game view was created. This is affected by timeScale.
      */
     get timeSinceStart() {
         return this._timeSinceStart;
     }
     /**
-     * Time in seconds that has passed since the last frame.
+     * Time in seconds that has passed since the last frame. This is affected by timeScale.
      */
     get deltaTime() {
         return this._deltaTime;
@@ -156,7 +160,7 @@ class Time {
         // Track time.
         this._frameCount += 1;
         const clockDelta = this._clock.getDelta();
-        this._deltaTime = !this.paused ? clockDelta : 0;
+        this._deltaTime = clockDelta * this.timeScale;
         this._timeSinceStart += this._deltaTime;
         this.onUpdate.invoke(this);
     }
@@ -5805,8 +5809,8 @@ var APEngineBuildInfo;
     /**
      * Version number of the app.
      */
-    APEngineBuildInfo.version = '0.1.0';
-    const _time = '1588948835398';
+    APEngineBuildInfo.version = '0.1.1';
+    const _time = '1588970213291';
     /**
      * The date that this version of the app was built.
      */
@@ -6437,8 +6441,13 @@ class ActionTracker {
     contains(action) {
         return this._actions.some(a => a === action);
     }
-    get(index) {
+    getByIndex(index) {
         return this._actions[index];
+    }
+    getActionsWithWeight() {
+        return this._actions.filter((action) => {
+            return action.weight > 0;
+        });
     }
     tryGet(index) {
         if (index >= 0 && index < this._actions.length) {
@@ -6483,11 +6492,24 @@ class AnimatorDecorator extends Decorator {
     constructor() {
         super(...arguments);
         this._clips = new Map();
-        this._activeActionTracker = new ActionTracker();
+        this._actionTracker = new ActionTracker();
+        this._timeScale = 1.0;
         this.onAnimationLoop = new ArgEvent();
         this.onAnimationFinished = new ArgEvent();
     }
     get clips() { return Array.from(this._clips.values()); }
+    /**
+     * The global time scale of the animator.
+     */
+    get timeScale() {
+        return this._timeScale;
+    }
+    set timeScale(value) {
+        this._timeScale = value;
+        if (this._mixer) {
+            this._mixer.timeScale = value;
+        }
+    }
     configure(options) {
         super.configure(options);
         if (options.clips) {
@@ -6511,6 +6533,7 @@ class AnimatorDecorator extends Decorator {
         this._mixer = new AnimationMixer(this.gameObject);
         this._mixer.addEventListener('loop', this._onActionLoop);
         this._mixer.addEventListener('finished', this._onActionFinished);
+        this._mixer.timeScale = this._timeScale;
     }
     onVisible() {
         super.onVisible();
@@ -6528,24 +6551,30 @@ class AnimatorDecorator extends Decorator {
             return;
         }
         if (this._clipAlreadyPlaying(clip, LoopOnce)) {
+            console.warn(`There is already an action that is playing the clip ${clip.name}`);
             // There is already an action that is playing the clip.
             return;
         }
         if (!options) {
             options = {};
         }
-        // Create action for clip.
+        // Get action for clip.
         const action = this._mixer.clipAction(clip).reset();
-        if (this._activeActionTracker.count > 0 && options.crossFadeDuration > 0) {
-            // Perform a crossfade from active action.
-            const fromAction = this._activeActionTracker.get(0);
-            action.crossFadeFrom(fromAction, options.crossFadeDuration, options.crossFadeWarping);
-            // From action is no longer considered active by Animator as it is being faded out.
-            this._activeActionTracker.remove(fromAction);
+        const actionsWithWeight = this._actionTracker.getActionsWithWeight();
+        if (actionsWithWeight.length > 0 &&
+            this._actionTracker.count > 0 &&
+            options.transitionDuration > 0) {
+            // Fade out all other clips that currently have weight values above 0.
+            for (let i = 0; i < actionsWithWeight.length; i++) {
+                actionsWithWeight[i].fadeOut(options.transitionDuration);
+            }
+            // Fade in the new action.
+            action.fadeIn(options.transitionDuration);
         }
         else {
             // Stop all current actions.
             this.stopAll();
+            action.weight = 1.0;
         }
         // Set the loop properties.
         if (options.loop) {
@@ -6554,7 +6583,7 @@ class AnimatorDecorator extends Decorator {
         else {
             action.setLoop(LoopOnce, 0);
         }
-        action.clampWhenFinished = options.clampWhenFinished;
+        action.clampWhenFinished = true;
         // Change start time if one is provided.
         if (options.normalizedStartTime) {
             options.normalizedStartTime = clamp(options.normalizedStartTime, 0, 1);
@@ -6562,13 +6591,13 @@ class AnimatorDecorator extends Decorator {
         }
         // Play the action.
         action.play();
-        this._activeActionTracker.add(action);
+        this._actionTracker.add(action);
     }
     stopAll() {
-        for (let i = 0; i < this._activeActionTracker.count; i++) {
-            const action = this._activeActionTracker.get(i);
+        for (let i = 0; i < this._actionTracker.count; i++) {
+            const action = this._actionTracker.getByIndex(i);
             action.stop();
-            this._activeActionTracker.remove(action);
+            this._actionTracker.remove(action);
         }
     }
     onUpdate() {
@@ -6586,7 +6615,6 @@ class AnimatorDecorator extends Decorator {
     }
     _onActionFinished(e) {
         const finishEvent = e;
-        this._activeActionTracker.remove(finishEvent.action);
         this.onAnimationFinished.invoke({
             clipName: finishEvent.action.getClip().name
         });

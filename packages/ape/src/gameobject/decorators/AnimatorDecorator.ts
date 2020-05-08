@@ -11,7 +11,6 @@ import { IDecoratorOptions, Decorator } from './Decorator';
 import { GameObject } from '../GameObject';
 import { APEngine } from '../../APEngine';
 import { ArgEvent } from '../../misc/Events';
-import { IDisposable } from '../../misc/IDisposable';
 import { clamp, unnormalize } from '../../utils/MathUtils';
 
 export interface IAnimatorDecoratorOptions extends IDecoratorOptions {
@@ -33,7 +32,7 @@ interface ActionLoopEvent extends ActionEvent {
     loopDelta: number;
 }
 
-interface AnimatorEvent {
+export interface AnimatorEvent {
     clipName: string;
 }
 
@@ -48,8 +47,14 @@ class ActionTracker {
         return this._actions.some(a => a === action);
     }
     
-    get(index: number): AnimationAction {
+    getByIndex(index: number): AnimationAction {
         return this._actions[index];
+    }
+
+    getActionsWithWeight(): AnimationAction[] {
+        return this._actions.filter((action) => {
+            return action.weight > 0;
+        });
     }
 
     tryGet(index: number): AnimationAction {
@@ -105,21 +110,11 @@ export interface PlayClipOptions {
      */
     loop?: boolean;
 
-    /**
-     * Should the animation clamp to the pose of the last frame when finished?
-     */
-    clampWhenFinished?: boolean;
-    
-    /**
-     * How long a crossfade should take (in seconds) if there is an animation currently playing.
+    /** 
+     * How quickly to transition to this animation.
      * If this value is 0 or less, then all animations will be stopped before playing the clip.
      */
-    crossFadeDuration?: number;
-
-    /**
-     * If true, additional warping (gradually changes of the time scales) will be applied.
-     */
-    crossFadeWarping?: boolean;
+    transitionDuration?: number;
 
     /**
      * Time to start playing the clip at in normalized range (0.0 - 1.0).
@@ -131,12 +126,27 @@ export class AnimatorDecorator extends Decorator {
 
     private _mixer: AnimationMixer;
     private _clips: Map<string, AnimationClip> = new Map();
-    private _activeActionTracker = new ActionTracker();
+    private _actionTracker = new ActionTracker();
+    private _timeScale: number = 1.0;
 
     onAnimationLoop: ArgEvent<AnimatorEvent> = new ArgEvent();
     onAnimationFinished: ArgEvent<AnimatorEvent> = new ArgEvent();
 
     get clips(): AnimationClip[] { return Array.from(this._clips.values()) }
+    
+    /**
+     * The global time scale of the animator.
+     */
+    get timeScale(): number {
+        return this._timeScale;
+    }
+    set timeScale(value: number) {
+        this._timeScale = value;
+
+        if (this._mixer) {
+            this._mixer.timeScale = value;
+        }
+    }
     
     configure(options: IAnimatorDecoratorOptions): void {
         super.configure(options);
@@ -165,6 +175,7 @@ export class AnimatorDecorator extends Decorator {
         this._mixer = new AnimationMixer(this.gameObject);
         this._mixer.addEventListener('loop', this._onActionLoop);
         this._mixer.addEventListener('finished', this._onActionFinished);
+        this._mixer.timeScale = this._timeScale;
     }
 
     onVisible() {
@@ -186,6 +197,7 @@ export class AnimatorDecorator extends Decorator {
             return;
         }
         if (this._clipAlreadyPlaying(clip, LoopOnce)) {
+            console.warn(`There is already an action that is playing the clip ${clip.name}`);
             // There is already an action that is playing the clip.
             return;
         }
@@ -194,19 +206,26 @@ export class AnimatorDecorator extends Decorator {
             options = {};
         }
 
-        // Create action for clip.
+        // Get action for clip.
         const action = this._mixer.clipAction(clip).reset();
 
-        if (this._activeActionTracker.count > 0 && options.crossFadeDuration > 0) {
-            // Perform a crossfade from active action.
-            const fromAction = this._activeActionTracker.get(0);
-            action.crossFadeFrom(fromAction, options.crossFadeDuration, options.crossFadeWarping);
+        const actionsWithWeight = this._actionTracker.getActionsWithWeight();
+        if (actionsWithWeight.length > 0 && 
+            this._actionTracker.count > 0 &&
+            options.transitionDuration > 0
+        ) {
+            // Fade out all other clips that currently have weight values above 0.
+            for (let i = 0; i < actionsWithWeight.length; i++) {
+                actionsWithWeight[i].fadeOut(options.transitionDuration);
+            }
 
-            // From action is no longer considered active by Animator as it is being faded out.
-            this._activeActionTracker.remove(fromAction);
+            // Fade in the new action.
+            action.fadeIn(options.transitionDuration);
         } else {
             // Stop all current actions.
             this.stopAll();
+
+            action.weight = 1.0;
         }
 
         // Set the loop properties.
@@ -216,7 +235,7 @@ export class AnimatorDecorator extends Decorator {
             action.setLoop(LoopOnce, 0);
         }
 
-        action.clampWhenFinished = options.clampWhenFinished;
+        action.clampWhenFinished = true;
 
         // Change start time if one is provided.
         if (options.normalizedStartTime) {
@@ -227,14 +246,14 @@ export class AnimatorDecorator extends Decorator {
         // Play the action.
         action.play();
         
-        this._activeActionTracker.add(action);
+        this._actionTracker.add(action);
     }
 
     stopAll(): void {
-        for (let i = 0; i < this._activeActionTracker.count; i++) {
-            const action = this._activeActionTracker.get(i);
+        for (let i = 0; i < this._actionTracker.count; i++) {
+            const action = this._actionTracker.getByIndex(i);
             action.stop();
-            this._activeActionTracker.remove(action);
+            this._actionTracker.remove(action);
         }
     }
 
@@ -258,8 +277,6 @@ export class AnimatorDecorator extends Decorator {
 
     private _onActionFinished(e: DispatcherEvent): void {
         const finishEvent = e as ActionFinishedEvent;
-
-        this._activeActionTracker.remove(finishEvent.action);
 
         this.onAnimationFinished.invoke({
             clipName: finishEvent.action.getClip().name

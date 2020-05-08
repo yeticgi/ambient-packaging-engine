@@ -5,7 +5,7 @@ import { ArgEvent } from '../../misc/Events';
 export interface IAnimatorDecoratorOptions extends IDecoratorOptions {
     clips?: AnimationClip[];
 }
-interface AnimatorEvent {
+export interface AnimatorEvent {
     clipName: string;
 }
 export interface PlayClipOptions {
@@ -14,18 +14,10 @@ export interface PlayClipOptions {
      */
     loop?: boolean;
     /**
-     * Should the animation clamp to the pose of the last frame when finished?
-     */
-    clampWhenFinished?: boolean;
-    /**
-     * How long a crossfade should take (in seconds) if there is an animation currently playing.
+     * How quickly to transition to this animation.
      * If this value is 0 or less, then all animations will be stopped before playing the clip.
      */
-    crossFadeDuration?: number;
-    /**
-     * If true, additional warping (gradually changes of the time scales) will be applied.
-     */
-    crossFadeWarping?: boolean;
+    transitionDuration?: number;
     /**
      * Time to start playing the clip at in normalized range (0.0 - 1.0).
      */
@@ -34,10 +26,16 @@ export interface PlayClipOptions {
 export declare class AnimatorDecorator extends Decorator {
     private _mixer;
     private _clips;
-    private _activeActionTracker;
+    private _actionTracker;
+    private _timeScale;
     onAnimationLoop: ArgEvent<AnimatorEvent>;
     onAnimationFinished: ArgEvent<AnimatorEvent>;
     get clips(): AnimationClip[];
+    /**
+     * The global time scale of the animator.
+     */
+    get timeScale(): number;
+    set timeScale(value: number);
     configure(options: IAnimatorDecoratorOptions): void;
     addClip(clip: AnimationClip): void;
     onAttach(gameObject: GameObject): void;
@@ -53,4 +51,3 @@ export declare class AnimatorDecorator extends Decorator {
     private _clipAlreadyPlaying;
     onDestroy(): void;
 }
-export {};

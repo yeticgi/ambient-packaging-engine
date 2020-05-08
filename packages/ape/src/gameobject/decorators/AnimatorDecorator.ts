@@ -53,7 +53,7 @@ class ActionTracker {
 
     getActionsWithWeight(): AnimationAction[] {
         return this._actions.filter((action) => {
-            return action.weight > 0;
+            return action.getEffectiveWeight() > 0;
         });
     }
 
@@ -213,26 +213,27 @@ export class AnimatorDecorator extends Decorator {
         let actionsWithWeight = this._actionTracker.getActionsWithWeight();
         if (actionsWithWeight && actionsWithWeight.length > 0) {
             // Filter out the clip that we are about to start playing.
-            actionsWithWeight = actionsWithWeight.filter(action => action !== action);
+            actionsWithWeight = actionsWithWeight.filter(a => a !== action);
         }
 
         if (actionsWithWeight &&
             actionsWithWeight.length > 0 && 
-            this._actionTracker.count > 0 &&
             options.transitionDuration > 0
         ) {
             // Fade out the action that still have weight.
             for (let i = 0; i < actionsWithWeight.length; i++) {
+                actionsWithWeight[i].stopFading();
                 actionsWithWeight[i].fadeOut(options.transitionDuration);
             }
 
             // Fade in the new action.
+            action.stopFading();
             action.fadeIn(options.transitionDuration);
         } else {
             // Stop all current actions.
             this.stopAll();
 
-            action.weight = 1.0;
+            action.setEffectiveWeight(1);
         }
 
         // Set the loop properties.
@@ -242,6 +243,7 @@ export class AnimatorDecorator extends Decorator {
             action.setLoop(LoopOnce, 0);
         }
 
+        // Always clamp on the last frame when finished.
         action.clampWhenFinished = true;
 
         // Change start time if one is provided.

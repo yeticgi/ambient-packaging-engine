@@ -5810,7 +5810,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.1.1';
-    const _time = '1588970213291';
+    const _time = '1588971239751';
     /**
      * The date that this version of the app was built.
      */
@@ -6560,11 +6560,17 @@ class AnimatorDecorator extends Decorator {
         }
         // Get action for clip.
         const action = this._mixer.clipAction(clip).reset();
-        const actionsWithWeight = this._actionTracker.getActionsWithWeight();
-        if (actionsWithWeight.length > 0 &&
+        // Get list of actions that still have weight.
+        let actionsWithWeight = this._actionTracker.getActionsWithWeight();
+        if (actionsWithWeight && actionsWithWeight.length > 0) {
+            // Filter out the clip that we are about to start playing.
+            actionsWithWeight = actionsWithWeight.filter(action => action !== action);
+        }
+        if (actionsWithWeight &&
+            actionsWithWeight.length > 0 &&
             this._actionTracker.count > 0 &&
             options.transitionDuration > 0) {
-            // Fade out all other clips that currently have weight values above 0.
+            // Fade out the action that still have weight.
             for (let i = 0; i < actionsWithWeight.length; i++) {
                 actionsWithWeight[i].fadeOut(options.transitionDuration);
             }

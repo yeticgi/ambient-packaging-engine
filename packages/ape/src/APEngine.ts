@@ -38,6 +38,7 @@ export namespace APEngine {
     let _xrFrame: any;
     let _xrEnabled: boolean = false;
     let _maxPixelRatio: number = 0;
+    let _audioMutedCount: number = 0;
 
     export function isXREnabled() {
         return _xrEnabled;
@@ -215,7 +216,18 @@ export namespace APEngine {
     }
 
     export function setAudioMuted(muted:boolean) {
-        Howler.mute(muted);
+        if (muted) {
+            _audioMutedCount++;
+            if (_audioMutedCount > 0) {
+                Howler.mute(true);
+            }
+        } else {
+            _audioMutedCount--;
+            if (_audioMutedCount <= 0) {
+                _audioMutedCount = 0;
+                Howler.mute(false);
+            }
+        }
     }
 
 }

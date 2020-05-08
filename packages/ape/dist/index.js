@@ -5806,7 +5806,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.1.0';
-    const _time = '1588874787860';
+    const _time = '1588948835398';
     /**
      * The date that this version of the app was built.
      */
@@ -6041,6 +6041,7 @@ var APEngine;
     let _xrFrame;
     let _xrEnabled = false;
     let _maxPixelRatio = 0;
+    let _audioMutedCount = 0;
     function isXREnabled() {
         return _xrEnabled;
     }
@@ -6175,7 +6176,19 @@ var APEngine;
         APEngine.onVisibilityChanged.invoke(document.hidden);
     }
     function setAudioMuted(muted) {
-        Howler.mute(muted);
+        if (muted) {
+            _audioMutedCount++;
+            if (_audioMutedCount > 0) {
+                Howler.mute(true);
+            }
+        }
+        else {
+            _audioMutedCount--;
+            if (_audioMutedCount <= 0) {
+                _audioMutedCount = 0;
+                Howler.mute(false);
+            }
+        }
     }
     APEngine.setAudioMuted = setAudioMuted;
 })(APEngine || (APEngine = {}));

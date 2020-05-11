@@ -5307,11 +5307,16 @@ function waitForCondition(condition, timeout, tickRate) {
  */
 function waitForSeconds(seconds) {
     return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve, reject) => {
-            window.setTimeout(() => {
-                return resolve();
-            }, (seconds * 1000));
-        });
+        if (seconds > 0) {
+            return new Promise((resolve, reject) => {
+                window.setTimeout(() => {
+                    return resolve();
+                }, (seconds * 1000));
+            });
+        }
+        else {
+            return Promise.resolve();
+        }
     });
 }
 
@@ -5810,7 +5815,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.1.1';
-    const _time = '1588974415801';
+    const _time = '1589218443847';
     /**
      * The date that this version of the app was built.
      */

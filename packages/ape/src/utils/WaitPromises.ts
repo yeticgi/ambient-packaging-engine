@@ -52,9 +52,13 @@ export async function waitForCondition(condition: () => boolean, timeout?: numbe
  * @param seconds Number of seconds to wait before resolving the promise.
  */
 export async function waitForSeconds(seconds: number): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-        window.setTimeout(() => {
-            return resolve();
-        }, (seconds * 1000));
-    });
+    if (seconds > 0) {
+        return new Promise<void>((resolve, reject) => {
+            window.setTimeout(() => {
+                return resolve();
+            }, (seconds * 1000));
+        });
+    } else {
+        return Promise.resolve();
+    }
 }

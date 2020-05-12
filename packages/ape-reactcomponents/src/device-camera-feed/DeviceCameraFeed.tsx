@@ -5,7 +5,8 @@ interface IDeviceCameraFeedProps {
     /**
      * The Device Camera to use as input for video feed rendering.
      */
-    deviceCamera: DeviceCamera
+    deviceCamera: DeviceCamera,
+    className?: string;
 }
 
 export class DeviceCameraFeed extends Component<IDeviceCameraFeedProps> {
@@ -56,16 +57,20 @@ export class DeviceCameraFeed extends Component<IDeviceCameraFeedProps> {
     }
 
     render() {
-        const style: React.CSSProperties = {
-            position: 'fixed',
-            width: '100%',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)'
-        };
+        
+        var style:React.CSSProperties = {};
+        if (!this.props.className) {
+            style = {
+                position: 'fixed',
+                width: '100%',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)'
+            };
+        }
 
         return (
-            <canvas style={style} ref={this._canvasRef} />
+            <canvas style={style} ref={this._canvasRef} className={this.props.className} />
         );
     }
 }

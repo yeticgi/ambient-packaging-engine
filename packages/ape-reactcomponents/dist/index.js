@@ -192,14 +192,17 @@ class DeviceCameraFeed extends Component {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     }
     render() {
-        const style = {
-            position: 'fixed',
-            width: '100%',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)'
-        };
-        return (React.createElement("canvas", { style: style, ref: this._canvasRef }));
+        var style = {};
+        if (!this.props.className) {
+            style = {
+                position: 'fixed',
+                width: '100%',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)'
+            };
+        }
+        return (React.createElement("canvas", { style: style, ref: this._canvasRef, className: this.props.className }));
     }
 }
 

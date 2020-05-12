@@ -11,7 +11,9 @@ import {
     BoxBufferGeometry,
     MeshBasicMaterial,
     MeshStandardMaterial,
-    Material
+    Material,
+    Camera,
+    Vector3
 } from 'three';
 
 /**
@@ -188,4 +190,18 @@ export function createDebugCube(size: number, color: string, lit?: boolean): Mes
     }
 
     return new Mesh(geometry, material);
+}
+
+export function worldToScreenPosition(object3d: Object3D, camera: Camera): Vector2 {
+    const pos = new Vector3().setFromMatrixPosition(object3d.matrixWorld);
+    pos.project(camera);
+
+    const halfWidth = window.innerWidth * 0.5;
+    const halfHeight = window.innerHeight * 0.5;
+
+    pos.x = (pos.x * halfWidth) + halfWidth;
+    pos.y = -(pos.y * halfHeight) + halfHeight;
+    pos.z = 0;
+
+    return new Vector2(pos.x, pos.y);
 }

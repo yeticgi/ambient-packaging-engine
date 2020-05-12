@@ -1,4 +1,4 @@
-import { Object3D, Scene, Box2, Box3, Mesh } from 'three';
+import { Object3D, Scene, Box2, Vector2, Box3, Mesh, Camera } from 'three';
 /**
  * Set the parent of the object3d.
  * @param object3d the object to re-parent.
@@ -40,3 +40,4 @@ export declare function isObjectVisible(obj: Object3D): boolean;
 export declare function disposeObject3d(obj: Object3D): void;
 export declare function createDebugSphere(radius: number, color: string, lit?: boolean): Mesh;
 export declare function createDebugCube(size: number, color: string, lit?: boolean): Mesh;
+export declare function worldToScreenPosition(object3d: Object3D, camera: Camera): Vector2;

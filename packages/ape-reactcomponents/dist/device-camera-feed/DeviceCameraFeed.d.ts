@@ -5,6 +5,7 @@ interface IDeviceCameraFeedProps {
      * The Device Camera to use as input for video feed rendering.
      */
     deviceCamera: DeviceCamera;
+    className?: string;
 }
 export declare class DeviceCameraFeed extends Component<IDeviceCameraFeedProps> {
     private _canvasRef;

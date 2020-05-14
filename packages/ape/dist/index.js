@@ -30,7 +30,8 @@ class Event {
         this._listeners = [];
     }
     invoke() {
-        this._listeners.forEach(l => {
+        const listeners = [...this._listeners];
+        listeners.forEach(l => {
             l();
         });
     }
@@ -58,7 +59,8 @@ class ArgEvent {
         this._listeners = [];
     }
     invoke(arg) {
-        this._listeners.forEach(l => {
+        const listeners = [...this._listeners];
+        listeners.forEach(l => {
             l(arg);
         });
     }
@@ -5825,7 +5827,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.1.1';
-    const _time = '1589316395928';
+    const _time = '1589490032942';
     /**
      * The date that this version of the app was built.
      */

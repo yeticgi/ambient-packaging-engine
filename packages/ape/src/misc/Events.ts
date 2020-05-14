@@ -27,7 +27,8 @@ export class Event implements IDisposable {
     }
 
     public invoke() {
-        this._listeners.forEach(l => {
+        const listeners = [...this._listeners];
+        listeners.forEach(l => {
             l();
         });
     }
@@ -64,7 +65,8 @@ export class ArgEvent<T> implements IDisposable {
     }
 
     public invoke(arg: T) {
-        this._listeners.forEach(l => {
+        const listeners = [...this._listeners];
+        listeners.forEach(l => {
             l(arg);
         });
     }

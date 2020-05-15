@@ -38,7 +38,6 @@ export default {
         },
       }),
       typescript({
-        objectHashIgnoreUnknownHack: true,
         check: true,
         clean: true,
         verbosity: 2

@@ -80,24 +80,7 @@ export class GLTFResource extends Resource<GLTFPrefab> {
             gltfLoader.load(
                 this._gltfUrl,
                 (gltf) => {
-                    const gltfGroup = new Group();
-                    gltfGroup.name = this.name;
-
-                    // GLTF comes back as a scene by default.
-                    // Place all children of the loaded GLTF into newly created prefab group.
-                    const scene = gltf.scene;
-                    const sceneChildren = scene.children.slice();
-                    for (let child of sceneChildren) {
-                        // Remove child from scene.
-                        scene.remove(child);
-                        // Place child in prefab group.
-                        gltfGroup.add(child);
-                    }
-
-                    // Dispose of the original GLTF scene.
-                    scene.dispose();
-
-                    const prefab = new GLTFPrefab(gltfGroup, gltf.animations);
+                    const prefab = new GLTFPrefab(gltf.scene, gltf.animations);
                     resolve(prefab);
                 },
                 () => {

@@ -1,4 +1,4 @@
-import { Clock, Vector2, Vector3, Object3D, MathUtils, Plane, Raycaster, Matrix4, Scene, Box2, Layers, Mesh, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, BoxBufferGeometry, PerspectiveCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Ray, Quaternion, Material, Texture, Geometry, BufferGeometry, LoadingManager, Group, TextureLoader } from 'three';
+import { Clock, Vector2, Vector3, Object3D, MathUtils, Plane, Raycaster, Matrix4, Scene, Box2, Layers, Mesh, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, BoxBufferGeometry, PerspectiveCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Ray, Quaternion, Material, Texture, Geometry, BufferGeometry, LoadingManager, TextureLoader } from 'three';
 import { __awaiter } from 'tslib';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import { Howl } from 'howler';
@@ -5830,7 +5830,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.1.1';
-    const _time = '1589554218667';
+    const _time = '1589554566099';
     /**
      * The date that this version of the app was built.
      */
@@ -17827,21 +17827,7 @@ class GLTFResource extends Resource {
             dracoLoader.setDecoderConfig({ type: 'js' });
             gltfLoader.setDRACOLoader(dracoLoader);
             gltfLoader.load(this._gltfUrl, (gltf) => {
-                const gltfGroup = new Group();
-                gltfGroup.name = this.name;
-                // GLTF comes back as a scene by default.
-                // Place all children of the loaded GLTF into newly created prefab group.
-                const scene = gltf.scene;
-                const sceneChildren = scene.children.slice();
-                for (let child of sceneChildren) {
-                    // Remove child from scene.
-                    scene.remove(child);
-                    // Place child in prefab group.
-                    gltfGroup.add(child);
-                }
-                // Dispose of the original GLTF scene.
-                scene.dispose();
-                const prefab = new GLTFPrefab(gltfGroup, gltf.animations);
+                const prefab = new GLTFPrefab(gltf.scene, gltf.animations);
                 resolve(prefab);
             }, () => {
             }, (errorEvent) => {

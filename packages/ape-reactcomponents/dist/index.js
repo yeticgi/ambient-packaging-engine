@@ -28,8 +28,8 @@ function styleInject(css, ref) {
   }
 }
 
-var css = ".threeCanvasParent {\n    width: 100%;\n    height: 100%;\n}";
-styleInject(css);
+var css_248z = ".threeCanvasParent {\n    width: 100%;\n    height: 100%;\n}";
+styleInject(css_248z);
 
 class ThreeContainer extends Component {
     constructor(props) {
@@ -46,8 +46,8 @@ class ThreeContainer extends Component {
     }
 }
 
-var css$1 = ".arButton {\n    display: none;\n    position: absolute;\n    bottom: 20px;\n    padding: 12px 6px;\n    border: 1px solid #fff;\n    border-radius: 4px;\n    background: rgba(0,0,0,0.1);\n    color: #fff;\n    font: 'normal 13px sans-serif';\n    text-align: center;\n    opacity: 0.5;\n    outline: none;\n}\n\n.arButton.start {\n    display: initial;\n    cursor: pointer;\n    left: calc(50% - 50px);\n    width: 100px;\n}\n\n.arButton.disabled {\n    display: initial;\n    cursor: auto;\n    left: calc(50% - 75px);\n    width: 150px;\n}\n\n.arButton.disabled:hover {\n    background: rgba(255, 255, 255, 0.25);\n}";
-styleInject(css$1);
+var css_248z$1 = ".arButton {\n    display: none;\n    position: absolute;\n    bottom: 20px;\n    padding: 12px 6px;\n    border: 1px solid #fff;\n    border-radius: 4px;\n    background: rgba(0,0,0,0.1);\n    color: #fff;\n    font: 'normal 13px sans-serif';\n    text-align: center;\n    opacity: 0.5;\n    outline: none;\n}\n\n.arButton.start {\n    display: initial;\n    cursor: pointer;\n    left: calc(50% - 50px);\n    width: 100px;\n}\n\n.arButton.disabled {\n    display: initial;\n    cursor: auto;\n    left: calc(50% - 75px);\n    width: 150px;\n}\n\n.arButton.disabled:hover {\n    background: rgba(255, 255, 255, 0.25);\n}";
+styleInject(css_248z$1);
 
 /**
  * This is a port of ARButton.js from Three JS to a React component.

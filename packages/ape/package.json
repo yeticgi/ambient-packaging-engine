@@ -29,7 +29,7 @@
         "lodash": "^4.17.15",
         "stats.js": "^0.17.0",
         "three": "^0.116.1",
-        "tslib": "^1.10.0"
+        "tslib": "^2.0.0"
     },
     "main": "dist/index.js",
     "types": "dist/index.d.ts"

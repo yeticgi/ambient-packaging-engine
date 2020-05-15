@@ -35,6 +35,6 @@
         "@yeticgi/ape-reactcomponents": "*",
         "react": "^16.13.1",
         "react-dom": "^16.13.1",
-        "tslib": "^1.10.0"
+        "tslib": "^2.0.0"
     }
 }

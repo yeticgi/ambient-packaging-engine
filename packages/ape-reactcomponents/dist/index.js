@@ -148,7 +148,7 @@ class Overlay extends Component {
             left: '0px',
             width: '100%',
             height: '100%',
-            backgroundColor: (_a = this.props.color, (_a !== null && _a !== void 0 ? _a : 'rgba(0,0,0,0.5)'))
+            backgroundColor: (_a = this.props.color) !== null && _a !== void 0 ? _a : 'rgba(0,0,0,0.5)'
         };
         return (React.createElement("div", { id: 'overlay', style: style, onClick: () => {
                 if (this.props.onClick) {

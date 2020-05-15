@@ -16,7 +16,7 @@
         "@types/lodash": "^4.14.149",
         "@types/stats.js": "^0.17.0",
         "rollup": "^1.32.1",
-        "rollup-plugin-copy": "^3.1.0",
+        "rollup-plugin-copy": "^3.3.0",
         "rollup-plugin-delete": "^1.1.0",
         "rollup-plugin-peer-deps-external": "^2.2.0",
         "rollup-plugin-postcss": "^2.0.3",

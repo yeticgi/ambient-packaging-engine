@@ -77,3 +77,12 @@ export function unnormalizeClamped(normal: number, min: number, max: number): nu
     normal = clamp(normal, 0.0, 1.0);
     return normal * (max - min) + min;
 }
+
+export function calculateFrustumPlanes(size: number, aspect: number): { left: number, right: number, top: number, bottom: number } {
+    return {
+        left: - 0.5 * size * aspect / 2,
+        right: 0.5 * size * aspect / 2,
+        top: size / 2,
+        bottom: - size / 2,
+    }
+}

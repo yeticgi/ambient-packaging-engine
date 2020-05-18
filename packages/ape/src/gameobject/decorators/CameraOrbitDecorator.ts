@@ -1,20 +1,18 @@
-import {
-    PerspectiveCamera,
-    Vector3,
-    Vector2
-} from 'three';
-import { InputType } from '../input/Input';
-import { clampDegAngle, pointOnSphere, clamp } from '../utils/MathUtils';
-import { APEngine } from '../APEngine';
+import { IDecoratorOptions, Decorator } from "./Decorator";
+import { GameObject } from "../GameObject";
+import { Vector3, Vector2 } from "three";
+import { CameraDecorator } from "./CameraDecorator";
+import { clamp, clampDegAngle, pointOnSphere } from "../../utils/MathUtils";
+import { APEngine } from "../../APEngine";
+import { InputType } from "../../input/Input";
 
-export interface IDefaultSettings {
-    zoomDistance?: number;
-    x?: number;
-    y?: number;
+export interface ICameraOrbitDecoratorOptions extends IDecoratorOptions {
 }
 
-export class CameraOrbitControls {
-
+/**
+ * Decorator that provided orbit controls for a camera decorator.
+ */
+export class CameraOrbitDecorator extends Decorator {
     /**
      * The world position that the camera is looking at.
      */
@@ -46,7 +44,7 @@ export class CameraOrbitControls {
 
     rotateWhileZooming: boolean = false;
 
-    private _camera: PerspectiveCamera = null;
+    private _camera: CameraDecorator = null;
     private _inputEnabled: boolean = true;
     private _zoomEnabled: boolean = true;
     private _isDragging: boolean = false;
@@ -83,20 +81,33 @@ export class CameraOrbitControls {
         }
     }
 
-    get camera(): PerspectiveCamera { return this._camera; } 
+    get camera(): CameraDecorator { return this._camera; } 
     get isDragging(): boolean { return this._isDragging; } 
     get isZooming(): boolean { return this._isZooming; }
 
-    constructor(camera: PerspectiveCamera) {
-        this._camera = camera;
+    configure(options: ICameraOrbitDecoratorOptions): void {
+        super.configure(options);
     }
 
-    update(): void {
-        if (this.target) {
-            this._rotateControls();
-            this._zoomControls();
-            this._updateCamera();
+    onAttach(gameObject: GameObject): void {
+        super.onAttach(gameObject);
+
+        this._camera = this.gameObject.getDecorator(CameraDecorator);
+        if (!this._camera) {
+            console.error(`[CameraOrbitDecorator] Needs to be attached to game object with a CameraDecorator.`);
         }
+    }
+
+    onVisible() {
+        super.onVisible();
+    }
+
+    onInvisible() {
+        super.onInvisible();
+    }
+
+    onStart(): void {
+        super.onStart();
     }
 
     setOrbit(x?: number, y?: number) {
@@ -259,16 +270,36 @@ export class CameraOrbitControls {
         this._x = clampDegAngle(this._x, this.xMinDeg, this.xMaxDeg);
         this._y = clampDegAngle(this._y, this.yMinDeg, this.yMaxDeg);
 
-        const position = pointOnSphere(
-            this.target, 
-            this._zoomDistance, 
-            new Vector2(
-                this.invertY ? -this._y : this._y,
-                this.invertX ? -this._x : this._x,
-            )
-        );
-        this._camera.position.copy(position);
+        if (this._camera) {
+            const position = pointOnSphere(
+                this.target, 
+                this._zoomDistance, 
+                new Vector2(
+                    this.invertY ? -this._y : this._y,
+                    this.invertX ? -this._x : this._x,
+                )
+            );
+            
+            this._camera.gameObject.position.copy(position);
+            this._camera.gameObject.lookAt(this.target);
+        }
+    }
+
+    onUpdate(): void {
+        super.onUpdate();
         
-        this._camera.lookAt(this.target);
+        if (this.target) {
+            this._rotateControls();
+            this._zoomControls();
+            this._updateCamera();
+        }
+    }
+
+    onLateUpdate(): void {
+        super.onLateUpdate();
+    }
+
+    onDestroy(): void {
+        super.onDestroy();
     }
 }

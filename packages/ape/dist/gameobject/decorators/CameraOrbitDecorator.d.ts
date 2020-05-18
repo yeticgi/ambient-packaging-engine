@@ -1,10 +1,13 @@
-import { PerspectiveCamera, Vector3 } from 'three';
-export interface IDefaultSettings {
-    zoomDistance?: number;
-    x?: number;
-    y?: number;
+import { IDecoratorOptions, Decorator } from "./Decorator";
+import { GameObject } from "../GameObject";
+import { Vector3 } from "three";
+import { CameraDecorator } from "./CameraDecorator";
+export interface ICameraOrbitDecoratorOptions extends IDecoratorOptions {
 }
-export declare class CameraOrbitControls {
+/**
+ * Decorator that provided orbit controls for a camera decorator.
+ */
+export declare class CameraOrbitDecorator extends Decorator {
     /**
      * The world position that the camera is looking at.
      */
@@ -44,11 +47,14 @@ export declare class CameraOrbitControls {
     set inputEnabled(value: boolean);
     get zoomEnabled(): boolean;
     set zoomEnabled(value: boolean);
-    get camera(): PerspectiveCamera;
+    get camera(): CameraDecorator;
     get isDragging(): boolean;
     get isZooming(): boolean;
-    constructor(camera: PerspectiveCamera);
-    update(): void;
+    configure(options: ICameraOrbitDecoratorOptions): void;
+    onAttach(gameObject: GameObject): void;
+    onVisible(): void;
+    onInvisible(): void;
+    onStart(): void;
     setOrbit(x?: number, y?: number): void;
     setOrbitFromGeoCoord(latitude?: number, longitude?: number): void;
     getOrbit(): {
@@ -60,4 +66,7 @@ export declare class CameraOrbitControls {
     private _rotateControls;
     private _zoomControls;
     private _updateCamera;
+    onUpdate(): void;
+    onLateUpdate(): void;
+    onDestroy(): void;
 }

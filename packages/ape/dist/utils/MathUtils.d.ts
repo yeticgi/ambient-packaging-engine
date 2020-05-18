@@ -10,3 +10,9 @@ export declare function normalize(value: number, min: number, max: number): numb
 export declare function normalizeClamped(value: number, min: number, max: number): number;
 export declare function unnormalize(normal: number, min: number, max: number): number;
 export declare function unnormalizeClamped(normal: number, min: number, max: number): number;
+export declare function calculateFrustumPlanes(size: number, aspect: number): {
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+};

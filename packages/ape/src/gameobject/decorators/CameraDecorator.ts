@@ -16,6 +16,10 @@ export interface ICameraDecoratorOptions extends IDecoratorOptions {
     size?: number;
 }
 
+/**
+ * Camera decorator creates and manages ThreeJS cameras. 
+ * You can change the camera type on the fly by setting the cameraType property.
+ */
 export class CameraDecorator extends Decorator {
 
     private _cameraType: CameraType;

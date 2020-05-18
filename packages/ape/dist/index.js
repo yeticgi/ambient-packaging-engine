@@ -1,4 +1,4 @@
-import { Clock, Vector2, Vector3, Object3D, MathUtils, Plane, Raycaster, Matrix4, Scene, Box2, Layers, Mesh, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, BoxBufferGeometry, PerspectiveCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Ray, Quaternion, Material, Texture, Geometry, BufferGeometry, LoadingManager, TextureLoader } from 'three';
+import { Clock, Vector2, Vector3, Object3D, MathUtils, Plane, Raycaster, Matrix4, Scene, Box2, Layers, Mesh, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, BoxBufferGeometry, PerspectiveCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, OrthographicCamera, Ray, Quaternion, Material, Texture, Geometry, BufferGeometry, LoadingManager, TextureLoader } from 'three';
 import { __awaiter } from 'tslib';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import { Howl } from 'howler';
@@ -4991,6 +4991,14 @@ function unnormalizeClamped(normal, min, max) {
     normal = clamp(normal, 0.0, 1.0);
     return normal * (max - min) + min;
 }
+function calculateFrustumPlanes(size, aspect) {
+    return {
+        left: -0.5 * size * aspect / 2,
+        right: 0.5 * size * aspect / 2,
+        top: size / 2,
+        bottom: -size / 2,
+    };
+}
 
 function hasValue(obj) {
     return obj !== undefined && obj !== null;
@@ -5830,7 +5838,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.1.1';
-    const _time = '1589560650027';
+    const _time = '1589836905065';
     /**
      * The date that this version of the app was built.
      */
@@ -6216,225 +6224,6 @@ var APEngine;
     }
     APEngine.setAudioMuted = setAudioMuted;
 })(APEngine || (APEngine = {}));
-
-class CameraOrbitControls {
-    constructor(camera) {
-        /**
-         * The world position that the camera is looking at.
-         */
-        this.target = new Vector3();
-        /**
-         * The distance in pixels that needs to be crossed in order for dragging to start.
-         */
-        this.dragThreshold = 10.0;
-        this.invertY = true;
-        this.invertX = true;
-        this.xMouseSpeed = 1.0;
-        this.yMouseSpeed = 1.0;
-        this.xTouchSpeed = 1.0;
-        this.yTouchSpeed = 1.0;
-        this.xMinDeg = -360.0;
-        this.xMaxDeg = 360.0;
-        this.yMinDeg = -90.0;
-        this.yMaxDeg = 90.0;
-        this.zoomMouseSpeed = 1.0;
-        this.zoomTouchSpeed = 1.0;
-        this.zoomMin = 0.0;
-        this.zoomMax = 40.0;
-        this.rotateWhileZooming = false;
-        this._camera = null;
-        this._inputEnabled = true;
-        this._zoomEnabled = true;
-        this._isDragging = false;
-        this._isZooming = false;
-        this._x = 0;
-        this._y = 0;
-        this._zoomDistance = 0;
-        this._inputDown = false;
-        this._inputDownStartPos = new Vector2();
-        this._inputDragLastPos = new Vector2();
-        this._inputTouchZoomDist = 0;
-        this._camera = camera;
-    }
-    get inputEnabled() { return this._inputEnabled; }
-    set inputEnabled(value) {
-        this._inputEnabled = value;
-        if (!this.inputEnabled) {
-            this._inputDown = false;
-            this._isDragging = false;
-            this._isZooming = false;
-            this._inputDownStartPos.set(0, 0);
-            this._inputDragLastPos.set(0, 0);
-            this._inputTouchZoomDist = 0;
-        }
-    }
-    get zoomEnabled() { return this._zoomEnabled; }
-    set zoomEnabled(value) {
-        this._zoomEnabled = value;
-        if (!this._zoomEnabled) {
-            this._isZooming = false;
-            this._inputTouchZoomDist = 0;
-        }
-    }
-    get camera() { return this._camera; }
-    get isDragging() { return this._isDragging; }
-    get isZooming() { return this._isZooming; }
-    update() {
-        if (this.target) {
-            this._rotateControls();
-            this._zoomControls();
-            this._updateCamera();
-        }
-    }
-    setOrbit(x, y) {
-        let set = false;
-        if (typeof x === 'number') {
-            this._x = x;
-            set = true;
-        }
-        if (typeof y === 'number') {
-            this._y = y;
-            set = true;
-        }
-        if (set) {
-            this._updateCamera();
-        }
-    }
-    setOrbitFromGeoCoord(latitude, longitude) {
-        let set = false;
-        if (typeof longitude === 'number') {
-            this._x = -90 + longitude;
-            set = true;
-        }
-        if (typeof latitude === 'number') {
-            this._y = -latitude;
-            set = true;
-        }
-        if (set) {
-            this._updateCamera();
-        }
-    }
-    getOrbit() {
-        return {
-            x: this._x,
-            y: this._y
-        };
-    }
-    setZoomDistance(zoom) {
-        zoom = clamp(zoom, this.zoomMin, this.zoomMax);
-        if (this._zoomDistance !== zoom) {
-            this._zoomDistance = zoom;
-            this._updateCamera();
-        }
-    }
-    getZoomDistance() {
-        return this._zoomDistance;
-    }
-    _rotateControls() {
-        if (!this.inputEnabled) {
-            return;
-        }
-        const input = APEngine.input;
-        if (input.currentInputType === InputType.Touch && input.getTouchDown(0)) {
-            this._inputDown = true;
-            this._isDragging = false;
-            this._inputDownStartPos.copy(input.getTouchClientPos(0));
-        }
-        else if (input.currentInputType === InputType.Mouse && input.getMouseButtonDown(0)) {
-            this._inputDown = true;
-            this._isDragging = false;
-            this._inputDownStartPos.copy(input.getMouseClientPos());
-        }
-        if (this._inputDown && !this._isDragging) {
-            // Need to cross drag theshold in order to start dragging.
-            let dragDistance = 0.0;
-            let inputPos;
-            if (input.currentInputType === InputType.Touch) {
-                inputPos = input.getTouchClientPos(0);
-            }
-            else {
-                inputPos = input.getMouseClientPos();
-            }
-            dragDistance = this._inputDownStartPos.distanceTo(inputPos);
-            if (dragDistance >= this.dragThreshold) {
-                this._isDragging = true;
-                this._inputDragLastPos.copy(inputPos);
-            }
-        }
-        if (input.currentInputType === InputType.Touch && input.getTouchUp(0)) {
-            this._inputDown = false;
-            this._isDragging = false;
-            this._inputDownStartPos.set(0, 0);
-        }
-        else if (input.currentInputType === InputType.Mouse && input.getMouseButtonUp(0)) {
-            this._inputDown = false;
-            this._isDragging = false;
-            this._inputDownStartPos.set(0, 0);
-        }
-        if (this._isDragging) {
-            const rotateAllowed = !this.isZooming || (this.isZooming && this.rotateWhileZooming);
-            if (input.currentInputType === InputType.Touch && input.getTouchHeld(0)) {
-                if (rotateAllowed) {
-                    const delta = this._inputDragLastPos.clone().sub(input.getTouchClientPos(0));
-                    this._x += (delta.x * this.xTouchSpeed);
-                    this._y += (delta.y * this.yTouchSpeed);
-                }
-                this._inputDragLastPos.copy(input.getTouchClientPos(0));
-            }
-            else if (input.currentInputType === InputType.Mouse && input.getMouseButtonHeld(0)) {
-                if (rotateAllowed) {
-                    const delta = this._inputDragLastPos.clone().sub(input.getMouseClientPos());
-                    this._x += (delta.x * this.xMouseSpeed);
-                    this._y += (delta.y * this.yMouseSpeed);
-                }
-                this._inputDragLastPos.copy(input.getMouseClientPos());
-            }
-        }
-    }
-    _zoomControls() {
-        if (!this.inputEnabled) {
-            return;
-        }
-        if (!this._zoomEnabled) {
-            return;
-        }
-        const input = APEngine.input;
-        let zoomDelta = 0;
-        if (input.currentInputType === InputType.Touch && input.getTouchCount() === 2) {
-            const posA = input.getTouchClientPos(0);
-            const posB = input.getTouchClientPos(1);
-            const distance = posA.distanceTo(posB);
-            if (input.getTouchDown(1)) {
-                // Pinch zoom start.
-                this._isZooming = true;
-                // Calculate starting distance between the two touch points.
-                this._inputTouchZoomDist = distance;
-            }
-            else {
-                zoomDelta = ((this._inputTouchZoomDist - distance) * this.zoomTouchSpeed);
-                this._inputTouchZoomDist = distance;
-            }
-        }
-        else if (input.currentInputType === InputType.Mouse && input.getWheelMoved()) {
-            this._isZooming = true;
-            zoomDelta = (input.getWheelData().delta.y * this.zoomMouseSpeed);
-        }
-        else {
-            this._isZooming = false;
-            this._inputTouchZoomDist = 0;
-        }
-        if (zoomDelta !== 0) {
-            this._zoomDistance = clamp(this._zoomDistance + zoomDelta, this.zoomMin, this.zoomMax);
-        }
-    }
-    _updateCamera() {
-        this._x = clampDegAngle(this._x, this.xMinDeg, this.xMaxDeg);
-        this._y = clampDegAngle(this._y, this.yMinDeg, this.yMaxDeg);
-        const position = pointOnSphere(this.target, this._zoomDistance, new Vector2(this.invertY ? -this._y : this._y, this.invertX ? -this._x : this._x));
-        this._camera.position.copy(position);
-        this._camera.lookAt(this.target);
-    }
-}
 
 var ThreeDevTools;
 (function (ThreeDevTools) {
@@ -7026,6 +6815,410 @@ class TransformPickerDecorator extends Decorator {
             TransformTool.detach();
         }
         APEngine.pointerEventSystem.removeListener(this);
+    }
+}
+
+/**
+ * Camera decorator creates and manages ThreeJS cameras.
+ * You can change the camera type on the fly by setting the cameraType property.
+ */
+class CameraDecorator extends Decorator {
+    /**
+     * Is the camera orthographic or perspective.
+     */
+    get cameraType() { return this._cameraType; }
+    set cameraType(value) {
+        if (this._cameraType !== value) {
+            this._cameraType = value;
+            this._removeCamera();
+            this._createCamera();
+        }
+    }
+    /**
+     * Field of View for perspective camera. No affect on orthographic cameras.
+     */
+    get fov() { return this._fov; }
+    set fov(value) {
+        if (this._fov !== value) {
+            this._fov = value;
+            if (this._camera && this._camera instanceof PerspectiveCamera) {
+                this._camera.fov = this._fov;
+            }
+        }
+    }
+    /**
+     * Zoom level of the camera.
+     */
+    get zoom() { return this._zoom; }
+    set zoom(value) {
+        if (this._zoom !== value) {
+            this._zoom = value;
+            if (this._camera) {
+                this._camera.zoom = this._zoom;
+            }
+        }
+    }
+    /**
+     * Aspect ratio of perspective camera. Has no effect on orthographic camera.
+     */
+    get aspect() { return this._aspect; }
+    set aspect(value) {
+        if (this._aspect !== value) {
+            this._aspect = value;
+            if (this._camera && this._camera instanceof PerspectiveCamera) {
+                this._camera.aspect = this._aspect;
+            }
+        }
+    }
+    /**
+     * Far clipping plane
+     */
+    get far() { return this._far; }
+    set far(value) {
+        if (this._far !== value) {
+            this._far = value;
+            if (this._camera) {
+                this._camera.far = this._far;
+            }
+        }
+    }
+    /**
+     * Near clipping plane
+     */
+    get near() { return this._near; }
+    set near(value) {
+        if (this._near !== value) {
+            this._near = value;
+            if (this._camera) {
+                this._camera.near = this._near;
+            }
+        }
+    }
+    /**
+     * The frustum size of orthographic camera. This has no affect on perspective camera.
+     */
+    get size() { return this._size; }
+    set size(value) {
+        if (this._size !== value) {
+            this._size = value;
+            if (this._camera && this._camera instanceof OrthographicCamera) {
+                const planes = calculateFrustumPlanes(this._size, this._aspect);
+                this._camera.left = planes.left;
+                this._camera.right = planes.right;
+                this._camera.top = planes.top;
+                this._camera.bottom = planes.bottom;
+            }
+        }
+    }
+    /**
+     * ThreeJS camera that is managed by this camera decorator.
+     */
+    get camera() { return this._camera; }
+    configure(options) {
+        super.configure(options);
+        this._cameraType = getOptionalValue(options.cameraType, 'perspective');
+        this._fov = getOptionalValue(options.fov, 50);
+        this._zoom = getOptionalValue(options.zoom, 1);
+        this._aspect = getOptionalValue(options.aspect, window.innerWidth / window.innerHeight);
+        this._far = getOptionalValue(options.far, 2000);
+        this._near = getOptionalValue(options.near, 0.1);
+    }
+    onAttach(gameObject) {
+        super.onAttach(gameObject);
+        this._createCamera();
+    }
+    onVisible() {
+        super.onVisible();
+    }
+    onInvisible() {
+        super.onInvisible();
+    }
+    onStart() {
+        super.onStart();
+    }
+    onUpdate() {
+        super.onUpdate();
+    }
+    onLateUpdate() {
+        super.onLateUpdate();
+    }
+    _createCamera() {
+        if (!this.gameObject) {
+            // Dont create camera until this decorator is attached to a GameObject.
+            return;
+        }
+        if (this._cameraType === 'perspective') {
+            this._camera = new PerspectiveCamera(this._fov, this._aspect, this._near, this._far);
+        }
+        else if (this._cameraType === 'orthographic') {
+            const planes = calculateFrustumPlanes(this._size, this._aspect);
+            this._camera = new OrthographicCamera(planes.left, planes.right, planes.top, planes.bottom, this._near, this._far);
+        }
+        else {
+            console.error(`[CameraDecorator] Can't create camera. Unknown camera type: ${this._cameraType}`);
+        }
+    }
+    _removeCamera() {
+        if (this._camera) {
+            if (this._camera.parent) {
+                this._camera.parent.remove(this._camera);
+            }
+            this._camera = null;
+        }
+    }
+    onDestroy() {
+        super.onDestroy();
+        this._removeCamera();
+    }
+}
+
+/**
+ * Decorator that provided orbit controls for a camera decorator.
+ */
+class CameraOrbitDecorator extends Decorator {
+    constructor() {
+        super(...arguments);
+        /**
+         * The world position that the camera is looking at.
+         */
+        this.target = new Vector3();
+        /**
+         * The distance in pixels that needs to be crossed in order for dragging to start.
+         */
+        this.dragThreshold = 10.0;
+        this.invertY = true;
+        this.invertX = true;
+        this.xMouseSpeed = 1.0;
+        this.yMouseSpeed = 1.0;
+        this.xTouchSpeed = 1.0;
+        this.yTouchSpeed = 1.0;
+        this.xMinDeg = -360.0;
+        this.xMaxDeg = 360.0;
+        this.yMinDeg = -90.0;
+        this.yMaxDeg = 90.0;
+        this.zoomMouseSpeed = 1.0;
+        this.zoomTouchSpeed = 1.0;
+        this.zoomMin = 0.0;
+        this.zoomMax = 40.0;
+        this.rotateWhileZooming = false;
+        this._camera = null;
+        this._inputEnabled = true;
+        this._zoomEnabled = true;
+        this._isDragging = false;
+        this._isZooming = false;
+        this._x = 0;
+        this._y = 0;
+        this._zoomDistance = 0;
+        this._inputDown = false;
+        this._inputDownStartPos = new Vector2();
+        this._inputDragLastPos = new Vector2();
+        this._inputTouchZoomDist = 0;
+    }
+    get inputEnabled() { return this._inputEnabled; }
+    set inputEnabled(value) {
+        this._inputEnabled = value;
+        if (!this.inputEnabled) {
+            this._inputDown = false;
+            this._isDragging = false;
+            this._isZooming = false;
+            this._inputDownStartPos.set(0, 0);
+            this._inputDragLastPos.set(0, 0);
+            this._inputTouchZoomDist = 0;
+        }
+    }
+    get zoomEnabled() { return this._zoomEnabled; }
+    set zoomEnabled(value) {
+        this._zoomEnabled = value;
+        if (!this._zoomEnabled) {
+            this._isZooming = false;
+            this._inputTouchZoomDist = 0;
+        }
+    }
+    get camera() { return this._camera; }
+    get isDragging() { return this._isDragging; }
+    get isZooming() { return this._isZooming; }
+    configure(options) {
+        super.configure(options);
+    }
+    onAttach(gameObject) {
+        super.onAttach(gameObject);
+        this._camera = this.gameObject.getDecorator(CameraDecorator);
+        if (!this._camera) {
+            console.error(`[CameraOrbitDecorator] Needs to be attached to game object with a CameraDecorator.`);
+        }
+    }
+    onVisible() {
+        super.onVisible();
+    }
+    onInvisible() {
+        super.onInvisible();
+    }
+    onStart() {
+        super.onStart();
+    }
+    setOrbit(x, y) {
+        let set = false;
+        if (typeof x === 'number') {
+            this._x = x;
+            set = true;
+        }
+        if (typeof y === 'number') {
+            this._y = y;
+            set = true;
+        }
+        if (set) {
+            this._updateCamera();
+        }
+    }
+    setOrbitFromGeoCoord(latitude, longitude) {
+        let set = false;
+        if (typeof longitude === 'number') {
+            this._x = -90 + longitude;
+            set = true;
+        }
+        if (typeof latitude === 'number') {
+            this._y = -latitude;
+            set = true;
+        }
+        if (set) {
+            this._updateCamera();
+        }
+    }
+    getOrbit() {
+        return {
+            x: this._x,
+            y: this._y
+        };
+    }
+    setZoomDistance(zoom) {
+        zoom = clamp(zoom, this.zoomMin, this.zoomMax);
+        if (this._zoomDistance !== zoom) {
+            this._zoomDistance = zoom;
+            this._updateCamera();
+        }
+    }
+    getZoomDistance() {
+        return this._zoomDistance;
+    }
+    _rotateControls() {
+        if (!this.inputEnabled) {
+            return;
+        }
+        const input = APEngine.input;
+        if (input.currentInputType === InputType.Touch && input.getTouchDown(0)) {
+            this._inputDown = true;
+            this._isDragging = false;
+            this._inputDownStartPos.copy(input.getTouchClientPos(0));
+        }
+        else if (input.currentInputType === InputType.Mouse && input.getMouseButtonDown(0)) {
+            this._inputDown = true;
+            this._isDragging = false;
+            this._inputDownStartPos.copy(input.getMouseClientPos());
+        }
+        if (this._inputDown && !this._isDragging) {
+            // Need to cross drag theshold in order to start dragging.
+            let dragDistance = 0.0;
+            let inputPos;
+            if (input.currentInputType === InputType.Touch) {
+                inputPos = input.getTouchClientPos(0);
+            }
+            else {
+                inputPos = input.getMouseClientPos();
+            }
+            dragDistance = this._inputDownStartPos.distanceTo(inputPos);
+            if (dragDistance >= this.dragThreshold) {
+                this._isDragging = true;
+                this._inputDragLastPos.copy(inputPos);
+            }
+        }
+        if (input.currentInputType === InputType.Touch && input.getTouchUp(0)) {
+            this._inputDown = false;
+            this._isDragging = false;
+            this._inputDownStartPos.set(0, 0);
+        }
+        else if (input.currentInputType === InputType.Mouse && input.getMouseButtonUp(0)) {
+            this._inputDown = false;
+            this._isDragging = false;
+            this._inputDownStartPos.set(0, 0);
+        }
+        if (this._isDragging) {
+            const rotateAllowed = !this.isZooming || (this.isZooming && this.rotateWhileZooming);
+            if (input.currentInputType === InputType.Touch && input.getTouchHeld(0)) {
+                if (rotateAllowed) {
+                    const delta = this._inputDragLastPos.clone().sub(input.getTouchClientPos(0));
+                    this._x += (delta.x * this.xTouchSpeed);
+                    this._y += (delta.y * this.yTouchSpeed);
+                }
+                this._inputDragLastPos.copy(input.getTouchClientPos(0));
+            }
+            else if (input.currentInputType === InputType.Mouse && input.getMouseButtonHeld(0)) {
+                if (rotateAllowed) {
+                    const delta = this._inputDragLastPos.clone().sub(input.getMouseClientPos());
+                    this._x += (delta.x * this.xMouseSpeed);
+                    this._y += (delta.y * this.yMouseSpeed);
+                }
+                this._inputDragLastPos.copy(input.getMouseClientPos());
+            }
+        }
+    }
+    _zoomControls() {
+        if (!this.inputEnabled) {
+            return;
+        }
+        if (!this._zoomEnabled) {
+            return;
+        }
+        const input = APEngine.input;
+        let zoomDelta = 0;
+        if (input.currentInputType === InputType.Touch && input.getTouchCount() === 2) {
+            const posA = input.getTouchClientPos(0);
+            const posB = input.getTouchClientPos(1);
+            const distance = posA.distanceTo(posB);
+            if (input.getTouchDown(1)) {
+                // Pinch zoom start.
+                this._isZooming = true;
+                // Calculate starting distance between the two touch points.
+                this._inputTouchZoomDist = distance;
+            }
+            else {
+                zoomDelta = ((this._inputTouchZoomDist - distance) * this.zoomTouchSpeed);
+                this._inputTouchZoomDist = distance;
+            }
+        }
+        else if (input.currentInputType === InputType.Mouse && input.getWheelMoved()) {
+            this._isZooming = true;
+            zoomDelta = (input.getWheelData().delta.y * this.zoomMouseSpeed);
+        }
+        else {
+            this._isZooming = false;
+            this._inputTouchZoomDist = 0;
+        }
+        if (zoomDelta !== 0) {
+            this._zoomDistance = clamp(this._zoomDistance + zoomDelta, this.zoomMin, this.zoomMax);
+        }
+    }
+    _updateCamera() {
+        this._x = clampDegAngle(this._x, this.xMinDeg, this.xMaxDeg);
+        this._y = clampDegAngle(this._y, this.yMinDeg, this.yMaxDeg);
+        if (this._camera) {
+            const position = pointOnSphere(this.target, this._zoomDistance, new Vector2(this.invertY ? -this._y : this._y, this.invertX ? -this._x : this._x));
+            this._camera.gameObject.position.copy(position);
+            this._camera.gameObject.lookAt(this.target);
+        }
+    }
+    onUpdate() {
+        super.onUpdate();
+        if (this.target) {
+            this._rotateControls();
+            this._zoomControls();
+            this._updateCamera();
+        }
+    }
+    onLateUpdate() {
+        super.onLateUpdate();
+    }
+    onDestroy() {
+        super.onDestroy();
     }
 }
 
@@ -18126,5 +18319,5 @@ class Stopwatch {
     }
 }
 
-export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, AnimatorDecorator, ArgEvent, AudioResource, CameraOrbitControls, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, XRInput, XRPhysics, appendLine, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isObjectVisible, loadImage, normalize, normalizeClamped, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
+export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, AnimatorDecorator, ArgEvent, AudioResource, CameraDecorator, CameraOrbitDecorator, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, XRInput, XRPhysics, appendLine, calculateFrustumPlanes, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isObjectVisible, loadImage, normalize, normalizeClamped, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
 //# sourceMappingURL=index.js.map

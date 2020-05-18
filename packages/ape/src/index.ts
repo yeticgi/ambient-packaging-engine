@@ -19,6 +19,7 @@ export * from './misc/IDisposable';
 export * from './misc/StateMachine';
 export * from './misc/PropertySpectator';
 export * from './misc/TransformTool';
+export * from './misc/HistoryStack';
 export * from './physics/Physics';
 export * from './physics/XRPhysics';
 export * from './resources/APEResources';

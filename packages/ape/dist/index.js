@@ -5830,7 +5830,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.1.1';
-    const _time = '1589560650027';
+    const _time = '1589814506713';
     /**
      * The date that this version of the app was built.
      */
@@ -17340,6 +17340,180 @@ class PropertySpectator {
     }
 }
 
+/**
+ * This the state type of the special state created by HistoryStack internally that
+ * denotes the start of the history stack (see onHistoryStackStartPop event for furthur details)
+ */
+const StateType_HistoryStackStart = 'historystack_start';
+/**
+ * A custom application style history state stack.
+ * This allows the wrapping of web browser History API functionality in such a way that we can keep track of
+ * our own custom history state stack and treat is like a smartphone app where you only ever travel backwards.
+ */
+var HistoryStack;
+(function (HistoryStack) {
+    var _started;
+    var _historyStack = [];
+    /**
+     * Debug flag for HistoryStack. Enabled lots of useful console logs
+     * for debugging the state of the history stack.
+     */
+    HistoryStack.debug = false;
+    /**
+     * Event invoked when the start of the history stack is popped.
+     * This is a special history state event that HistoryStack creates internally and
+     * is always the starting point of the history stack. This start history state
+     * is often the place you want to go back to the home/default state of your site.
+     */
+    HistoryStack.onHistoryStackStartPopped = new Event();
+    /**
+     * Event invoked when a history state is popped from the history stack.
+     * This will include the special start history state type that HistoryStack created internally.
+     * You can use the onHistoryStackStartPop event to listen for that event specifically if you wish.
+     */
+    HistoryStack.onHistoryStackPopped = new ArgEvent();
+    /**
+     * Start up HistoryStack by hooking up event listeners to the History API
+     * and initializing custom history stack.
+     */
+    function start() {
+        if (_started) {
+            console.error(`HistoryStack is already started.`);
+            return;
+        }
+        if (HistoryStack.debug) {
+            console.log(`[HistoryStack] start`);
+        }
+        _started = true;
+        // Add our popstate event listener.
+        window.addEventListener("popstate", onPopState);
+        // First we establish a "back" page to catch backward navigation.
+        window.history.replaceState({
+            isBackPage: true
+        }, '');
+        // Then push an "app" page on top of that - this is where the user will sit.
+        // (As browsers vary, it might be safer to put this in a short setTimeout).
+        window.history.pushState({
+            isBackPage: false
+        }, '');
+        // Push 'start' history state.
+        pushState({
+            stateType: StateType_HistoryStackStart
+        });
+    }
+    HistoryStack.start = start;
+    /**
+     * Reset the state of HistoryStack. Will clear the custom history stack.
+     */
+    function reset() {
+        // Clear the history stack.
+        _historyStack = [];
+        // Push 'start' history state.
+        pushState({
+            stateType: StateType_HistoryStackStart
+        });
+    }
+    HistoryStack.reset = reset;
+    /**
+     * Get the readonly copy of the current history stack.
+     */
+    function getHistoryStack() {
+        return _historyStack;
+    }
+    HistoryStack.getHistoryStack = getHistoryStack;
+    /**
+     * Set the history stack.
+     * This is useful if loading history stack externally from something like localStorage.
+     */
+    function setHistoryStack(historyStack) {
+        _historyStack = historyStack;
+    }
+    HistoryStack.setHistoryStack = setHistoryStack;
+    /**
+     * Return readonly copy of the current history state.
+     */
+    function currentState() {
+        if (_historyStack.length > 0) {
+            return _historyStack[_historyStack.length - 1];
+        }
+        else {
+            return null;
+        }
+    }
+    HistoryStack.currentState = currentState;
+    /**
+     * Push history state to the history stack.
+     */
+    function pushState(state) {
+        _historyStack.push(state);
+        if (HistoryStack.debug) {
+            console.log(`[HistoryStack] push state`, state);
+            console.log(`[HistoryStack] history stack`, _historyStack);
+        }
+    }
+    HistoryStack.pushState = pushState;
+    /**
+     * Remove the last state from the  history stack.
+     * This will remove the state silently, as if it was never there.
+     * Useful for 'undoing' the last history state.
+     */
+    function removeLastState() {
+        if (_historyStack.length > 0) {
+            const state = _historyStack[_historyStack.length - 1];
+            _historyStack.splice(_historyStack.length - 1, 1);
+            if (HistoryStack.debug) {
+                console.log(`[HistoryStack] remove last state`, state);
+                console.log(`[HistoryStack] history stack`, _historyStack);
+            }
+        }
+    }
+    HistoryStack.removeLastState = removeLastState;
+    function onPopState(e) {
+        if (e.state === null) {
+            // If there's no state at all, then the user must have navigated to a new hash.
+            // Undo what they've done (as far as navigation) by kicking them backwards to the "app" page
+            window.history.go(-1);
+            // Throw another replaceState in here.`
+            // This prevents them from using the "forward" button to return to the new hash.
+            window.history.replaceState({
+                isBackPage: false
+            }, '');
+        }
+        else {
+            if (e.state.isBackPage) {
+                // If there is state and it's the 'back' page...
+                if (_historyStack.length > 1) {
+                    // Pull/load from our custom history...
+                    // Get previous history state.
+                    const state = _historyStack[_historyStack.length - 2];
+                    // Remove the last entry from app history.
+                    removeLastState();
+                    // Exceute custom logic on custom history state.
+                    _onHistoryStatePop(state);
+                    // And push them to our "app" page again
+                    window.history.pushState({
+                        isBackPage: false
+                    }, '');
+                }
+                else {
+                    // No more history - let them exit.
+                    window.history.back();
+                }
+            }
+        }
+    }
+    function _onHistoryStatePop(state) {
+        if (HistoryStack.debug) {
+            console.log(`[HistoryStack] on history state pop`, state);
+            console.log(`[HistoryStack] history stack`, _historyStack);
+        }
+        if (state.stateType === StateType_HistoryStackStart) {
+            HistoryStack.onHistoryStackStartPopped.invoke();
+        }
+        HistoryStack.onHistoryStackPopped.invoke(state);
+    }
+})(HistoryStack || (HistoryStack = {}));
+
 var XRPhysics;
 (function (XRPhysics) {
     function gazeRaycast(renderer, frame) {
@@ -18126,5 +18300,5 @@ class Stopwatch {
     }
 }
 
-export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, AnimatorDecorator, ArgEvent, AudioResource, CameraOrbitControls, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, XRInput, XRPhysics, appendLine, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isObjectVisible, loadImage, normalize, normalizeClamped, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
+export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, AnimatorDecorator, ArgEvent, AudioResource, CameraOrbitControls, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, GLTFPrefab, GLTFResource, GameObject, HistoryStack, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, StateType_HistoryStackStart, Stopwatch, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, XRInput, XRPhysics, appendLine, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isObjectVisible, loadImage, normalize, normalizeClamped, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
 //# sourceMappingURL=index.js.map

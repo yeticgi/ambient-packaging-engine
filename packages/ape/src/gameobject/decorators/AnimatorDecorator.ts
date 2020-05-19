@@ -258,6 +258,17 @@ export class AnimatorDecorator extends Decorator {
         this._actionTracker.add(action);
     }
 
+    playAll(): void {
+        this.stopAll();
+
+        for (const [clipName, clip] of this._clips) {
+            const action = this._mixer.clipAction(clip).reset();
+            action.play();
+
+            this._actionTracker.add(action);
+        }
+    }
+
     stopAll(): void {
         for (let i = 0; i < this._actionTracker.count; i++) {
             const action = this._actionTracker.getByIndex(i);

@@ -5841,7 +5841,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.0';
-    const _time = '1589914100802';
+    const _time = '1589917671741';
     /**
      * The date that this version of the app was built.
      */
@@ -6586,6 +6586,14 @@ class AnimatorDecorator extends Decorator {
         // Play the action.
         action.play();
         this._actionTracker.add(action);
+    }
+    playAll() {
+        this.stopAll();
+        for (const [clipName, clip] of this._clips) {
+            const action = this._mixer.clipAction(clip).reset();
+            action.play();
+            this._actionTracker.add(action);
+        }
     }
     stopAll() {
         for (let i = 0; i < this._actionTracker.count; i++) {

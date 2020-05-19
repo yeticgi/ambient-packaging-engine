@@ -43,6 +43,7 @@ export declare class AnimatorDecorator extends Decorator {
     onInvisible(): void;
     onStart(): void;
     play(clipName: string, options?: PlayClipOptions): void;
+    playAll(): void;
     stopAll(): void;
     onUpdate(): void;
     onLateUpdate(): void;

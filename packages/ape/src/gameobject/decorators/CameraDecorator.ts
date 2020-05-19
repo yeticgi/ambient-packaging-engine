@@ -232,9 +232,11 @@ export class CameraDecorator extends Decorator {
 
         if (this._cameraType === 'perspective') {
             this._camera = new PerspectiveCamera(this._fov, this._aspect, this._near, this._far);
+            this.gameObject.add(this._camera);
         } else if (this._cameraType === 'orthographic') {
             const planes = calculateFrustumPlanes(this._size, this._aspect);
             this._camera = new OrthographicCamera(planes.left, planes.right, planes.top, planes.bottom, this._near, this._far);
+            this.gameObject.add(this._camera);
         } else {
             console.error(`[CameraDecorator] Can't create camera. Unknown camera type: ${this._cameraType}`);
         }

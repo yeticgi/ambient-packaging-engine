@@ -1,11 +1,12 @@
-import { Scene, Camera, WebGLRenderer } from 'three';
+import { Scene, WebGLRenderer } from 'three';
+import { CameraDecorator } from '../gameobject/decorators/CameraDecorator';
 export declare class SceneRenderOperation {
     scene: Scene;
-    camera: Camera;
+    cameraDecorator: CameraDecorator;
     enabled: boolean;
     clearColor: boolean;
     clearDepth: boolean;
     clearStencil: boolean;
-    constructor(scene?: Scene, camera?: Camera);
+    constructor(scene?: Scene, cameraDecorator?: CameraDecorator);
     render(webglRenderer: WebGLRenderer): void;
 }

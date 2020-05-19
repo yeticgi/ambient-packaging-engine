@@ -16,6 +16,19 @@ export interface ICameraDecoratorOptions extends IDecoratorOptions {
  * You can change the camera type on the fly by setting the cameraType property.
  */
 export declare class CameraDecorator extends Decorator {
+    private static _PrimaryCamera;
+    private static _Cameras;
+    /**
+     * The camera that is marked as primary.
+     * If no camera is marked as primary, than the first camera is returned.
+     */
+    static get PrimaryCamera(): CameraDecorator;
+    static set PrimaryCamera(cam: CameraDecorator);
+    /**
+     * Cameras that are updated by APEngine.
+     * These camera will automatically get resized when APEngine window resize is triggered.
+     */
+    static get Cameras(): Readonly<CameraDecorator[]>;
     private _cameraType;
     private _fov;
     private _zoom;
@@ -70,6 +83,7 @@ export declare class CameraDecorator extends Decorator {
     onStart(): void;
     onUpdate(): void;
     onLateUpdate(): void;
+    resize(): void;
     private _createCamera;
     private _removeCamera;
     onDestroy(): void;

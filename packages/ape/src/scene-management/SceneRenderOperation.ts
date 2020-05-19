@@ -1,17 +1,18 @@
 import { Scene, Camera, WebGLRenderer } from 'three';
+import { CameraDecorator } from '../gameobject/decorators/CameraDecorator';
 
 export class SceneRenderOperation {
     scene: Scene;
-    camera: Camera;
+    cameraDecorator: CameraDecorator;
     enabled: boolean = true;
 
     clearColor: boolean = false;
     clearDepth: boolean = false;
     clearStencil: boolean = false;
 
-    constructor(scene?: Scene, camera?: Camera) {
+    constructor(scene?: Scene, cameraDecorator?: CameraDecorator) {
         this.scene = scene;
-        this.camera = camera;
+        this.cameraDecorator = cameraDecorator;
     }
 
     render(webglRenderer: WebGLRenderer): void {
@@ -19,7 +20,7 @@ export class SceneRenderOperation {
             // No scene to render.
             return;
         }
-        if (!this.camera) {
+        if (!this.cameraDecorator || !this.cameraDecorator.camera) {
             // No camera to render scene with.
             return;
         }
@@ -40,6 +41,6 @@ export class SceneRenderOperation {
             webglRenderer.clearStencil();
         }
 
-        webglRenderer.render(this.scene, this.camera);
+        webglRenderer.render(this.scene, this.cameraDecorator.camera);
     }
 }

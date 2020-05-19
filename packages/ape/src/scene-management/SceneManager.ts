@@ -2,12 +2,11 @@ import { IDisposable } from "../misc/IDisposable";
 import { Scene, Camera, WebGLRenderer, PerspectiveCamera } from "three";
 import { SceneRenderOperation as RenderOperation } from "./SceneRenderOperation";
 import { GameObject } from "../gameobject/GameObject";
+import { CameraDecorator } from "../gameobject/decorators/CameraDecorator";
 
 export class SceneManager implements IDisposable {
 
     private _scenes: Scene[] = [];
-    private _cameras: Camera[] = [];
-    private _primaryCamera: Camera = null;
     private _primaryScene: Scene = null;
     private _renderList: RenderOperation[] = [];
     
@@ -17,34 +16,6 @@ export class SceneManager implements IDisposable {
      */
     get scenes(): Readonly<Scene[]> {
         return this._scenes;
-    }
-
-    /**
-     * Cameras that are updated by APEngine.
-     * These camera will automatically get resized when APEngine window resize is triggered.
-     */
-    get cameras(): Readonly<Camera[]> {
-        return this._cameras;
-    }
-
-    /**
-     * The camera that is marked as primary.
-     * If no camera is marked as primary, than the first camera is returned.
-     */
-    get primaryCamera(): Camera {
-        if (this._primaryCamera) {
-            return this._primaryCamera;
-        } else if (this._cameras.length > 0) {
-            return this._cameras[0];
-        } else {
-            return null;
-        }
-    }
-
-    set primaryCamera(cam: Camera) {
-        if (this._primaryCamera !== cam) {
-            this._primaryCamera = cam;
-        }
     }
 
     get sceneRenderList(): Readonly<RenderOperation[]> {
@@ -89,23 +60,8 @@ export class SceneManager implements IDisposable {
         this.removeRenderOperationsUsingScene(scene);
     }
 
-    addCamera(camera: Camera): void {
-        if (!this._cameras.some(c => c === camera)) {
-            this._cameras.push(camera);
-        }
-    }
-
-    removeCamera(camera: Camera): void {
-        const index = this._cameras.findIndex(c => c === camera);
-        if (index >= 0) {
-            this._cameras.splice(index, 1);
-        }
-
-        this.removeRenderOperationsUsingCamera(camera);
-    }
-
-    addRenderOperation(scene: Scene, camera: Camera): RenderOperation {
-        const renderOp = new RenderOperation(scene, camera);
+    addRenderOperation(scene: Scene, cameraDecorator: CameraDecorator): RenderOperation {
+        const renderOp = new RenderOperation(scene, cameraDecorator);
         this._renderList.push(renderOp);
         return renderOp;
     }
@@ -116,8 +72,8 @@ export class SceneManager implements IDisposable {
         }
     }
 
-    removeRenderOperation(scene: Scene, camera: Camera): void {
-        const index = this._renderList.findIndex(op => op.scene === scene && op.camera === camera);
+    removeRenderOperation(scene: Scene, cameraDecorator: CameraDecorator): void {
+        const index = this._renderList.findIndex(op => op.scene === scene && op.cameraDecorator === cameraDecorator);
         if (index >= 0) {
             this._renderList.splice(index, 1);
         }
@@ -131,9 +87,9 @@ export class SceneManager implements IDisposable {
         });
     }
 
-    removeRenderOperationsUsingCamera(camera: Camera): void {
+    removeRenderOperationsUsingCamera(cameraDecorator: CameraDecorator): void {
         this._renderList = this._renderList.filter((op) => {
-            if (op.camera !== camera) {
+            if (op.cameraDecorator !== cameraDecorator) {
                 return true;
             }
         });
@@ -177,17 +133,6 @@ export class SceneManager implements IDisposable {
         }
     }
 
-    resizeCameras(width: number, height: number): void {
-        for (let camera of this._cameras) {
-            if (camera) {
-                if (camera instanceof PerspectiveCamera) {
-                    camera.aspect = width / height;
-                    camera.updateProjectionMatrix();
-                }
-            }
-        }
-    }
-
     dispose(): void {
         for (let scene of this._scenes) {
             if (scene) {
@@ -196,9 +141,7 @@ export class SceneManager implements IDisposable {
         }
 
         this._scenes = [];
-        this._cameras = [];
         this._renderList = [];
-        this._primaryCamera = null;
         this._primaryScene = null;
     }
 }

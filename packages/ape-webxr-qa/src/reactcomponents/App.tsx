@@ -8,11 +8,11 @@ import {
     APEngine,
     GameObject,
     MeshDecorator,
-    APEResources
+    APEResources,
+    CameraDecorator
 } from '@yeticgi/ape';
 import {
     Scene,
-    PerspectiveCamera,
     BoxGeometry,
     Mesh,
     Color,
@@ -101,13 +101,9 @@ export class App extends Component<{}, IAppState> {
 
         // Create camera.
         const camera = createCamera();
-        camera.position.y = 0.4;
-        camera.position.z = 0.5;
-        scene.add(camera);
-
-        // Add camera to scene manager so that APEngine will automatically resize it
-        // if the browser window gets resized.
-        APEngine.sceneManager.addCamera(camera);
+        camera.gameObject.position.y = 0.4;
+        camera.gameObject.position.z = 0.5;
+        scene.add(camera.gameObject);
 
         // Add a render operation to APEngine scene manager using the just created
         // scene and camera. This tells APEngine to draw the scene with the given camera
@@ -238,17 +234,18 @@ export class App extends Component<{}, IAppState> {
     }
 }
 
-function createCamera(): PerspectiveCamera {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+function createCamera(): CameraDecorator {
+    const cameraGO = new GameObject('Camera');
+    const cameraDecorator = new CameraDecorator();
+    cameraDecorator.configure({
+        cameraType: 'perspective',
+        fov: 75,
+        near: 0.1,
+        far: 1000
+    });
+    cameraGO.addDecorator(cameraDecorator);
 
-    let fov = 75;
-    let aspect = width / height;
-    let near = 0.1;
-    let far = 1000;
-    const camera = new PerspectiveCamera(fov, aspect, near, far);
-
-    return camera;
+    return cameraDecorator;
 }
 
 function createCube(color: Color | string | number, size: number, position: Vector3): GameObject {

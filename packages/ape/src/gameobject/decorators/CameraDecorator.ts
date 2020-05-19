@@ -22,6 +22,37 @@ export interface ICameraDecoratorOptions extends IDecoratorOptions {
  */
 export class CameraDecorator extends Decorator {
 
+    private static _PrimaryCamera: CameraDecorator = null;
+    private static _Cameras: CameraDecorator[] = [];
+
+    /**
+     * The camera that is marked as primary.
+     * If no camera is marked as primary, than the first camera is returned.
+     */
+    static get PrimaryCamera(): CameraDecorator {
+        if (this._PrimaryCamera) {
+            return this._PrimaryCamera;
+        } else if (this._Cameras.length > 0) {
+            return this._Cameras[0];
+        } else {
+            return null;
+        }
+    }
+
+    static set PrimaryCamera(cam: CameraDecorator) {
+        if (this._PrimaryCamera !== cam) {
+            this._PrimaryCamera = cam;
+        }
+    }
+
+    /**
+     * Cameras that are updated by APEngine.
+     * These camera will automatically get resized when APEngine window resize is triggered.
+     */
+    static get Cameras(): Readonly<CameraDecorator[]> {
+        return this._Cameras;
+    }
+
     private _cameraType: CameraType;
     private _fov: number;
     private _zoom: number;
@@ -81,6 +112,7 @@ export class CameraDecorator extends Decorator {
 
             if (this._camera && this._camera instanceof PerspectiveCamera) {
                 this._camera.aspect = this._aspect;
+                this._camera.updateProjectionMatrix();
             }
         }
     }
@@ -151,6 +183,9 @@ export class CameraDecorator extends Decorator {
         super.onAttach(gameObject);
 
         this._createCamera();
+
+        // Add camera decorator to global list of camera decorators.
+        CameraDecorator._Cameras.push(this);
     }
 
     onVisible() {
@@ -173,6 +208,22 @@ export class CameraDecorator extends Decorator {
         super.onLateUpdate();
     }
 
+    resize(): void {
+        if (this._camera) {
+            // Update aspect ratio with new winodw size.
+            this.aspect = window.innerWidth / window.innerHeight;
+            
+            if (this._camera instanceof OrthographicCamera) {
+                // Update frustum planes for othrogtraphic camera using new aspect ratio.
+                const planes = calculateFrustumPlanes(this._size, this._aspect);
+                this._camera.left = planes.left;
+                this._camera.right = planes.right;
+                this._camera.top = planes.top;
+                this._camera.bottom = planes.bottom;
+            }
+        }
+    }
+
     private _createCamera(): void {
         if (!this.gameObject) {
             // Dont create camera until this decorator is attached to a GameObject.
@@ -190,17 +241,26 @@ export class CameraDecorator extends Decorator {
     }
 
     private _removeCamera(): void {
-        if (this._camera) {
-            if (this._camera.parent) {
-                this._camera.parent.remove(this._camera);
-            }
-            this._camera = null;
+        if (!this._camera) {
+            // No camera to remove.
+            return;
         }
+
+        if (this._camera.parent) {
+            this._camera.parent.remove(this._camera);
+        }
+        this._camera = null;
     }
 
     onDestroy(): void {
         super.onDestroy();
 
         this._removeCamera();
+        
+        // Remove camera decorator from global list of camera decorators.
+        const index = CameraDecorator._Cameras.findIndex(cameraDecorator => cameraDecorator === this);
+        if (index >= 0) {
+            CameraDecorator._Cameras.splice(index, 1);
+        }
     }
 }

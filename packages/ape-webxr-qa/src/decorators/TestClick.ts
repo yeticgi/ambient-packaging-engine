@@ -1,13 +1,12 @@
 import { 
     Decorator,
-    getOptionalValue,
     APEngine,
-    MeshDecorator,
     IDecoratorOptions,
     MouseButtonId,
     Physics,
     GameObject,
-    APEResources
+    APEResources,
+    CameraDecorator
 } from "@yeticgi/ape";
 import { Rotator } from "./Rotator";
 
@@ -26,7 +25,7 @@ export class TestClick extends Decorator {
     onUpdate() {
         if (APEngine.input.getMouseButtonDown(MouseButtonId.Left)) {
             const screenPos = APEngine.input.getMouseScreenPos();
-            const results = Physics.raycastAtScreenPos(screenPos, [this.gameObject], APEngine.sceneManager.primaryCamera, true);
+            const results = Physics.raycastAtScreenPos(screenPos, [this.gameObject], CameraDecorator.PrimaryCamera.camera, true);
             const firstHit = Physics.firstRaycastHit(results);
 
             if (firstHit) {
@@ -40,7 +39,7 @@ export class TestClick extends Decorator {
 
         if (APEngine.input.getMouseButtonUp(MouseButtonId.Left) && this._down) {
             const screenPos = APEngine.input.getMouseScreenPos();
-            const results = Physics.raycastAtScreenPos(screenPos, [this.gameObject], APEngine.sceneManager.primaryCamera, true);
+            const results = Physics.raycastAtScreenPos(screenPos, [this.gameObject], CameraDecorator.PrimaryCamera.camera, true);
             const firstHit = Physics.firstRaycastHit(results);
 
             if (firstHit) {

@@ -80,8 +80,8 @@ export function unnormalizeClamped(normal: number, min: number, max: number): nu
 
 export function calculateFrustumPlanes(size: number, aspect: number): { left: number, right: number, top: number, bottom: number } {
     return {
-        left: - 0.5 * size * aspect / 2,
-        right: 0.5 * size * aspect / 2,
+        left: - size * aspect / 2,
+        right: size * aspect / 2,
         top: size / 2,
         bottom: - size / 2,
     }

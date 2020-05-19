@@ -1,6 +1,7 @@
-import { Object3D, Camera } from 'three';
+import { Object3D } from 'three';
 import { IDisposable } from '../misc/IDisposable';
 import { Input } from './Input';
+import { CameraDecorator } from '../gameobject/decorators/CameraDecorator';
 export declare type PointerEventType = 'pointer enter' | 'pointer exit' | 'pointer down' | 'pointer up' | 'pointer click';
 export interface IPointerEvent {
     /**
@@ -60,10 +61,9 @@ export declare class PointerEventSystem implements IDisposable {
     private _listeners;
     private _pointerDown;
     private _pointerEnter;
-    constructor();
     addListener(listener: IPointerEventListener): void;
     removeListener(listener: IPointerEventListener): void;
-    update(input: Input, camera: Camera): void;
+    update(input: Input, cameraDecorator: CameraDecorator): void;
     dispose(): void;
     private _findEventListenerForObject;
 }

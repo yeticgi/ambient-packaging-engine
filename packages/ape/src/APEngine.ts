@@ -13,6 +13,7 @@ import { DeviceCamera } from './device-camera/DeviceCamera';
 import { PointerEventSystem } from './input/PointerEventSystem';
 import { APEngineBuildInfo } from './APEngineBuildInfo';
 import { SceneManager } from './scene-management/SceneManager';
+import { CameraDecorator } from './gameobject/decorators/CameraDecorator';
 
 export namespace APEngine {
 
@@ -133,7 +134,7 @@ export namespace APEngine {
         input.update();
 
         // Update pointer event system.
-        pointerEventSystem.update(input, sceneManager.primaryCamera);
+        pointerEventSystem.update(input, CameraDecorator.PrimaryCamera);
         
         // Update game objects in scenes.
         sceneManager.update();
@@ -204,7 +205,7 @@ export namespace APEngine {
         }
         
         webglRenderer.setPixelRatio(pixelRatio);
-        sceneManager.resizeCameras(width, height);
+        CameraDecorator.Cameras.forEach(camera => camera.resize());
 
         onResize.invoke();
     }

@@ -109,8 +109,12 @@ export class GameObject extends Object3D {
     private _destroyState: DestroyState = DestroyState.None;
     private _prevVisible: boolean = false;
 
-    constructor() {
+    constructor(name?: string) {
         super();
+        
+        if (this.name) {
+            this.name = name;
+        }
     }
 
     addDecorator<T extends Decorator>(decorator: T): T {

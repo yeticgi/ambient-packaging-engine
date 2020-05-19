@@ -3,6 +3,7 @@ import { IDisposable } from '../misc/IDisposable';
 import { Input, InputType } from './Input';
 import { Physics } from '../physics/Physics';
 import { isObjectVisible } from '../utils/ThreeUtils';
+import { CameraDecorator } from '../gameobject/decorators/CameraDecorator';
 
 export type PointerEventType = 'pointer enter' | 'pointer exit' | 'pointer down' | 'pointer up' | 'pointer click';
 
@@ -80,9 +81,6 @@ export class PointerEventSystem implements IDisposable {
     private _pointerDown: IPointerEventListener = null;
     private _pointerEnter: IPointerEventListener = null;
 
-    constructor() {
-    }
-
     addListener(listener: IPointerEventListener): void {
         if (!this._listeners.has(listener)) {
             this._listeners.add(listener);
@@ -93,8 +91,8 @@ export class PointerEventSystem implements IDisposable {
         this._listeners.delete(listener);
     }
 
-    update(input: Input, camera: Camera): void {
-        if (!input || !camera) {
+    update(input: Input, cameraDecorator: CameraDecorator): void {
+        if (!input || !cameraDecorator || !cameraDecorator.camera) {
             // Pointer event system needs both an input module and a camera.
             return;
         }
@@ -129,7 +127,7 @@ export class PointerEventSystem implements IDisposable {
             });
     
             // Raycast againsts all pointer event listener target objects.
-            const hits = Physics.raycastAtScreenPos(pointerScreenPos, allActiveListenerTargets, camera, false);
+            const hits = Physics.raycastAtScreenPos(pointerScreenPos, allActiveListenerTargets, cameraDecorator.camera, false);
             closestIntersection = Physics.firstRaycastHit(hits);
             closestListener = closestIntersection ? this._findEventListenerForObject(closestIntersection.object) : null;
         } else {

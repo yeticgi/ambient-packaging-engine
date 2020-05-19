@@ -32,7 +32,7 @@ export declare class GameObject extends Object3D {
     private _decorators;
     private _destroyState;
     private _prevVisible;
-    constructor();
+    constructor(name?: string);
     addDecorator<T extends Decorator>(decorator: T): T;
     getDecorator<T extends Decorator>(type: {
         new (): T;

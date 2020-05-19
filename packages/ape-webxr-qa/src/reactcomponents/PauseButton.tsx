@@ -17,7 +17,7 @@ export class PauseButton extends Component<{}, IPauseButtonState> {
         this.onClick = this.onClick.bind(this);
 
         this.state = {
-            paused: APEngine.time.paused
+            paused: APEngine.time.timeScale === 0
         }
         this._interval = window.setInterval(() => this.tick(), 100);
     }
@@ -34,15 +34,20 @@ export class PauseButton extends Component<{}, IPauseButtonState> {
     }
 
     tick() {
-        if (this.state.paused != APEngine.time.paused) {
+        const paused = APEngine.time.timeScale === 0;
+        if (this.state.paused != paused) {
             this.setState({
-                paused:APEngine.time.paused
+                paused
             });
         }
     }
 
     onClick() {
-        APEngine.time.paused = !APEngine.time.paused;
+        if (APEngine.time.timeScale === 0) {
+            APEngine.time.timeScale = 1;
+        } else {
+            APEngine.time.timeScale = 0;
+        }
 
         APEResources.audio.get('button').then(
             resource => resource.object.play()

@@ -4,6 +4,7 @@ import { Event, ArgEvent } from "../misc/Events";
 import { APEngine } from "../APEngine";
 import { findParentScene } from "../utils/ThreeUtils";
 import { TransformControlsGUI } from "./TransformControlsGUI";
+import { CameraDecorator } from "../gameobject/decorators/CameraDecorator";
 
 export namespace TransformTool {
     var _controls: TransformControls;
@@ -16,12 +17,12 @@ export namespace TransformTool {
     export const onMouseUp: Event = new Event();
     export const onObjectChange: ArgEvent<Object3D> = new ArgEvent();
 
-    export function attach(object3d: Object3D, camera?: Camera): void {
+    export function attach(object3d: Object3D, cameraDecorator?: CameraDecorator): void {
         if (_controls || _gui) {
             detach();
         }
 
-        const transformCamera = camera ?? APEngine.sceneManager.primaryCamera;
+        const transformCamera = cameraDecorator ?? CameraDecorator.PrimaryCamera;
         if (!transformCamera) {
             console.error(`[TransformTool] There is no valid camera to create transfrom controls with.`);
             return;
@@ -32,7 +33,7 @@ export namespace TransformTool {
         }
 
         _controls = new TransformControls(
-            transformCamera,
+            transformCamera.camera,
             APEngine.webglRenderer.domElement
         );
 

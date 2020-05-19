@@ -1,4 +1,4 @@
-import { Clock, Vector2, Vector3, Object3D, MathUtils, Plane, Raycaster, Matrix4, Scene, Box2, Layers, Mesh, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, BoxBufferGeometry, PerspectiveCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, OrthographicCamera, Ray, Quaternion, Material, Texture, Geometry, BufferGeometry, LoadingManager, TextureLoader } from 'three';
+import { Clock, Vector2, Vector3, Object3D, MathUtils, Plane, Raycaster, Matrix4, Scene, Box2, Layers, Mesh, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, BoxBufferGeometry, PerspectiveCamera, OrthographicCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Ray, Quaternion, Material, Texture, Geometry, BufferGeometry, LoadingManager, TextureLoader } from 'three';
 import { __awaiter } from 'tslib';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import { Howl } from 'howler';
@@ -4561,11 +4561,14 @@ var DestroyState;
  */
 let GameObject = /** @class */ (() => {
     class GameObject extends Object3D {
-        constructor() {
+        constructor(name) {
             super();
             this._decorators = [];
             this._destroyState = DestroyState.None;
             this._prevVisible = false;
+            if (this.name) {
+                this.name = name;
+            }
         }
         /**
          * Destroy the given GameObject and all of its children.
@@ -4993,8 +4996,8 @@ function unnormalizeClamped(normal, min, max) {
 }
 function calculateFrustumPlanes(size, aspect) {
     return {
-        left: -0.5 * size * aspect / 2,
-        right: 0.5 * size * aspect / 2,
+        left: -size * aspect / 2,
+        right: size * aspect / 2,
         top: size / 2,
         bottom: -size / 2,
     };
@@ -5696,8 +5699,8 @@ class PointerEventSystem {
     removeListener(listener) {
         this._listeners.delete(listener);
     }
-    update(input, camera) {
-        if (!input || !camera) {
+    update(input, cameraDecorator) {
+        if (!input || !cameraDecorator || !cameraDecorator.camera) {
             // Pointer event system needs both an input module and a camera.
             return;
         }
@@ -5725,7 +5728,7 @@ class PointerEventSystem {
                 }
             });
             // Raycast againsts all pointer event listener target objects.
-            const hits = Physics.raycastAtScreenPos(pointerScreenPos, allActiveListenerTargets, camera, false);
+            const hits = Physics.raycastAtScreenPos(pointerScreenPos, allActiveListenerTargets, cameraDecorator.camera, false);
             closestIntersection = Physics.firstRaycastHit(hits);
             closestListener = closestIntersection ? this._findEventListenerForObject(closestIntersection.object) : null;
         }
@@ -5838,7 +5841,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.1.1';
-    const _time = '1589836905065';
+    const _time = '1589901971415';
     /**
      * The date that this version of the app was built.
      */
@@ -5850,20 +5853,20 @@ var APEngineBuildInfo;
 })(APEngineBuildInfo || (APEngineBuildInfo = {}));
 
 class SceneRenderOperation {
-    constructor(scene, camera) {
+    constructor(scene, cameraDecorator) {
         this.enabled = true;
         this.clearColor = false;
         this.clearDepth = false;
         this.clearStencil = false;
         this.scene = scene;
-        this.camera = camera;
+        this.cameraDecorator = cameraDecorator;
     }
     render(webglRenderer) {
         if (!this.scene) {
             // No scene to render.
             return;
         }
-        if (!this.camera) {
+        if (!this.cameraDecorator || !this.cameraDecorator.camera) {
             // No camera to render scene with.
             return;
         }
@@ -5880,15 +5883,13 @@ class SceneRenderOperation {
         if (this.clearStencil) {
             webglRenderer.clearStencil();
         }
-        webglRenderer.render(this.scene, this.camera);
+        webglRenderer.render(this.scene, this.cameraDecorator.camera);
     }
 }
 
 class SceneManager {
     constructor() {
         this._scenes = [];
-        this._cameras = [];
-        this._primaryCamera = null;
         this._primaryScene = null;
         this._renderList = [];
     }
@@ -5898,33 +5899,6 @@ class SceneManager {
      */
     get scenes() {
         return this._scenes;
-    }
-    /**
-     * Cameras that are updated by APEngine.
-     * These camera will automatically get resized when APEngine window resize is triggered.
-     */
-    get cameras() {
-        return this._cameras;
-    }
-    /**
-     * The camera that is marked as primary.
-     * If no camera is marked as primary, than the first camera is returned.
-     */
-    get primaryCamera() {
-        if (this._primaryCamera) {
-            return this._primaryCamera;
-        }
-        else if (this._cameras.length > 0) {
-            return this._cameras[0];
-        }
-        else {
-            return null;
-        }
-    }
-    set primaryCamera(cam) {
-        if (this._primaryCamera !== cam) {
-            this._primaryCamera = cam;
-        }
     }
     get sceneRenderList() {
         return this._renderList;
@@ -5961,20 +5935,8 @@ class SceneManager {
         }
         this.removeRenderOperationsUsingScene(scene);
     }
-    addCamera(camera) {
-        if (!this._cameras.some(c => c === camera)) {
-            this._cameras.push(camera);
-        }
-    }
-    removeCamera(camera) {
-        const index = this._cameras.findIndex(c => c === camera);
-        if (index >= 0) {
-            this._cameras.splice(index, 1);
-        }
-        this.removeRenderOperationsUsingCamera(camera);
-    }
-    addRenderOperation(scene, camera) {
-        const renderOp = new SceneRenderOperation(scene, camera);
+    addRenderOperation(scene, cameraDecorator) {
+        const renderOp = new SceneRenderOperation(scene, cameraDecorator);
         this._renderList.push(renderOp);
         return renderOp;
     }
@@ -5983,8 +5945,8 @@ class SceneManager {
             this._renderList.splice(renderOrder, 0, renderOp);
         }
     }
-    removeRenderOperation(scene, camera) {
-        const index = this._renderList.findIndex(op => op.scene === scene && op.camera === camera);
+    removeRenderOperation(scene, cameraDecorator) {
+        const index = this._renderList.findIndex(op => op.scene === scene && op.cameraDecorator === cameraDecorator);
         if (index >= 0) {
             this._renderList.splice(index, 1);
         }
@@ -5996,9 +5958,9 @@ class SceneManager {
             }
         });
     }
-    removeRenderOperationsUsingCamera(camera) {
+    removeRenderOperationsUsingCamera(cameraDecorator) {
         this._renderList = this._renderList.filter((op) => {
-            if (op.camera !== camera) {
+            if (op.cameraDecorator !== cameraDecorator) {
                 return true;
             }
         });
@@ -6036,16 +5998,6 @@ class SceneManager {
             }
         }
     }
-    resizeCameras(width, height) {
-        for (let camera of this._cameras) {
-            if (camera) {
-                if (camera instanceof PerspectiveCamera) {
-                    camera.aspect = width / height;
-                    camera.updateProjectionMatrix();
-                }
-            }
-        }
-    }
     dispose() {
         for (let scene of this._scenes) {
             if (scene) {
@@ -6053,12 +6005,220 @@ class SceneManager {
             }
         }
         this._scenes = [];
-        this._cameras = [];
         this._renderList = [];
-        this._primaryCamera = null;
         this._primaryScene = null;
     }
 }
+
+/**
+ * Camera decorator creates and manages ThreeJS cameras.
+ * You can change the camera type on the fly by setting the cameraType property.
+ */
+let CameraDecorator = /** @class */ (() => {
+    class CameraDecorator extends Decorator {
+        /**
+         * The camera that is marked as primary.
+         * If no camera is marked as primary, than the first camera is returned.
+         */
+        static get PrimaryCamera() {
+            if (this._PrimaryCamera) {
+                return this._PrimaryCamera;
+            }
+            else if (this._Cameras.length > 0) {
+                return this._Cameras[0];
+            }
+            else {
+                return null;
+            }
+        }
+        static set PrimaryCamera(cam) {
+            if (this._PrimaryCamera !== cam) {
+                this._PrimaryCamera = cam;
+            }
+        }
+        /**
+         * Cameras that are updated by APEngine.
+         * These camera will automatically get resized when APEngine window resize is triggered.
+         */
+        static get Cameras() {
+            return this._Cameras;
+        }
+        /**
+         * Is the camera orthographic or perspective.
+         */
+        get cameraType() { return this._cameraType; }
+        set cameraType(value) {
+            if (this._cameraType !== value) {
+                this._cameraType = value;
+                this._removeCamera();
+                this._createCamera();
+            }
+        }
+        /**
+         * Field of View for perspective camera. No affect on orthographic cameras.
+         */
+        get fov() { return this._fov; }
+        set fov(value) {
+            if (this._fov !== value) {
+                this._fov = value;
+                if (this._camera && this._camera instanceof PerspectiveCamera) {
+                    this._camera.fov = this._fov;
+                }
+            }
+        }
+        /**
+         * Zoom level of the camera.
+         */
+        get zoom() { return this._zoom; }
+        set zoom(value) {
+            if (this._zoom !== value) {
+                this._zoom = value;
+                if (this._camera) {
+                    this._camera.zoom = this._zoom;
+                }
+            }
+        }
+        /**
+         * Aspect ratio of perspective camera. Has no effect on orthographic camera.
+         */
+        get aspect() { return this._aspect; }
+        set aspect(value) {
+            if (this._aspect !== value) {
+                this._aspect = value;
+                if (this._camera && this._camera instanceof PerspectiveCamera) {
+                    this._camera.aspect = this._aspect;
+                    this._camera.updateProjectionMatrix();
+                }
+            }
+        }
+        /**
+         * Far clipping plane
+         */
+        get far() { return this._far; }
+        set far(value) {
+            if (this._far !== value) {
+                this._far = value;
+                if (this._camera) {
+                    this._camera.far = this._far;
+                }
+            }
+        }
+        /**
+         * Near clipping plane
+         */
+        get near() { return this._near; }
+        set near(value) {
+            if (this._near !== value) {
+                this._near = value;
+                if (this._camera) {
+                    this._camera.near = this._near;
+                }
+            }
+        }
+        /**
+         * The frustum size of orthographic camera. This has no affect on perspective camera.
+         */
+        get size() { return this._size; }
+        set size(value) {
+            if (this._size !== value) {
+                this._size = value;
+                if (this._camera && this._camera instanceof OrthographicCamera) {
+                    const planes = calculateFrustumPlanes(this._size, this._aspect);
+                    this._camera.left = planes.left;
+                    this._camera.right = planes.right;
+                    this._camera.top = planes.top;
+                    this._camera.bottom = planes.bottom;
+                }
+            }
+        }
+        /**
+         * ThreeJS camera that is managed by this camera decorator.
+         */
+        get camera() { return this._camera; }
+        configure(options) {
+            super.configure(options);
+            this._cameraType = getOptionalValue(options.cameraType, 'perspective');
+            this._fov = getOptionalValue(options.fov, 50);
+            this._zoom = getOptionalValue(options.zoom, 1);
+            this._aspect = getOptionalValue(options.aspect, window.innerWidth / window.innerHeight);
+            this._far = getOptionalValue(options.far, 2000);
+            this._near = getOptionalValue(options.near, 0.1);
+        }
+        onAttach(gameObject) {
+            super.onAttach(gameObject);
+            this._createCamera();
+            // Add camera decorator to global list of camera decorators.
+            CameraDecorator._Cameras.push(this);
+        }
+        onVisible() {
+            super.onVisible();
+        }
+        onInvisible() {
+            super.onInvisible();
+        }
+        onStart() {
+            super.onStart();
+        }
+        onUpdate() {
+            super.onUpdate();
+        }
+        onLateUpdate() {
+            super.onLateUpdate();
+        }
+        resize() {
+            if (this._camera) {
+                // Update aspect ratio with new winodw size.
+                this.aspect = window.innerWidth / window.innerHeight;
+                if (this._camera instanceof OrthographicCamera) {
+                    // Update frustum planes for othrogtraphic camera using new aspect ratio.
+                    const planes = calculateFrustumPlanes(this._size, this._aspect);
+                    this._camera.left = planes.left;
+                    this._camera.right = planes.right;
+                    this._camera.top = planes.top;
+                    this._camera.bottom = planes.bottom;
+                }
+            }
+        }
+        _createCamera() {
+            if (!this.gameObject) {
+                // Dont create camera until this decorator is attached to a GameObject.
+                return;
+            }
+            if (this._cameraType === 'perspective') {
+                this._camera = new PerspectiveCamera(this._fov, this._aspect, this._near, this._far);
+            }
+            else if (this._cameraType === 'orthographic') {
+                const planes = calculateFrustumPlanes(this._size, this._aspect);
+                this._camera = new OrthographicCamera(planes.left, planes.right, planes.top, planes.bottom, this._near, this._far);
+            }
+            else {
+                console.error(`[CameraDecorator] Can't create camera. Unknown camera type: ${this._cameraType}`);
+            }
+        }
+        _removeCamera() {
+            if (!this._camera) {
+                // No camera to remove.
+                return;
+            }
+            if (this._camera.parent) {
+                this._camera.parent.remove(this._camera);
+            }
+            this._camera = null;
+        }
+        onDestroy() {
+            super.onDestroy();
+            this._removeCamera();
+            // Remove camera decorator from global list of camera decorators.
+            const index = CameraDecorator._Cameras.findIndex(cameraDecorator => cameraDecorator === this);
+            if (index >= 0) {
+                CameraDecorator._Cameras.splice(index, 1);
+            }
+        }
+    }
+    CameraDecorator._PrimaryCamera = null;
+    CameraDecorator._Cameras = [];
+    return CameraDecorator;
+})();
 
 var APEngine;
 (function (APEngine) {
@@ -6147,7 +6307,7 @@ var APEngine;
         }
         APEngine.input.update();
         // Update pointer event system.
-        APEngine.pointerEventSystem.update(APEngine.input, APEngine.sceneManager.primaryCamera);
+        APEngine.pointerEventSystem.update(APEngine.input, CameraDecorator.PrimaryCamera);
         // Update game objects in scenes.
         APEngine.sceneManager.update();
         APEngine.onUpdate.invoke();
@@ -6200,7 +6360,7 @@ var APEngine;
             pixelRatio = _maxPixelRatio;
         }
         APEngine.webglRenderer.setPixelRatio(pixelRatio);
-        APEngine.sceneManager.resizeCameras(width, height);
+        CameraDecorator.Cameras.forEach(camera => camera.resize());
         APEngine.onResize.invoke();
     }
     function visibilityChange() {
@@ -6691,11 +6851,11 @@ var TransformTool;
     TransformTool.onMouseDown = new Event();
     TransformTool.onMouseUp = new Event();
     TransformTool.onObjectChange = new ArgEvent();
-    function attach(object3d, camera) {
+    function attach(object3d, cameraDecorator) {
         if (_controls || _gui) {
             detach();
         }
-        const transformCamera = camera !== null && camera !== void 0 ? camera : APEngine.sceneManager.primaryCamera;
+        const transformCamera = cameraDecorator !== null && cameraDecorator !== void 0 ? cameraDecorator : CameraDecorator.PrimaryCamera;
         if (!transformCamera) {
             console.error(`[TransformTool] There is no valid camera to create transfrom controls with.`);
             return;
@@ -6704,7 +6864,7 @@ var TransformTool;
             console.error(`[TransformTool] There is no valid dom element to attach transfrom controls events to.`);
             return;
         }
-        _controls = new TransformControls(transformCamera, APEngine.webglRenderer.domElement);
+        _controls = new TransformControls(transformCamera.camera, APEngine.webglRenderer.domElement);
         _controls.attach(object3d);
         _controls.setSpace('local');
         _controls.setMode('translate');
@@ -6815,160 +6975,6 @@ class TransformPickerDecorator extends Decorator {
             TransformTool.detach();
         }
         APEngine.pointerEventSystem.removeListener(this);
-    }
-}
-
-/**
- * Camera decorator creates and manages ThreeJS cameras.
- * You can change the camera type on the fly by setting the cameraType property.
- */
-class CameraDecorator extends Decorator {
-    /**
-     * Is the camera orthographic or perspective.
-     */
-    get cameraType() { return this._cameraType; }
-    set cameraType(value) {
-        if (this._cameraType !== value) {
-            this._cameraType = value;
-            this._removeCamera();
-            this._createCamera();
-        }
-    }
-    /**
-     * Field of View for perspective camera. No affect on orthographic cameras.
-     */
-    get fov() { return this._fov; }
-    set fov(value) {
-        if (this._fov !== value) {
-            this._fov = value;
-            if (this._camera && this._camera instanceof PerspectiveCamera) {
-                this._camera.fov = this._fov;
-            }
-        }
-    }
-    /**
-     * Zoom level of the camera.
-     */
-    get zoom() { return this._zoom; }
-    set zoom(value) {
-        if (this._zoom !== value) {
-            this._zoom = value;
-            if (this._camera) {
-                this._camera.zoom = this._zoom;
-            }
-        }
-    }
-    /**
-     * Aspect ratio of perspective camera. Has no effect on orthographic camera.
-     */
-    get aspect() { return this._aspect; }
-    set aspect(value) {
-        if (this._aspect !== value) {
-            this._aspect = value;
-            if (this._camera && this._camera instanceof PerspectiveCamera) {
-                this._camera.aspect = this._aspect;
-            }
-        }
-    }
-    /**
-     * Far clipping plane
-     */
-    get far() { return this._far; }
-    set far(value) {
-        if (this._far !== value) {
-            this._far = value;
-            if (this._camera) {
-                this._camera.far = this._far;
-            }
-        }
-    }
-    /**
-     * Near clipping plane
-     */
-    get near() { return this._near; }
-    set near(value) {
-        if (this._near !== value) {
-            this._near = value;
-            if (this._camera) {
-                this._camera.near = this._near;
-            }
-        }
-    }
-    /**
-     * The frustum size of orthographic camera. This has no affect on perspective camera.
-     */
-    get size() { return this._size; }
-    set size(value) {
-        if (this._size !== value) {
-            this._size = value;
-            if (this._camera && this._camera instanceof OrthographicCamera) {
-                const planes = calculateFrustumPlanes(this._size, this._aspect);
-                this._camera.left = planes.left;
-                this._camera.right = planes.right;
-                this._camera.top = planes.top;
-                this._camera.bottom = planes.bottom;
-            }
-        }
-    }
-    /**
-     * ThreeJS camera that is managed by this camera decorator.
-     */
-    get camera() { return this._camera; }
-    configure(options) {
-        super.configure(options);
-        this._cameraType = getOptionalValue(options.cameraType, 'perspective');
-        this._fov = getOptionalValue(options.fov, 50);
-        this._zoom = getOptionalValue(options.zoom, 1);
-        this._aspect = getOptionalValue(options.aspect, window.innerWidth / window.innerHeight);
-        this._far = getOptionalValue(options.far, 2000);
-        this._near = getOptionalValue(options.near, 0.1);
-    }
-    onAttach(gameObject) {
-        super.onAttach(gameObject);
-        this._createCamera();
-    }
-    onVisible() {
-        super.onVisible();
-    }
-    onInvisible() {
-        super.onInvisible();
-    }
-    onStart() {
-        super.onStart();
-    }
-    onUpdate() {
-        super.onUpdate();
-    }
-    onLateUpdate() {
-        super.onLateUpdate();
-    }
-    _createCamera() {
-        if (!this.gameObject) {
-            // Dont create camera until this decorator is attached to a GameObject.
-            return;
-        }
-        if (this._cameraType === 'perspective') {
-            this._camera = new PerspectiveCamera(this._fov, this._aspect, this._near, this._far);
-        }
-        else if (this._cameraType === 'orthographic') {
-            const planes = calculateFrustumPlanes(this._size, this._aspect);
-            this._camera = new OrthographicCamera(planes.left, planes.right, planes.top, planes.bottom, this._near, this._far);
-        }
-        else {
-            console.error(`[CameraDecorator] Can't create camera. Unknown camera type: ${this._cameraType}`);
-        }
-    }
-    _removeCamera() {
-        if (this._camera) {
-            if (this._camera.parent) {
-                this._camera.parent.remove(this._camera);
-            }
-            this._camera = null;
-        }
-    }
-    onDestroy() {
-        super.onDestroy();
-        this._removeCamera();
     }
 }
 

@@ -20,7 +20,6 @@ export default (args) => {
   let output = {
     dir: 'dist',
     format: 'es',
-    exports: 'named',
     sourcemap: true
   };
 

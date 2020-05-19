@@ -128,6 +128,7 @@ export class AnimatorDecorator extends Decorator {
     private _clips: Map<string, AnimationClip> = new Map();
     private _actionTracker = new ActionTracker();
     private _timeScale: number = 1.0;
+    private _visible: boolean;
 
     onAnimationLoop: ArgEvent<AnimatorEvent> = new ArgEvent();
     onAnimationFinished: ArgEvent<AnimatorEvent> = new ArgEvent();
@@ -180,10 +181,12 @@ export class AnimatorDecorator extends Decorator {
 
     onVisible() {
         super.onVisible();
+        this._visible = true;
     }
 
     onInvisible() {
         super.onInvisible();
+        this._visible = false;
     }
 
     onStart(): void {
@@ -280,7 +283,9 @@ export class AnimatorDecorator extends Decorator {
     onUpdate(): void {
         super.onUpdate();
 
-        this._mixer.update(APEngine.time.deltaTime);
+        if (this._visible) {
+            this._mixer.update(APEngine.time.deltaTime);
+        }
     }
 
     onLateUpdate(): void {

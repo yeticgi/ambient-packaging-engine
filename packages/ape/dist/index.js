@@ -5841,7 +5841,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.0';
-    const _time = '1589917671741';
+    const _time = '1589918329443';
     /**
      * The date that this version of the app was built.
      */
@@ -6523,9 +6523,11 @@ class AnimatorDecorator extends Decorator {
     }
     onVisible() {
         super.onVisible();
+        this._visible = true;
     }
     onInvisible() {
         super.onInvisible();
+        this._visible = false;
     }
     onStart() {
         super.onStart();
@@ -6604,7 +6606,9 @@ class AnimatorDecorator extends Decorator {
     }
     onUpdate() {
         super.onUpdate();
-        this._mixer.update(APEngine.time.deltaTime);
+        if (this._visible) {
+            this._mixer.update(APEngine.time.deltaTime);
+        }
     }
     onLateUpdate() {
         super.onLateUpdate();

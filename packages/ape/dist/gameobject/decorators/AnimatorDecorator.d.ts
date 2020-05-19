@@ -28,6 +28,7 @@ export declare class AnimatorDecorator extends Decorator {
     private _clips;
     private _actionTracker;
     private _timeScale;
+    private _visible;
     onAnimationLoop: ArgEvent<AnimatorEvent>;
     onAnimationFinished: ArgEvent<AnimatorEvent>;
     get clips(): AnimationClip[];

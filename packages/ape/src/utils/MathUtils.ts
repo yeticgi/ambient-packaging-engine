@@ -1,15 +1,15 @@
 import { Vector3, Vector2, MathUtils } from "three";
 
-export function interpolate(start: number, end: number, t: number, ease?: (t: number) => number): number {
+export function interpolate(start: number, end: number, progress: number, ease?: (t: number) => number): number {
     if (ease) {
-        t = ease(t);
+        progress = ease(progress);
     }
 
-    return (1 - t) * start + t * end;
+    return (1 - progress) * start + progress * end;
 }
 
-export function interpolateClamped(start: number, end: number, t: number, ease?: (t: number) => number): number {
-    const value = interpolate(start, end, t, ease);
+export function interpolateClamped(start: number, end: number, progress: number, ease?: (t: number) => number): number {
+    const value = interpolate(start, end, progress, ease);
     return clamp(value, start, end);
 }
 

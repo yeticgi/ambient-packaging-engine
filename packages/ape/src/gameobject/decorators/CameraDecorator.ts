@@ -84,6 +84,7 @@ export class CameraDecorator extends Decorator {
 
             if (this._camera && this._camera instanceof PerspectiveCamera) {
                 this._camera.fov = this._fov;
+                this._camera.updateProjectionMatrix();
             }
         }
     }
@@ -98,6 +99,7 @@ export class CameraDecorator extends Decorator {
 
             if (this._camera) {
                 this._camera.zoom = this._zoom;
+                this._camera.updateProjectionMatrix();
             }
         }
     }
@@ -127,6 +129,7 @@ export class CameraDecorator extends Decorator {
 
             if (this._camera) {
                 this._camera.far = this._far;
+                this._camera.updateProjectionMatrix();
             }
         }
     }
@@ -141,6 +144,7 @@ export class CameraDecorator extends Decorator {
 
             if (this._camera) {
                 this._camera.near = this._near;
+                this._camera.updateProjectionMatrix();
             }
         }
     }
@@ -159,6 +163,7 @@ export class CameraDecorator extends Decorator {
                 this._camera.right = planes.right;
                 this._camera.top = planes.top;
                 this._camera.bottom = planes.bottom;
+                this._camera.updateProjectionMatrix();
             }
         }
     }
@@ -177,6 +182,7 @@ export class CameraDecorator extends Decorator {
         this._aspect = getOptionalValue(options.aspect, window.innerWidth / window.innerHeight);
         this._far = getOptionalValue(options.far, 2000);
         this._near = getOptionalValue(options.near, 0.1);
+        this._size = getOptionalValue(options.size, 25);
     }
 
     onAttach(gameObject: GameObject): void {
@@ -220,6 +226,7 @@ export class CameraDecorator extends Decorator {
                 this._camera.right = planes.right;
                 this._camera.top = planes.top;
                 this._camera.bottom = planes.bottom;
+                this._camera.updateProjectionMatrix();
             }
         }
     }

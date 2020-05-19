@@ -4934,14 +4934,14 @@ class PerformanceStats {
     }
 }
 
-function interpolate(start, end, t, ease) {
+function interpolate(start, end, progress, ease) {
     if (ease) {
-        t = ease(t);
+        progress = ease(progress);
     }
-    return (1 - t) * start + t * end;
+    return (1 - progress) * start + progress * end;
 }
-function interpolateClamped(start, end, t, ease) {
-    const value = interpolate(start, end, t, ease);
+function interpolateClamped(start, end, progress, ease) {
+    const value = interpolate(start, end, progress, ease);
     return clamp(value, start, end);
 }
 function clamp(value, min, max) {
@@ -5841,7 +5841,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.0';
-    const _time = '1589906484175';
+    const _time = '1589914100802';
     /**
      * The date that this version of the app was built.
      */
@@ -6063,6 +6063,7 @@ let CameraDecorator = /** @class */ (() => {
                 this._fov = value;
                 if (this._camera && this._camera instanceof PerspectiveCamera) {
                     this._camera.fov = this._fov;
+                    this._camera.updateProjectionMatrix();
                 }
             }
         }
@@ -6075,6 +6076,7 @@ let CameraDecorator = /** @class */ (() => {
                 this._zoom = value;
                 if (this._camera) {
                     this._camera.zoom = this._zoom;
+                    this._camera.updateProjectionMatrix();
                 }
             }
         }
@@ -6100,6 +6102,7 @@ let CameraDecorator = /** @class */ (() => {
                 this._far = value;
                 if (this._camera) {
                     this._camera.far = this._far;
+                    this._camera.updateProjectionMatrix();
                 }
             }
         }
@@ -6112,6 +6115,7 @@ let CameraDecorator = /** @class */ (() => {
                 this._near = value;
                 if (this._camera) {
                     this._camera.near = this._near;
+                    this._camera.updateProjectionMatrix();
                 }
             }
         }
@@ -6128,6 +6132,7 @@ let CameraDecorator = /** @class */ (() => {
                     this._camera.right = planes.right;
                     this._camera.top = planes.top;
                     this._camera.bottom = planes.bottom;
+                    this._camera.updateProjectionMatrix();
                 }
             }
         }
@@ -6143,6 +6148,7 @@ let CameraDecorator = /** @class */ (() => {
             this._aspect = getOptionalValue(options.aspect, window.innerWidth / window.innerHeight);
             this._far = getOptionalValue(options.far, 2000);
             this._near = getOptionalValue(options.near, 0.1);
+            this._size = getOptionalValue(options.size, 25);
         }
         onAttach(gameObject) {
             super.onAttach(gameObject);
@@ -6176,6 +6182,7 @@ let CameraDecorator = /** @class */ (() => {
                     this._camera.right = planes.right;
                     this._camera.top = planes.top;
                     this._camera.bottom = planes.bottom;
+                    this._camera.updateProjectionMatrix();
                 }
             }
         }

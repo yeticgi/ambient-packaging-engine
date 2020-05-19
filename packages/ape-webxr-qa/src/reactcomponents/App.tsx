@@ -102,7 +102,7 @@ export class App extends Component<{}, IAppState> {
         // Create camera.
         const camera = createCamera();
         camera.gameObject.position.y = 0.4;
-        camera.gameObject.position.z = 0.5;
+        camera.gameObject.position.z = -0.5;
         scene.add(camera.gameObject);
 
         // Add a render operation to APEngine scene manager using the just created

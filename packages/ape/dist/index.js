@@ -4566,7 +4566,7 @@ let GameObject = /** @class */ (() => {
             this._decorators = [];
             this._destroyState = DestroyState.None;
             this._prevVisible = false;
-            if (this.name) {
+            if (name) {
                 this.name = name;
             }
         }
@@ -5841,7 +5841,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.0';
-    const _time = '1589904212189';
+    const _time = '1589906484175';
     /**
      * The date that this version of the app was built.
      */
@@ -6186,15 +6186,19 @@ let CameraDecorator = /** @class */ (() => {
             }
             if (this._cameraType === 'perspective') {
                 this._camera = new PerspectiveCamera(this._fov, this._aspect, this._near, this._far);
-                this.gameObject.add(this._camera);
             }
             else if (this._cameraType === 'orthographic') {
                 const planes = calculateFrustumPlanes(this._size, this._aspect);
                 this._camera = new OrthographicCamera(planes.left, planes.right, planes.top, planes.bottom, this._near, this._far);
-                this.gameObject.add(this._camera);
             }
             else {
                 console.error(`[CameraDecorator] Can't create camera. Unknown camera type: ${this._cameraType}`);
+            }
+            if (this._camera) {
+                // Rotate camera 180 degrees on the y-axis so that it faces forward.
+                this._camera.rotateY(180 * MathUtils.DEG2RAD);
+                // Add camera to this gameObject.
+                this.gameObject.add(this._camera);
             }
         }
         _removeCamera() {
@@ -7051,12 +7055,16 @@ class CameraOrbitDecorator extends Decorator {
     get isZooming() { return this._isZooming; }
     configure(options) {
         super.configure(options);
+        this._camera = getOptionalValue(options.cameraDecorator, null);
     }
     onAttach(gameObject) {
         super.onAttach(gameObject);
-        this._camera = this.gameObject.getDecorator(CameraDecorator);
         if (!this._camera) {
-            console.error(`[CameraOrbitDecorator] Needs to be attached to game object with a CameraDecorator.`);
+            // If no camera was provided, look for one on the gameObject we are attached to.
+            this._camera = this.gameObject.getDecorator(CameraDecorator);
+        }
+        if (!this._camera) {
+            console.error(`[CameraOrbitDecorator] No camera decorator to control. Need to be provided one or be attached to GameObject with CameraDecorator on it.`);
         }
     }
     onVisible() {
@@ -7220,7 +7228,7 @@ class CameraOrbitDecorator extends Decorator {
     }
     onUpdate() {
         super.onUpdate();
-        if (this.target) {
+        if (!TransformTool.isMouseDown() && this.target) {
             this._rotateControls();
             this._zoomControls();
             this._updateCamera();

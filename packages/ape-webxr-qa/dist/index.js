@@ -92147,7 +92147,7 @@ let GameObject = /** @class */ (() => {
             this._decorators = [];
             this._destroyState = DestroyState.None;
             this._prevVisible = false;
-            if (this.name) {
+            if (name) {
                 this.name = name;
             }
         }
@@ -93125,7 +93125,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.0';
-    const _time = '1589904212189';
+    const _time = '1589906484175';
     /**
      * The date that this version of the app was built.
      */
@@ -93470,15 +93470,19 @@ let CameraDecorator = /** @class */ (() => {
             }
             if (this._cameraType === 'perspective') {
                 this._camera = new PerspectiveCamera(this._fov, this._aspect, this._near, this._far);
-                this.gameObject.add(this._camera);
             }
             else if (this._cameraType === 'orthographic') {
                 const planes = calculateFrustumPlanes(this._size, this._aspect);
                 this._camera = new OrthographicCamera(planes.left, planes.right, planes.top, planes.bottom, this._near, this._far);
-                this.gameObject.add(this._camera);
             }
             else {
                 console.error(`[CameraDecorator] Can't create camera. Unknown camera type: ${this._cameraType}`);
+            }
+            if (this._camera) {
+                // Rotate camera 180 degrees on the y-axis so that it faces forward.
+                this._camera.rotateY(180 * MathUtils.DEG2RAD);
+                // Add camera to this gameObject.
+                this.gameObject.add(this._camera);
             }
         }
         _removeCamera() {
@@ -105228,7 +105232,7 @@ var BuildInfo;
      * Version number of the app.
      */
     BuildInfo.version = '0.0.3';
-    const _time = '1589904221830';
+    const _time = '1589906493423';
     /**
      * The date that this version of the app was built.
      */
@@ -105304,7 +105308,7 @@ class App extends react_2 {
         // Create camera.
         const camera = createCamera();
         camera.gameObject.position.y = 0.4;
-        camera.gameObject.position.z = 0.5;
+        camera.gameObject.position.z = -0.5;
         scene.add(camera.gameObject);
         // Add a render operation to APEngine scene manager using the just created
         // scene and camera. This tells APEngine to draw the scene with the given camera

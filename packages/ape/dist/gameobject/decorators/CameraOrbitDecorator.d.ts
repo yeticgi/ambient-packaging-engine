@@ -3,6 +3,7 @@ import { GameObject } from "../GameObject";
 import { Vector3 } from "three";
 import { CameraDecorator } from "./CameraDecorator";
 export interface ICameraOrbitDecoratorOptions extends IDecoratorOptions {
+    cameraDecorator?: CameraDecorator;
 }
 /**
  * Decorator that provided orbit controls for a camera decorator.

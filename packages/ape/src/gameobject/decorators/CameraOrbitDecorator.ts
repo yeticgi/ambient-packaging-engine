@@ -5,8 +5,11 @@ import { CameraDecorator } from "./CameraDecorator";
 import { clamp, clampDegAngle, pointOnSphere } from "../../utils/MathUtils";
 import { APEngine } from "../../APEngine";
 import { InputType } from "../../input/Input";
+import { getOptionalValue } from "../../utils/MiscUtils";
+import { TransformTool } from "../../misc/TransformTool";
 
 export interface ICameraOrbitDecoratorOptions extends IDecoratorOptions {
+    cameraDecorator?: CameraDecorator;
 }
 
 /**
@@ -87,14 +90,20 @@ export class CameraOrbitDecorator extends Decorator {
 
     configure(options: ICameraOrbitDecoratorOptions): void {
         super.configure(options);
+
+        this._camera = getOptionalValue(options.cameraDecorator, null);
     }
 
     onAttach(gameObject: GameObject): void {
         super.onAttach(gameObject);
 
-        this._camera = this.gameObject.getDecorator(CameraDecorator);
         if (!this._camera) {
-            console.error(`[CameraOrbitDecorator] Needs to be attached to game object with a CameraDecorator.`);
+            // If no camera was provided, look for one on the gameObject we are attached to.
+            this._camera = this.gameObject.getDecorator(CameraDecorator);
+        }
+
+        if (!this._camera) {
+            console.error(`[CameraOrbitDecorator] No camera decorator to control. Need to be provided one or be attached to GameObject with CameraDecorator on it.`);
         }
     }
 
@@ -288,7 +297,7 @@ export class CameraOrbitDecorator extends Decorator {
     onUpdate(): void {
         super.onUpdate();
         
-        if (this.target) {
+        if (!TransformTool.isMouseDown() && this.target) {
             this._rotateControls();
             this._zoomControls();
             this._updateCamera();

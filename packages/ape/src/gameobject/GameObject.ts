@@ -112,7 +112,7 @@ export class GameObject extends Object3D {
     constructor(name?: string) {
         super();
         
-        if (this.name) {
+        if (name) {
             this.name = name;
         }
     }

@@ -1,6 +1,6 @@
 import { IDecoratorOptions, Decorator } from "./Decorator";
 import { GameObject } from "../GameObject";
-import { PerspectiveCamera, OrthographicCamera } from "three";
+import { PerspectiveCamera, OrthographicCamera, MathUtils } from "three";
 import { getOptionalValue } from "../../utils/MiscUtils";
 import { calculateFrustumPlanes } from "../../utils/MathUtils";
 
@@ -232,13 +232,19 @@ export class CameraDecorator extends Decorator {
 
         if (this._cameraType === 'perspective') {
             this._camera = new PerspectiveCamera(this._fov, this._aspect, this._near, this._far);
-            this.gameObject.add(this._camera);
         } else if (this._cameraType === 'orthographic') {
             const planes = calculateFrustumPlanes(this._size, this._aspect);
             this._camera = new OrthographicCamera(planes.left, planes.right, planes.top, planes.bottom, this._near, this._far);
-            this.gameObject.add(this._camera);
         } else {
             console.error(`[CameraDecorator] Can't create camera. Unknown camera type: ${this._cameraType}`);
+        }
+
+        if (this._camera) {
+            // Rotate camera 180 degrees on the y-axis so that it faces forward.
+            this._camera.rotateY(180 * MathUtils.DEG2RAD);
+
+            // Add camera to this gameObject.
+            this.gameObject.add(this._camera);
         }
     }
 

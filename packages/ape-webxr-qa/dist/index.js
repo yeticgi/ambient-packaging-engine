@@ -93124,8 +93124,8 @@ var APEngineBuildInfo;
     /**
      * Version number of the app.
      */
-    APEngineBuildInfo.version = '0.1.1';
-    const _time = '1589903940641';
+    APEngineBuildInfo.version = '0.2.0';
+    const _time = '1589904212189';
     /**
      * The date that this version of the app was built.
      */
@@ -93498,6 +93498,10 @@ let CameraDecorator = /** @class */ (() => {
             const index = CameraDecorator._Cameras.findIndex(cameraDecorator => cameraDecorator === this);
             if (index >= 0) {
                 CameraDecorator._Cameras.splice(index, 1);
+            }
+            // If this camera is the primary camera, set primary camera back to null.
+            if (CameraDecorator._PrimaryCamera === this) {
+                CameraDecorator._PrimaryCamera = null;
             }
         }
     }
@@ -105224,7 +105228,7 @@ var BuildInfo;
      * Version number of the app.
      */
     BuildInfo.version = '0.0.3';
-    const _time = '1589903949913';
+    const _time = '1589904221830';
     /**
      * The date that this version of the app was built.
      */

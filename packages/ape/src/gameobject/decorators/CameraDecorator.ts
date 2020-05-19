@@ -264,5 +264,10 @@ export class CameraDecorator extends Decorator {
         if (index >= 0) {
             CameraDecorator._Cameras.splice(index, 1);
         }
+
+        // If this camera is the primary camera, set primary camera back to null.
+        if (CameraDecorator._PrimaryCamera === this) {
+            CameraDecorator._PrimaryCamera = null;
+        }
     }
 }

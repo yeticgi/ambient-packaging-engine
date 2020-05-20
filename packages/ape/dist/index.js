@@ -5841,7 +5841,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.0';
-    const _time = '1589918329443';
+    const _time = '1589994931646';
     /**
      * The date that this version of the app was built.
      */
@@ -18092,7 +18092,7 @@ class GLTFResource extends Resource {
                     return url;
                 }
                 let redirectUrl = null;
-                if (ext === 'gltf') {
+                if (ext === 'gltf' || ext === 'glb') {
                     redirectUrl = this._gltfUrl;
                 }
                 else if (ext === 'bin') {

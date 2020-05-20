@@ -50,7 +50,7 @@ export class GLTFResource extends Resource<GLTFPrefab> {
                 }
                 let redirectUrl: string = null;
                 
-                if (ext === 'gltf') {
+                if (ext === 'gltf' || ext === 'glb') {
                     redirectUrl = this._gltfUrl;
                 } else if (ext === 'bin') {
                     if (this._binUrl) {

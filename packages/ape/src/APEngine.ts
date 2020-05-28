@@ -14,6 +14,7 @@ import { PointerEventSystem } from './input/PointerEventSystem';
 import { APEngineBuildInfo } from './APEngineBuildInfo';
 import { SceneManager } from './scene-management/SceneManager';
 import { CameraDecorator } from './gameobject/decorators/CameraDecorator';
+import { XRPhysics } from './physics/XRPhysics';
 
 export namespace APEngine {
 
@@ -23,6 +24,7 @@ export namespace APEngine {
     export let time: Time;
     export let input: Input;
     export let xrInput: XRInput;
+    export let xrPhysics: XRPhysics;
     export let performanceStats: PerformanceStats;
     export let performanceResolutionScalar: PerformanceResolutionScalar;
     export let deviceCamera: DeviceCamera;
@@ -67,7 +69,6 @@ export namespace APEngine {
 
         webglRenderer.setSize(width, height);
         webglRenderer.domElement.style.display = "block";
-        webglRenderer.xr.enabled = false;
         
         // Create time module.
         time = new Time();
@@ -90,6 +91,9 @@ export namespace APEngine {
         
         // Create xr input module.
         xrInput = new XRInput(webglRenderer);
+
+        // Create xr physics module.
+        xrPhysics = new XRPhysics();
 
         // Create pointer event system.
         pointerEventSystem = new PointerEventSystem();
@@ -125,8 +129,10 @@ export namespace APEngine {
             _xrEnabled = xrEnabled;
 
             if (_xrEnabled) {
+                webglRenderer.xr.enabled = true;
                 onXRSessionStarted.invoke();
             } else {
+                webglRenderer.xr.enabled = false;
                 onXRSessionEnded.invoke();
             }
         }
@@ -175,6 +181,9 @@ export namespace APEngine {
 
         xrInput.dispose();
         xrInput = null;
+
+        xrPhysics.dispose();
+        xrPhysics = null;
 
         deviceCamera.dispose();
         deviceCamera = null;

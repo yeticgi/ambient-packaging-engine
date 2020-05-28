@@ -5841,7 +5841,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.0';
-    const _time = '1589994931646';
+    const _time = '1590694920209';
     /**
      * The date that this version of the app was built.
      */
@@ -6268,11 +6268,11 @@ var APEngine;
         // Create renderer.
         APEngine.webglRenderer = new WebGLRenderer(webglParams);
         APEngine.webglRenderer.autoClear = false;
+        APEngine.webglRenderer.xr.enabled = true;
         const width = window.innerWidth;
         const height = window.innerHeight;
         APEngine.webglRenderer.setSize(width, height);
         APEngine.webglRenderer.domElement.style.display = "block";
-        APEngine.webglRenderer.xr.enabled = false;
         // Create time module.
         APEngine.time = new Time();
         // Create performance stats module.

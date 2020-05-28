@@ -93125,7 +93125,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.0';
-    const _time = '1589906484175';
+    const _time = '1590694920209';
     /**
      * The date that this version of the app was built.
      */
@@ -93347,6 +93347,7 @@ let CameraDecorator = /** @class */ (() => {
                 this._fov = value;
                 if (this._camera && this._camera instanceof PerspectiveCamera) {
                     this._camera.fov = this._fov;
+                    this._camera.updateProjectionMatrix();
                 }
             }
         }
@@ -93359,6 +93360,7 @@ let CameraDecorator = /** @class */ (() => {
                 this._zoom = value;
                 if (this._camera) {
                     this._camera.zoom = this._zoom;
+                    this._camera.updateProjectionMatrix();
                 }
             }
         }
@@ -93384,6 +93386,7 @@ let CameraDecorator = /** @class */ (() => {
                 this._far = value;
                 if (this._camera) {
                     this._camera.far = this._far;
+                    this._camera.updateProjectionMatrix();
                 }
             }
         }
@@ -93396,6 +93399,7 @@ let CameraDecorator = /** @class */ (() => {
                 this._near = value;
                 if (this._camera) {
                     this._camera.near = this._near;
+                    this._camera.updateProjectionMatrix();
                 }
             }
         }
@@ -93412,6 +93416,7 @@ let CameraDecorator = /** @class */ (() => {
                     this._camera.right = planes.right;
                     this._camera.top = planes.top;
                     this._camera.bottom = planes.bottom;
+                    this._camera.updateProjectionMatrix();
                 }
             }
         }
@@ -93427,6 +93432,7 @@ let CameraDecorator = /** @class */ (() => {
             this._aspect = getOptionalValue(options.aspect, window.innerWidth / window.innerHeight);
             this._far = getOptionalValue(options.far, 2000);
             this._near = getOptionalValue(options.near, 0.1);
+            this._size = getOptionalValue(options.size, 25);
         }
         onAttach(gameObject) {
             super.onAttach(gameObject);
@@ -93460,6 +93466,7 @@ let CameraDecorator = /** @class */ (() => {
                     this._camera.right = planes.right;
                     this._camera.top = planes.top;
                     this._camera.bottom = planes.bottom;
+                    this._camera.updateProjectionMatrix();
                 }
             }
         }
@@ -93545,11 +93552,11 @@ var APEngine;
         // Create renderer.
         APEngine.webglRenderer = new WebGLRenderer(webglParams);
         APEngine.webglRenderer.autoClear = false;
+        APEngine.webglRenderer.xr.enabled = true;
         const width = window.innerWidth;
         const height = window.innerHeight;
         APEngine.webglRenderer.setSize(width, height);
         APEngine.webglRenderer.domElement.style.display = "block";
-        APEngine.webglRenderer.xr.enabled = false;
         // Create time module.
         APEngine.time = new Time();
         // Create performance stats module.
@@ -104622,7 +104629,7 @@ class GLTFResource extends Resource {
                     return url;
                 }
                 let redirectUrl = null;
-                if (ext === 'gltf') {
+                if (ext === 'gltf' || ext === 'glb') {
                     redirectUrl = this._gltfUrl;
                 }
                 else if (ext === 'bin') {
@@ -105232,7 +105239,7 @@ var BuildInfo;
      * Version number of the app.
      */
     BuildInfo.version = '0.0.3';
-    const _time = '1589906493423';
+    const _time = '1590694929093';
     /**
      * The date that this version of the app was built.
      */

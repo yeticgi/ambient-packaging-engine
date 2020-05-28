@@ -1,10 +1,11 @@
 import {
     Vector3,
     Matrix4,
-    Quaternion
+    Quaternion,
+    WebGLRenderer
 } from 'three';
-import { APEngine } from '../APEngine';
 import { IDisposable } from '../misc/IDisposable';
+import { Event } from '../misc/Events';
 
 export interface RaycastHit {
     position: Vector3;
@@ -14,22 +15,31 @@ export interface RaycastHit {
 // Reference 01: https://github.com/mrdoob/three.js/blob/dev/examples/webxr_ar_hittest.html
 // Refernece 02: https://web.dev/ar-hit-test/
 export class XRPhysics implements IDisposable {
+
+    private _renderer: WebGLRenderer;
+    private _xrSessionStartedEvent: Event;
+    private _xrSessionEndedEvent: Event;
+    private _getFrame: () => any;
     
     private _hitTestSourceRequested: boolean = false;
     private _referenceSpace: any = null;
     private _hitTestSource: any = null;
 
-    constructor() {
+    constructor(renderer: WebGLRenderer, onXRSessionStarted: Event, onXRSessionEnded: Event, getFrame: () => any) {
+        this._renderer = renderer;
+        this._xrSessionStartedEvent = onXRSessionStarted;
+        this._xrSessionEndedEvent = onXRSessionEnded;
+        this._getFrame = getFrame;
+
         this._onXRSessionStarted = this._onXRSessionStarted.bind(this);
-        APEngine.onXRSessionStarted.addListener(this._onXRSessionStarted);
+        this._xrSessionStartedEvent.addListener(this._onXRSessionStarted);
 
         this._onXRSessionEnded = this._onXRSessionEnded.bind(this);
-        APEngine.onXRSessionEnded.addListener(this._onXRSessionEnded);
+        this._xrSessionEndedEvent.addListener(this._onXRSessionEnded);
     }
 
     gazeRaycast(): RaycastHit | null {
-        const renderer = APEngine.webglRenderer;
-        const frame = APEngine.getXRFrame();
+        const frame = this._getFrame();
 
         if (frame) {
             if (this._referenceSpace && this._hitTestSource) {
@@ -58,7 +68,7 @@ export class XRPhysics implements IDisposable {
     }
 
     private async _onXRSessionStarted() {
-        const session = APEngine.webglRenderer.xr.getSession();
+        const session = this._renderer.xr.getSession();
         
         console.log(`[XRPhysics] Getting reference space...`);
         this._referenceSpace = await session.requestReferenceSpace('viewer');
@@ -74,7 +84,7 @@ export class XRPhysics implements IDisposable {
     }
 
     dispose() {
-        APEngine.onXRSessionStarted.removeListener(this._onXRSessionStarted);
-        APEngine.onXRSessionEnded.removeListener(this._onXRSessionEnded);
+        this._xrSessionStartedEvent.removeListener(this._onXRSessionStarted);
+        this._xrSessionEndedEvent.removeListener(this._onXRSessionEnded);
     }
 }

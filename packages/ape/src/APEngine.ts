@@ -93,7 +93,7 @@ export namespace APEngine {
         xrInput = new XRInput(webglRenderer);
 
         // Create xr physics module.
-        xrPhysics = new XRPhysics();
+        xrPhysics = new XRPhysics(webglRenderer, onXRSessionStarted, onXRSessionEnded, getXRFrame);
 
         // Create pointer event system.
         pointerEventSystem = new PointerEventSystem();

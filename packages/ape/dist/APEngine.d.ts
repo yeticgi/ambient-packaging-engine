@@ -1,7 +1,6 @@
 import { WebGLRenderer, WebGLRendererParameters } from 'three';
 import { Time } from './Time';
 import { Input } from './input/Input';
-import { Event, ArgEvent } from "./misc/Events";
 import { XRInput } from './input/XRInput';
 import { PerformanceStats } from './misc/PerformanceStats';
 import { PerformanceResolutionScalar } from './misc/PerformanceResolutionScalar';
@@ -20,12 +19,6 @@ export declare namespace APEngine {
     let performanceResolutionScalar: PerformanceResolutionScalar;
     let deviceCamera: DeviceCamera;
     let pointerEventSystem: PointerEventSystem;
-    const onUpdate: Event;
-    const onLateUpdate: Event;
-    const onResize: Event;
-    const onXRSessionStarted: Event;
-    const onXRSessionEnded: Event;
-    const onVisibilityChanged: ArgEvent<boolean>;
     function isXREnabled(): boolean;
     function getXRFrame(): any;
     function init(webglParams?: WebGLRendererParameters): void;

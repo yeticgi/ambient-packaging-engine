@@ -1,8 +1,9 @@
 import { IDecoratorOptions, Decorator } from "./Decorator";
 import { GameObject } from "../GameObject";
-import { PerspectiveCamera, OrthographicCamera, MathUtils } from "three";
+import { PerspectiveCamera, OrthographicCamera, MathUtils, WebGLRenderer, Scene, Camera, Geometry, BufferGeometry, Material, Group, Matrix4, Vector3, Euler } from "three";
 import { getOptionalValue } from "../../utils/MiscUtils";
 import { calculateFrustumPlanes } from "../../utils/MathUtils";
+import { APEngineEvents } from "../../APEngineEvents";
 
 export declare type CameraType = 'perspective' | 'orthographic';
 
@@ -61,6 +62,9 @@ export class CameraDecorator extends Decorator {
     private _far: number;
     private _size: number;
     private _camera: PerspectiveCamera | OrthographicCamera;
+    private _nonXrPositon: Vector3;
+    private _nonXrRotation: Euler;
+    private _nonXrScale: Vector3;
 
     /**
      * Is the camera orthographic or perspective.
@@ -192,6 +196,12 @@ export class CameraDecorator extends Decorator {
 
         // Add camera decorator to global list of camera decorators.
         CameraDecorator._Cameras.push(this);
+
+        this._onXRSessionStarted = this._onXRSessionStarted.bind(this);
+        APEngineEvents.onXRSessionStarted.addListener(this._onXRSessionStarted);
+
+        this._onXRSessionEnded = this._onXRSessionEnded.bind(this);
+        APEngineEvents.onXRSessionEnded.addListener(this._onXRSessionEnded);
     }
 
     onVisible() {
@@ -229,6 +239,30 @@ export class CameraDecorator extends Decorator {
                 this._camera.updateProjectionMatrix();
             }
         }
+    }
+
+    private _onXRSessionStarted(): void {
+        // Store this camera decorator's game object matrix before the WebXRManager starts overtwriting camera positioning.
+        this._nonXrPositon = this.gameObject.position.clone();
+        this._nonXrRotation = this.gameObject.rotation.clone();
+        this._nonXrScale = this.gameObject.scale.clone();
+
+        // Reset the camera decorator game object to default position, rotation, and scale.
+        // WebXRManager doesnt like if the xr camera to be parented to an object with an offset.
+        this.gameObject.position.set(0, 0, 0);
+        this.gameObject.rotation.set(0, 0, 0);
+        this.gameObject.scale.set(1, 1, 1);
+    }
+
+    private _onXRSessionEnded(): void {
+        // Restore the camera decorator's game object to the position, rotation, and scale it was at before entering XR mode.
+        this.gameObject.position.copy(this._nonXrPositon);
+        this.gameObject.rotation.copy(this._nonXrRotation);
+        this.gameObject.scale.copy(this._nonXrScale);
+
+        this._nonXrPositon = null;
+        this._nonXrRotation = null;
+        this._nonXrScale = null;
     }
 
     private _createCamera(): void {

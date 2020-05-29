@@ -5,7 +5,6 @@ import {
 import { Time } from './Time';
 import { Input } from './input/Input';
 import { GameObject } from "./gameobject/GameObject";
-import { Event, ArgEvent } from "./misc/Events";
 import { XRInput } from './input/XRInput';
 import { PerformanceStats } from './misc/PerformanceStats';
 import { PerformanceResolutionScalar } from './misc/PerformanceResolutionScalar';
@@ -15,6 +14,7 @@ import { APEngineBuildInfo } from './APEngineBuildInfo';
 import { SceneManager } from './scene-management/SceneManager';
 import { CameraDecorator } from './gameobject/decorators/CameraDecorator';
 import { XRPhysics } from './physics/XRPhysics';
+import { APEngineEvents } from './APEngineEvents';
 
 export namespace APEngine {
 
@@ -29,13 +29,6 @@ export namespace APEngine {
     export let performanceResolutionScalar: PerformanceResolutionScalar;
     export let deviceCamera: DeviceCamera;
     export let pointerEventSystem: PointerEventSystem;
-
-    export const onUpdate: Event = new Event();
-    export const onLateUpdate: Event = new Event();
-    export const onResize: Event = new Event();
-    export const onXRSessionStarted: Event = new Event();
-    export const onXRSessionEnded: Event = new Event();
-    export const onVisibilityChanged: ArgEvent<boolean> = new ArgEvent();
 
     let _initialized: boolean = false;
     let _xrFrame: any;
@@ -93,7 +86,7 @@ export namespace APEngine {
         xrInput = new XRInput(webglRenderer);
 
         // Create xr physics module.
-        xrPhysics = new XRPhysics(webglRenderer, onXRSessionStarted, onXRSessionEnded, getXRFrame);
+        xrPhysics = new XRPhysics(webglRenderer, APEngineEvents.onXRSessionStarted, APEngineEvents.onXRSessionEnded, getXRFrame);
 
         // Create pointer event system.
         pointerEventSystem = new PointerEventSystem();
@@ -130,10 +123,10 @@ export namespace APEngine {
 
             if (_xrEnabled) {
                 webglRenderer.xr.enabled = true;
-                onXRSessionStarted.invoke();
+                APEngineEvents.onXRSessionStarted.invoke();
             } else {
                 webglRenderer.xr.enabled = false;
-                onXRSessionEnded.invoke();
+                APEngineEvents.onXRSessionEnded.invoke();
             }
         }
 
@@ -144,9 +137,9 @@ export namespace APEngine {
         
         // Update game objects in scenes.
         sceneManager.update();
-        onUpdate.invoke();
+        APEngineEvents.onUpdate.invoke();
         sceneManager.lateUpdate();
-        onLateUpdate.invoke();
+        APEngineEvents.onLateUpdate.invoke();
 
         GameObject.__APEngine_ProcessGameObjectDestroyQueue();
         
@@ -194,10 +187,10 @@ export namespace APEngine {
         _xrEnabled = false;
         _xrFrame = null;
 
-        onUpdate.removeAllListeners();
-        onLateUpdate.removeAllListeners();
-        onXRSessionStarted.removeAllListeners();
-        onXRSessionEnded.removeAllListeners();
+        APEngineEvents.onUpdate.removeAllListeners();
+        APEngineEvents.onLateUpdate.removeAllListeners();
+        APEngineEvents.onXRSessionStarted.removeAllListeners();
+        APEngineEvents.onXRSessionEnded.removeAllListeners();
 
         _initialized = false;
     }
@@ -216,13 +209,13 @@ export namespace APEngine {
         webglRenderer.setPixelRatio(pixelRatio);
         CameraDecorator.Cameras.forEach(camera => camera.resize());
 
-        onResize.invoke();
+        APEngineEvents.onResize.invoke();
     }
 
     function visibilityChange() {
         setAudioMuted(document.hidden);
 
-        onVisibilityChanged.invoke(document.hidden);
+        APEngineEvents.onVisibilityChanged.invoke(document.hidden);
     }
 
     export function setAudioMuted(muted:boolean) {

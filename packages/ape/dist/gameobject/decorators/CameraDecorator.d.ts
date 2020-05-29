@@ -37,6 +37,9 @@ export declare class CameraDecorator extends Decorator {
     private _far;
     private _size;
     private _camera;
+    private _nonXrPositon;
+    private _nonXrRotation;
+    private _nonXrScale;
     /**
      * Is the camera orthographic or perspective.
      */
@@ -84,6 +87,8 @@ export declare class CameraDecorator extends Decorator {
     onUpdate(): void;
     onLateUpdate(): void;
     resize(): void;
+    private _onXRSessionStarted;
+    private _onXRSessionEnded;
     private _createCamera;
     private _removeCamera;
     onDestroy(): void;

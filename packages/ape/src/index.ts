@@ -1,4 +1,5 @@
 export * from './APEngine';
+export * from './APEngineEvents';
 export * from './APEngineBuildInfo';
 export * from './Time';
 export * from './dev/ThreeDevTools';

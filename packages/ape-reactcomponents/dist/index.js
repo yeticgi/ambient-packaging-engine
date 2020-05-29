@@ -97,7 +97,7 @@ class ARButton extends Component {
         if (this.state.mode === 'start ar') {
             if (this._currentSession === null) {
                 const nav = navigator;
-                nav.xr.requestSession('immersive-ar', { requiredFeatures: ['hit-test']
+                nav.xr.requestSession('immersive-ar', { requiredFeatures: ['local', 'hit-test']
                 })
                     .then(this._onSessionStarted);
             }

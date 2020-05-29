@@ -6,7 +6,6 @@ import {
 } from 'three';
 import { IDisposable } from '../misc/IDisposable';
 import { Event } from '../misc/Events';
-import { waitForSeconds } from '../utils/WaitPromises';
 
 export interface RaycastHit {
     position: Vector3;
@@ -22,8 +21,7 @@ export class XRPhysics implements IDisposable {
     private _xrSessionEndedEvent: Event;
     private _getFrame: () => any;
     
-    private _referenceSpace: any = null;
-    private _hitTestSource: any = null;
+    private _viewerHitTestSource: any = null;
 
     constructor(renderer: WebGLRenderer, onXRSessionStarted: Event, onXRSessionEnded: Event, getFrame: () => any) {
         this._renderer = renderer;
@@ -42,11 +40,13 @@ export class XRPhysics implements IDisposable {
         const frame = this._getFrame();
 
         if (frame) {
-            if (this._referenceSpace && this._hitTestSource) {
-                const hitTestResults = frame.getHitTestResults(this._hitTestSource);
+            const referenceSpace = this._renderer.xr.getReferenceSpace();
+
+            if (this._viewerHitTestSource) {
+                const hitTestResults = frame.getHitTestResults(this._viewerHitTestSource);
 
                 if (hitTestResults.length) {
-                    const hitPose = hitTestResults[0].getPose(this._referenceSpace);
+                    const hitPose = hitTestResults[0].getPose(referenceSpace);
                     const hitMatrix = new Matrix4();
                     hitMatrix.fromArray(hitPose.transform.matrix);
 
@@ -68,18 +68,16 @@ export class XRPhysics implements IDisposable {
     }
 
     private async _onXRSessionStarted() {
+        // Retrieve hit test source for viewer reference space.
         const session = this._renderer.xr.getSession();
-        
-        console.log(`[XRPhysics] Getting reference space...`);
-        this._referenceSpace = await session.requestReferenceSpace('viewer');
-        console.log(`[XRPhysics] Getting hit test source...`);
-        this._hitTestSource = await session.requestHitTestSource({ space: this._referenceSpace });
-        console.log(`[XRPhysics] Ready!`);
+        const referenceSpace = await session.requestReferenceSpace('viewer');
+        this._viewerHitTestSource = await session.requestHitTestSource({
+            space: referenceSpace
+        });
     }
     
     private _onXRSessionEnded() {
-        this._referenceSpace = null;
-        this._hitTestSource = null;
+        this._viewerHitTestSource = null;
     }
 
     dispose() {

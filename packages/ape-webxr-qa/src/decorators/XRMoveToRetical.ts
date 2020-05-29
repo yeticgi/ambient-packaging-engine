@@ -1,4 +1,4 @@
-import { Decorator, APEngine, IDecoratorOptions, MeshDecorator } from "@yeticgi/ape";
+import { Decorator, APEngine, APEngineEvents, IDecoratorOptions, MeshDecorator } from "@yeticgi/ape";
 import { Vector3 } from 'three';
 import { XRRetical } from './XRRetical';
 
@@ -12,8 +12,8 @@ export class XRMoveToRetical extends Decorator {
         this._onXRStarted = this._onXRStarted.bind(this);
         this._onXREnded = this._onXREnded.bind(this);
 
-        APEngine.onXRSessionStarted.addListener(this._onXRStarted);
-        APEngine.onXRSessionEnded.addListener(this._onXREnded);
+        APEngineEvents.onXRSessionStarted.addListener(this._onXRStarted);
+        APEngineEvents.onXRSessionEnded.addListener(this._onXREnded);
     }
 
     onStart() {
@@ -29,8 +29,8 @@ export class XRMoveToRetical extends Decorator {
     onDestroy() {
         super.onDestroy();
 
-        APEngine.onXRSessionStarted.removeListener(this._onXRStarted);
-        APEngine.onXRSessionEnded.removeListener(this._onXREnded);
+        APEngineEvents.onXRSessionStarted.removeListener(this._onXRStarted);
+        APEngineEvents.onXRSessionEnded.removeListener(this._onXREnded);
     }
 
     onUpdate() {

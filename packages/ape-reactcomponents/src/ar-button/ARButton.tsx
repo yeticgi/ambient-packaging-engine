@@ -65,7 +65,7 @@ export class ARButton extends Component<{}, IARButtonState> {
             if (this._currentSession === null) {
                 const nav = navigator as any;
                 nav.xr.requestSession('immersive-ar',
-                    { requiredFeatures: [ 'hit-test' ]
+                    { requiredFeatures: [ 'local', 'hit-test' ]
                 })
                 .then(this._onSessionStarted);
             } else {

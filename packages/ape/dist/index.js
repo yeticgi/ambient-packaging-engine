@@ -5866,8 +5866,8 @@ var APEngineBuildInfo;
     /**
      * Version number of the app.
      */
-    APEngineBuildInfo.version = '0.2.0';
-    const _time = '1590762611315';
+    APEngineBuildInfo.version = '0.2.5';
+    const _time = '1590776351955';
     /**
      * The date that this version of the app was built.
      */
@@ -6036,6 +6036,16 @@ class SceneManager {
     }
 }
 
+var APEngineEvents;
+(function (APEngineEvents) {
+    APEngineEvents.onUpdate = new Event();
+    APEngineEvents.onLateUpdate = new Event();
+    APEngineEvents.onResize = new Event();
+    APEngineEvents.onXRSessionStarted = new Event();
+    APEngineEvents.onXRSessionEnded = new Event();
+    APEngineEvents.onVisibilityChanged = new ArgEvent();
+})(APEngineEvents || (APEngineEvents = {}));
+
 /**
  * Camera decorator creates and manages ThreeJS cameras.
  * You can change the camera type on the fly by setting the cameraType property.
@@ -6181,6 +6191,10 @@ let CameraDecorator = /** @class */ (() => {
             this._createCamera();
             // Add camera decorator to global list of camera decorators.
             CameraDecorator._Cameras.push(this);
+            this._onXRSessionStarted = this._onXRSessionStarted.bind(this);
+            APEngineEvents.onXRSessionStarted.addListener(this._onXRSessionStarted);
+            this._onXRSessionEnded = this._onXRSessionEnded.bind(this);
+            APEngineEvents.onXRSessionEnded.addListener(this._onXRSessionEnded);
         }
         onVisible() {
             super.onVisible();
@@ -6211,6 +6225,26 @@ let CameraDecorator = /** @class */ (() => {
                     this._camera.updateProjectionMatrix();
                 }
             }
+        }
+        _onXRSessionStarted() {
+            // Store this camera decorator's game object matrix before the WebXRManager starts overtwriting camera positioning.
+            this._nonXrPositon = this.gameObject.position.clone();
+            this._nonXrRotation = this.gameObject.rotation.clone();
+            this._nonXrScale = this.gameObject.scale.clone();
+            // Reset the camera decorator game object to default position, rotation, and scale.
+            // WebXRManager doesnt like if the xr camera to be parented to an object with an offset.
+            this.gameObject.position.set(0, 0, 0);
+            this.gameObject.rotation.set(0, 0, 0);
+            this.gameObject.scale.set(1, 1, 1);
+        }
+        _onXRSessionEnded() {
+            // Restore the camera decorator's game object to the position, rotation, and scale it was at before entering XR mode.
+            this.gameObject.position.copy(this._nonXrPositon);
+            this.gameObject.rotation.copy(this._nonXrRotation);
+            this.gameObject.scale.copy(this._nonXrScale);
+            this._nonXrPositon = null;
+            this._nonXrRotation = null;
+            this._nonXrScale = null;
         }
         _createCamera() {
             if (!this.gameObject) {
@@ -6267,8 +6301,7 @@ let CameraDecorator = /** @class */ (() => {
 // Refernece 02: https://web.dev/ar-hit-test/
 class XRPhysics {
     constructor(renderer, onXRSessionStarted, onXRSessionEnded, getFrame) {
-        this._referenceSpace = null;
-        this._hitTestSource = null;
+        this._viewerHitTestSource = null;
         this._renderer = renderer;
         this._xrSessionStartedEvent = onXRSessionStarted;
         this._xrSessionEndedEvent = onXRSessionEnded;
@@ -6281,10 +6314,11 @@ class XRPhysics {
     gazeRaycast() {
         const frame = this._getFrame();
         if (frame) {
-            if (this._referenceSpace && this._hitTestSource) {
-                const hitTestResults = frame.getHitTestResults(this._hitTestSource);
+            const referenceSpace = this._renderer.xr.getReferenceSpace();
+            if (this._viewerHitTestSource) {
+                const hitTestResults = frame.getHitTestResults(this._viewerHitTestSource);
                 if (hitTestResults.length) {
-                    const hitPose = hitTestResults[0].getPose(this._referenceSpace);
+                    const hitPose = hitTestResults[0].getPose(referenceSpace);
                     const hitMatrix = new Matrix4();
                     hitMatrix.fromArray(hitPose.transform.matrix);
                     const position = new Vector3();
@@ -6302,17 +6336,16 @@ class XRPhysics {
     }
     _onXRSessionStarted() {
         return __awaiter(this, void 0, void 0, function* () {
+            // Retrieve hit test source for viewer reference space.
             const session = this._renderer.xr.getSession();
-            console.log(`[XRPhysics] Getting reference space...`);
-            this._referenceSpace = yield session.requestReferenceSpace('viewer');
-            console.log(`[XRPhysics] Getting hit test source...`);
-            this._hitTestSource = yield session.requestHitTestSource({ space: this._referenceSpace });
-            console.log(`[XRPhysics] Ready!`);
+            const referenceSpace = yield session.requestReferenceSpace('viewer');
+            this._viewerHitTestSource = yield session.requestHitTestSource({
+                space: referenceSpace
+            });
         });
     }
     _onXRSessionEnded() {
-        this._referenceSpace = null;
-        this._hitTestSource = null;
+        this._viewerHitTestSource = null;
     }
     dispose() {
         this._xrSessionStartedEvent.removeListener(this._onXRSessionStarted);
@@ -6323,12 +6356,6 @@ class XRPhysics {
 var APEngine;
 (function (APEngine) {
     APEngine.sceneManager = new SceneManager();
-    APEngine.onUpdate = new Event();
-    APEngine.onLateUpdate = new Event();
-    APEngine.onResize = new Event();
-    APEngine.onXRSessionStarted = new Event();
-    APEngine.onXRSessionEnded = new Event();
-    APEngine.onVisibilityChanged = new ArgEvent();
     let _initialized = false;
     let _xrFrame;
     let _xrEnabled = false;
@@ -6373,7 +6400,7 @@ var APEngine;
         // Create xr input module.
         APEngine.xrInput = new XRInput(APEngine.webglRenderer);
         // Create xr physics module.
-        APEngine.xrPhysics = new XRPhysics(APEngine.webglRenderer, APEngine.onXRSessionStarted, APEngine.onXRSessionEnded, getXRFrame);
+        APEngine.xrPhysics = new XRPhysics(APEngine.webglRenderer, APEngineEvents.onXRSessionStarted, APEngineEvents.onXRSessionEnded, getXRFrame);
         // Create pointer event system.
         APEngine.pointerEventSystem = new PointerEventSystem();
         // Create device camera module.
@@ -6401,11 +6428,11 @@ var APEngine;
             _xrEnabled = xrEnabled;
             if (_xrEnabled) {
                 APEngine.webglRenderer.xr.enabled = true;
-                APEngine.onXRSessionStarted.invoke();
+                APEngineEvents.onXRSessionStarted.invoke();
             }
             else {
                 APEngine.webglRenderer.xr.enabled = false;
-                APEngine.onXRSessionEnded.invoke();
+                APEngineEvents.onXRSessionEnded.invoke();
             }
         }
         APEngine.input.update();
@@ -6413,9 +6440,9 @@ var APEngine;
         APEngine.pointerEventSystem.update(APEngine.input, CameraDecorator.PrimaryCamera);
         // Update game objects in scenes.
         APEngine.sceneManager.update();
-        APEngine.onUpdate.invoke();
+        APEngineEvents.onUpdate.invoke();
         APEngine.sceneManager.lateUpdate();
-        APEngine.onLateUpdate.invoke();
+        APEngineEvents.onLateUpdate.invoke();
         GameObject.__APEngine_ProcessGameObjectDestroyQueue();
         APEngine.sceneManager.render(APEngine.webglRenderer);
         APEngine.time.update();
@@ -6449,10 +6476,10 @@ var APEngine;
         APEngine.performanceStats = null;
         _xrEnabled = false;
         _xrFrame = null;
-        APEngine.onUpdate.removeAllListeners();
-        APEngine.onLateUpdate.removeAllListeners();
-        APEngine.onXRSessionStarted.removeAllListeners();
-        APEngine.onXRSessionEnded.removeAllListeners();
+        APEngineEvents.onUpdate.removeAllListeners();
+        APEngineEvents.onLateUpdate.removeAllListeners();
+        APEngineEvents.onXRSessionStarted.removeAllListeners();
+        APEngineEvents.onXRSessionEnded.removeAllListeners();
         _initialized = false;
     }
     APEngine.dispose = dispose;
@@ -6466,11 +6493,11 @@ var APEngine;
         }
         APEngine.webglRenderer.setPixelRatio(pixelRatio);
         CameraDecorator.Cameras.forEach(camera => camera.resize());
-        APEngine.onResize.invoke();
+        APEngineEvents.onResize.invoke();
     }
     function visibilityChange() {
         setAudioMuted(document.hidden);
-        APEngine.onVisibilityChanged.invoke(document.hidden);
+        APEngineEvents.onVisibilityChanged.invoke(document.hidden);
     }
     function setAudioMuted(muted) {
         if (muted) {
@@ -18462,5 +18489,5 @@ class Stopwatch {
     }
 }
 
-export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, AnimatorDecorator, ArgEvent, AudioResource, CameraDecorator, CameraOrbitDecorator, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, XRInput, XRPhysics, appendLine, calculateFrustumPlanes, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isObjectVisible, loadImage, normalize, normalizeClamped, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
+export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, APEngineEvents, AnimatorDecorator, ArgEvent, AudioResource, CameraDecorator, CameraOrbitDecorator, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, XRInput, XRPhysics, appendLine, calculateFrustumPlanes, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isObjectVisible, loadImage, normalize, normalizeClamped, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
 //# sourceMappingURL=index.js.map

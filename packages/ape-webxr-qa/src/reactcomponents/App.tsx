@@ -6,6 +6,7 @@ import {
 } from '@yeticgi/ape-reactcomponents';
 import {
     APEngine,
+    APEngineEvents,
     GameObject,
     MeshDecorator,
     APEResources,
@@ -83,7 +84,7 @@ export class App extends Component<{}, IAppState> {
         APEngine.performanceStats.position = 'bottom right';
 
         this.onEngineUpdate = this.onEngineUpdate.bind(this);
-        APEngine.onUpdate.addListener(this.onEngineUpdate);
+        APEngineEvents.onUpdate.addListener(this.onEngineUpdate);
 
         this.setState({
             engineInitialized: true

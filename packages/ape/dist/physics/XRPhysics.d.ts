@@ -10,8 +10,7 @@ export declare class XRPhysics implements IDisposable {
     private _xrSessionStartedEvent;
     private _xrSessionEndedEvent;
     private _getFrame;
-    private _referenceSpace;
-    private _hitTestSource;
+    private _viewerHitTestSource;
     constructor(renderer: WebGLRenderer, onXRSessionStarted: Event, onXRSessionEnded: Event, getFrame: () => any);
     gazeRaycast(): RaycastHit | null;
     private _onXRSessionStarted;

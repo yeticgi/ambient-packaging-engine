@@ -297,7 +297,7 @@ export class CameraOrbitDecorator extends Decorator {
     onUpdate(): void {
         super.onUpdate();
         
-        if (!TransformTool.isMouseDown() && this.target) {
+        if (!APEngine.isXREnabled() && !TransformTool.isMouseDown() && this.target) {
             this._rotateControls();
             this._zoomControls();
             this._updateCamera();

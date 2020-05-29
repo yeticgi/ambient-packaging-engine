@@ -5867,7 +5867,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.5';
-    const _time = '1590776351955';
+    const _time = '1590782216372';
     /**
      * The date that this version of the app was built.
      */
@@ -7362,7 +7362,7 @@ class CameraOrbitDecorator extends Decorator {
     }
     onUpdate() {
         super.onUpdate();
-        if (!TransformTool.isMouseDown() && this.target) {
+        if (!APEngine.isXREnabled() && !TransformTool.isMouseDown() && this.target) {
             this._rotateControls();
             this._zoomControls();
             this._updateCamera();

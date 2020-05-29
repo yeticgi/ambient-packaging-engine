@@ -1,4 +1,4 @@
-import { Clock, Vector2, Vector3, Object3D, MathUtils, Plane, Raycaster, Matrix4, Scene, Box2, Layers, Mesh, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, BoxBufferGeometry, PerspectiveCamera, OrthographicCamera, Quaternion, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Material, Texture, Geometry, BufferGeometry, LoadingManager, TextureLoader } from 'three';
+import { Clock, Vector2, Vector3, Object3D, Quaternion, MathUtils, Plane, Raycaster, Matrix4, Scene, Box2, Layers, Mesh, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, BoxBufferGeometry, PerspectiveCamera, OrthographicCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Material, Texture, Geometry, BufferGeometry, LoadingManager, TextureLoader } from 'three';
 import { __awaiter } from 'tslib';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import { Howl } from 'howler';
@@ -4819,26 +4819,52 @@ let GameObject = /** @class */ (() => {
 
 class XRInput {
     constructor(renderer) {
-        /**
-         * Should gaze raycasting be enabled.
-         */
-        this.gazeEnabled = false;
-        this.onSelect = new Event();
+        this.onSelectStart = new ArgEvent();
+        this.onSelect = new ArgEvent();
+        this.onSelectEnd = new ArgEvent();
         this._renderer = renderer;
+        this._onControllerSelectStart = this._onControllerSelectStart.bind(this);
         this._onControllerSelect = this._onControllerSelect.bind(this);
+        this._onControllerSelectEnd = this._onControllerSelectEnd.bind(this);
         // Setup AR controller.
-        this._controller = this._renderer.xr.getController(0);
-        this._controller.addEventListener('select', this._onControllerSelect);
-        // this._scene.add(this._controller);
+        this.controller = this._renderer.xr.getController(0);
+        this.controller.addEventListener('selectstart', this._onControllerSelectStart);
+        this.controller.addEventListener('select', this._onControllerSelect);
+        this.controller.addEventListener('selectend', this._onControllerSelectEnd);
     }
-    dispose() {
-        if (this._controller) {
-            // this._controller.parent.remove(this._controller);
-            this._controller.removeEventListener('select', this._onControllerSelect);
+    /**
+     * Return the controller's pose at the current time.
+     * This is a snapshot of the controller's pose and will not change as the controller moves.
+     */
+    getCurrentControllerPose() {
+        if (this.controller) {
+            const controllerPose = {
+                position: new Vector3(),
+                rotation: new Quaternion(),
+                scale: new Vector3()
+            };
+            this.controller.matrixWorld.decompose(controllerPose.position, controllerPose.rotation, controllerPose.scale);
+            return controllerPose;
+        }
+        else {
+            return null;
         }
     }
+    dispose() {
+        if (this.controller) {
+            this.controller.removeEventListener('selectstart', this._onControllerSelectStart);
+            this.controller.removeEventListener('select', this._onControllerSelect);
+            this.controller.removeEventListener('selectend', this._onControllerSelectEnd);
+        }
+    }
+    _onControllerSelectStart() {
+        this.onSelectStart.invoke(this.getCurrentControllerPose());
+    }
     _onControllerSelect() {
-        this.onSelect.invoke();
+        this.onSelect.invoke(this.getCurrentControllerPose());
+    }
+    _onControllerSelectEnd() {
+        this.onSelectEnd.invoke(this.getCurrentControllerPose());
     }
 }
 
@@ -5841,7 +5867,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.0';
-    const _time = '1590700197705';
+    const _time = '1590762611315';
     /**
      * The date that this version of the app was built.
      */
@@ -6241,7 +6267,6 @@ let CameraDecorator = /** @class */ (() => {
 // Refernece 02: https://web.dev/ar-hit-test/
 class XRPhysics {
     constructor(renderer, onXRSessionStarted, onXRSessionEnded, getFrame) {
-        this._hitTestSourceRequested = false;
         this._referenceSpace = null;
         this._hitTestSource = null;
         this._renderer = renderer;
@@ -6286,7 +6311,6 @@ class XRPhysics {
         });
     }
     _onXRSessionEnded() {
-        this._hitTestSourceRequested = false;
         this._referenceSpace = null;
         this._hitTestSource = null;
     }

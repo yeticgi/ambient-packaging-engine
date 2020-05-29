@@ -1,5 +1,5 @@
-import { Decorator, getOptionalValue, APEngine, IDecoratorOptions, MeshDecorator } from "@yeticgi/ape";
-import { Vector3, Object3D } from 'three';
+import { Decorator, APEngine, IDecoratorOptions, MeshDecorator } from "@yeticgi/ape";
+import { Vector3 } from 'three';
 import { XRRetical } from './XRRetical';
 
 export class XRMoveToRetical extends Decorator {

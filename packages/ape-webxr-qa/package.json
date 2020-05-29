@@ -1,7 +1,7 @@
 {
     "private": true,
     "name": "@yeticgi/ape-webxr-qa",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "scripts": {
         "build": "rollup -c",
         "build:dev": "rollup -c --configMode dev",

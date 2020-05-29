@@ -92400,26 +92400,52 @@ let GameObject = /** @class */ (() => {
 
 class XRInput {
     constructor(renderer) {
-        /**
-         * Should gaze raycasting be enabled.
-         */
-        this.gazeEnabled = false;
-        this.onSelect = new Event();
+        this.onSelectStart = new ArgEvent();
+        this.onSelect = new ArgEvent();
+        this.onSelectEnd = new ArgEvent();
         this._renderer = renderer;
+        this._onControllerSelectStart = this._onControllerSelectStart.bind(this);
         this._onControllerSelect = this._onControllerSelect.bind(this);
+        this._onControllerSelectEnd = this._onControllerSelectEnd.bind(this);
         // Setup AR controller.
-        this._controller = this._renderer.xr.getController(0);
-        this._controller.addEventListener('select', this._onControllerSelect);
-        // this._scene.add(this._controller);
+        this.controller = this._renderer.xr.getController(0);
+        this.controller.addEventListener('selectstart', this._onControllerSelectStart);
+        this.controller.addEventListener('select', this._onControllerSelect);
+        this.controller.addEventListener('selectend', this._onControllerSelectEnd);
     }
-    dispose() {
-        if (this._controller) {
-            // this._controller.parent.remove(this._controller);
-            this._controller.removeEventListener('select', this._onControllerSelect);
+    /**
+     * Return the controller's pose at the current time.
+     * This is a snapshot of the controller's pose and will not change as the controller moves.
+     */
+    getCurrentControllerPose() {
+        if (this.controller) {
+            const controllerPose = {
+                position: new Vector3(),
+                rotation: new Quaternion(),
+                scale: new Vector3()
+            };
+            this.controller.matrixWorld.decompose(controllerPose.position, controllerPose.rotation, controllerPose.scale);
+            return controllerPose;
+        }
+        else {
+            return null;
         }
     }
+    dispose() {
+        if (this.controller) {
+            this.controller.removeEventListener('selectstart', this._onControllerSelectStart);
+            this.controller.removeEventListener('select', this._onControllerSelect);
+            this.controller.removeEventListener('selectend', this._onControllerSelectEnd);
+        }
+    }
+    _onControllerSelectStart() {
+        this.onSelectStart.invoke(this.getCurrentControllerPose());
+    }
     _onControllerSelect() {
-        this.onSelect.invoke();
+        this.onSelect.invoke(this.getCurrentControllerPose());
+    }
+    _onControllerSelectEnd() {
+        this.onSelectEnd.invoke(this.getCurrentControllerPose());
     }
 }
 
@@ -93125,7 +93151,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.0';
-    const _time = '1590694920209';
+    const _time = '1590762611315';
     /**
      * The date that this version of the app was built.
      */
@@ -93521,6 +93547,63 @@ let CameraDecorator = /** @class */ (() => {
     return CameraDecorator;
 })();
 
+// Reference 01: https://github.com/mrdoob/three.js/blob/dev/examples/webxr_ar_hittest.html
+// Refernece 02: https://web.dev/ar-hit-test/
+class XRPhysics {
+    constructor(renderer, onXRSessionStarted, onXRSessionEnded, getFrame) {
+        this._referenceSpace = null;
+        this._hitTestSource = null;
+        this._renderer = renderer;
+        this._xrSessionStartedEvent = onXRSessionStarted;
+        this._xrSessionEndedEvent = onXRSessionEnded;
+        this._getFrame = getFrame;
+        this._onXRSessionStarted = this._onXRSessionStarted.bind(this);
+        this._xrSessionStartedEvent.addListener(this._onXRSessionStarted);
+        this._onXRSessionEnded = this._onXRSessionEnded.bind(this);
+        this._xrSessionEndedEvent.addListener(this._onXRSessionEnded);
+    }
+    gazeRaycast() {
+        const frame = this._getFrame();
+        if (frame) {
+            if (this._referenceSpace && this._hitTestSource) {
+                const hitTestResults = frame.getHitTestResults(this._hitTestSource);
+                if (hitTestResults.length) {
+                    const hitPose = hitTestResults[0].getPose(this._referenceSpace);
+                    const hitMatrix = new Matrix4();
+                    hitMatrix.fromArray(hitPose.transform.matrix);
+                    const position = new Vector3();
+                    const rotation = new Quaternion();
+                    const scale = new Vector3();
+                    hitMatrix.decompose(position, rotation, scale);
+                    return {
+                        position,
+                        rotation
+                    };
+                }
+            }
+        }
+        return null;
+    }
+    _onXRSessionStarted() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const session = this._renderer.xr.getSession();
+            console.log(`[XRPhysics] Getting reference space...`);
+            this._referenceSpace = yield session.requestReferenceSpace('viewer');
+            console.log(`[XRPhysics] Getting hit test source...`);
+            this._hitTestSource = yield session.requestHitTestSource({ space: this._referenceSpace });
+            console.log(`[XRPhysics] Ready!`);
+        });
+    }
+    _onXRSessionEnded() {
+        this._referenceSpace = null;
+        this._hitTestSource = null;
+    }
+    dispose() {
+        this._xrSessionStartedEvent.removeListener(this._onXRSessionStarted);
+        this._xrSessionEndedEvent.removeListener(this._onXRSessionEnded);
+    }
+}
+
 var APEngine;
 (function (APEngine) {
     APEngine.sceneManager = new SceneManager();
@@ -93552,7 +93635,6 @@ var APEngine;
         // Create renderer.
         APEngine.webglRenderer = new WebGLRenderer(webglParams);
         APEngine.webglRenderer.autoClear = false;
-        APEngine.webglRenderer.xr.enabled = true;
         const width = window.innerWidth;
         const height = window.innerHeight;
         APEngine.webglRenderer.setSize(width, height);
@@ -93574,6 +93656,8 @@ var APEngine;
         });
         // Create xr input module.
         APEngine.xrInput = new XRInput(APEngine.webglRenderer);
+        // Create xr physics module.
+        APEngine.xrPhysics = new XRPhysics(APEngine.webglRenderer, APEngine.onXRSessionStarted, APEngine.onXRSessionEnded, getXRFrame);
         // Create pointer event system.
         APEngine.pointerEventSystem = new PointerEventSystem();
         // Create device camera module.
@@ -93600,9 +93684,11 @@ var APEngine;
         if (_xrEnabled !== xrEnabled) {
             _xrEnabled = xrEnabled;
             if (_xrEnabled) {
+                APEngine.webglRenderer.xr.enabled = true;
                 APEngine.onXRSessionStarted.invoke();
             }
             else {
+                APEngine.webglRenderer.xr.enabled = false;
                 APEngine.onXRSessionEnded.invoke();
             }
         }
@@ -93639,6 +93725,8 @@ var APEngine;
         APEngine.input = null;
         APEngine.xrInput.dispose();
         APEngine.xrInput = null;
+        APEngine.xrPhysics.dispose();
+        APEngine.xrPhysics = null;
         APEngine.deviceCamera.dispose();
         APEngine.deviceCamera = null;
         APEngine.performanceStats.dispose();
@@ -104167,48 +104255,6 @@ class DeviceCameraQRReader extends DeviceCameraReader {
     }
 }
 
-var XRPhysics;
-(function (XRPhysics) {
-    function gazeRaycast(renderer, frame) {
-        return __awaiter(this, void 0, void 0, function* () {
-            // Reference: https://github.com/mrdoob/three.js/blob/dev/examples/webxr_ar_hittest.html
-            if (frame) {
-                const xr = renderer.xr;
-                const referenceSpace = xr.getReferenceSpace();
-                const session = xr.getSession();
-                const pose = frame.getViewerPose(referenceSpace);
-                if (pose) {
-                    console.log(`[XRPhysics] gazeRaycast pose exists`);
-                    const matrix = new Matrix4();
-                    const ray = new Ray();
-                    matrix.fromArray(pose.transform.matrix);
-                    ray.origin.set(0, 0, 0);
-                    ray.direction.set(0, 0, -1);
-                    ray.applyMatrix4(matrix);
-                    const xrRay = new XRRay(ray.origin, ray.direction);
-                    const hits = yield session.requestHitTest(xrRay, referenceSpace);
-                    if (hits.length) {
-                        // Hit
-                        const hitResult = hits[0];
-                        const hitMatrix = new Matrix4();
-                        hitMatrix.fromArray(hitResult.hitMatrix);
-                        let position = new Vector3();
-                        let rotation = new Quaternion();
-                        let scale = new Vector3();
-                        hitMatrix.decompose(position, rotation, scale);
-                        return {
-                            position,
-                            rotation
-                        };
-                    }
-                }
-            }
-            return null;
-        });
-    }
-    XRPhysics.gazeRaycast = gazeRaycast;
-})(XRPhysics || (XRPhysics = {}));
-
 /**
  * A Resource Manager is a generic class that manages any type of Resouce that it is created for.
  * Resource Managers load, track, retrieve, and dipose of any Resources assigned to it.
@@ -104859,7 +104905,9 @@ class ARButton extends react_2 {
         if (this.state.mode === 'start ar') {
             if (this._currentSession === null) {
                 const nav = navigator;
-                nav.xr.requestSession('immersive-ar').then(this._onSessionStarted);
+                nav.xr.requestSession('immersive-ar', { requiredFeatures: ['hit-test']
+                })
+                    .then(this._onSessionStarted);
             }
             else {
                 this._currentSession.end();
@@ -105059,22 +105107,12 @@ class XRRetical extends Decorator {
     }
     onUpdate() {
         super.onUpdate();
-        const xrEnabled = APEngine.isXREnabled();
-        if (xrEnabled && !this._raycasting) {
-            this._raycasting = true;
-            const raycastPromise = XRPhysics.gazeRaycast(APEngine.webglRenderer, APEngine.getXRFrame());
-            raycastPromise
-                .then((gazeHit) => {
-                if (gazeHit) {
-                    this._meshDecorator.mesh.visible = true;
-                    this.gameObject.position.copy(gazeHit.position);
-                }
-                this._raycasting = false;
-            })
-                .catch((reason) => {
-                console.warn(`[XRRetical] gaze failed: ${reason}`);
-                this._raycasting = false;
-            });
+        if (APEngine.isXREnabled()) {
+            const gazeHit = APEngine.xrPhysics.gazeRaycast();
+            if (gazeHit) {
+                this._meshDecorator.mesh.visible = true;
+                this.gameObject.position.copy(gazeHit.position);
+            }
         }
         else {
             this._meshDecorator.mesh.visible = false;
@@ -105238,8 +105276,8 @@ var BuildInfo;
     /**
      * Version number of the app.
      */
-    BuildInfo.version = '0.0.3';
-    const _time = '1590694929093';
+    BuildInfo.version = '0.0.4';
+    const _time = '1590762619918';
     /**
      * The date that this version of the app was built.
      */

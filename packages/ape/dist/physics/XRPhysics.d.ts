@@ -10,7 +10,6 @@ export declare class XRPhysics implements IDisposable {
     private _xrSessionStartedEvent;
     private _xrSessionEndedEvent;
     private _getFrame;
-    private _hitTestSourceRequested;
     private _referenceSpace;
     private _hitTestSource;
     constructor(renderer: WebGLRenderer, onXRSessionStarted: Event, onXRSessionEnded: Event, getFrame: () => any);

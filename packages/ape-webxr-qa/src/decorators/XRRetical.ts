@@ -1,12 +1,10 @@
-import { Decorator, getOptionalValue, APEngine, IDecoratorOptions, XRPhysics, GameObject, MeshDecorator } from "@yeticgi/ape";
-import { Vector3 } from 'three';
+import { Decorator, APEngine, IDecoratorOptions, GameObject, MeshDecorator } from "@yeticgi/ape";
 
 export class XRRetical extends Decorator {
 
     static instance: XRRetical | null;
 
     private _meshDecorator: MeshDecorator;
-    private _raycasting: boolean;
 
     get isVisible() {
         return this._meshDecorator.mesh.visible;
@@ -44,26 +42,12 @@ export class XRRetical extends Decorator {
     onUpdate() {
         super.onUpdate();
 
-        const xrEnabled = APEngine.isXREnabled();
-
-        if (xrEnabled && !this._raycasting) {
-            this._raycasting = true;
-            const raycastPromise = XRPhysics.gazeRaycast(APEngine.webglRenderer, APEngine.getXRFrame());
-
-            raycastPromise
-                .then((gazeHit) => {
-                if (gazeHit) {
-                    this._meshDecorator.mesh.visible = true;
-                    this.gameObject.position.copy(gazeHit.position);
-                } else {
-                }
-
-                this._raycasting = false;
-                })
-                .catch((reason) => {
-                    console.warn(`[XRRetical] gaze failed: ${reason}`);
-                    this._raycasting = false;
-                });
+        if (APEngine.isXREnabled()) {
+            const gazeHit = APEngine.xrPhysics.gazeRaycast();
+            if (gazeHit) {
+                this._meshDecorator.mesh.visible = true;
+                this.gameObject.position.copy(gazeHit.position);
+            }
         } else {
             this._meshDecorator.mesh.visible = false;
         }

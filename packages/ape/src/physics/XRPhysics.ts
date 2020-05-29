@@ -6,6 +6,7 @@ import {
 } from 'three';
 import { IDisposable } from '../misc/IDisposable';
 import { Event } from '../misc/Events';
+import { waitForSeconds } from '../utils/WaitPromises';
 
 export interface RaycastHit {
     position: Vector3;
@@ -21,7 +22,6 @@ export class XRPhysics implements IDisposable {
     private _xrSessionEndedEvent: Event;
     private _getFrame: () => any;
     
-    private _hitTestSourceRequested: boolean = false;
     private _referenceSpace: any = null;
     private _hitTestSource: any = null;
 
@@ -78,7 +78,6 @@ export class XRPhysics implements IDisposable {
     }
     
     private _onXRSessionEnded() {
-        this._hitTestSourceRequested = false;
         this._referenceSpace = null;
         this._hitTestSource = null;
     }

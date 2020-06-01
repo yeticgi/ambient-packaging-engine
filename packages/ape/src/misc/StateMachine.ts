@@ -2,27 +2,27 @@ import { ArgEvent } from "./Events";
 import { APEngine } from "../APEngine";
 import isEqual from "lodash/isEqual";
 
-export abstract class State {
-    private _id: string;
+export abstract class State<Id, Command> {
+    private _id: Id;
 
-    get id(): string { return this._id }
+    get id(): Id { return this._id }
 
-    constructor(id: string) {
+    constructor(id: Id) {
         this._id = id;
     }
 
     abstract onStateEnter(): void;
-    abstract onStateUpdate(): string;
+    abstract onStateUpdate(): Command;
     abstract onStateExit(): void;
 }
 
-interface ITransition {
-    fromStateId: string,
-    command: string,
-    nextStateId: string
+interface ITransition<Id, Command> {
+    fromStateId: Id,
+    command: Command,
+    nextStateId: Id
 }
 
-export class StateMachine {
+export class StateMachine<Id, Command> {
     /**
      * Debug level for this state machine.  
      * 0 = Disabled  
@@ -33,24 +33,24 @@ export class StateMachine {
     debugLevel: number = 0;
 
     private _name: string;
-    private _states: Map<string, State> = new Map();
-    private _transitions: ITransition[] = [];
-    private _curState: State;
-    private _changeStateId: string;
+    private _states: Map<Id, State<Id, Command>> = new Map();
+    private _transitions: ITransition<Id, Command>[] = [];
+    private _curState: State<Id, Command>;
+    private _changeStateId: Id;
     private _lastStateUpdate: number;
     private _active: boolean;
 
     get name(): string { return this._name; } 
-    get currentState(): State { return this._curState; }
+    get currentState(): State<Id, Command> { return this._curState; }
 
-    onStateEnter: ArgEvent<string> = new ArgEvent();
-    onStateExit: ArgEvent<string> = new ArgEvent();
+    onStateEnter: ArgEvent<Id> = new ArgEvent();
+    onStateExit: ArgEvent<Id> = new ArgEvent();
 
     constructor(name: string) {
         this._name = name;
     }
 
-    start(startingStateId: string): void {
+    start(startingStateId: Id): void {
         if (this._active) {
             return;
         }
@@ -78,7 +78,7 @@ export class StateMachine {
         this.update();
     }
 
-    addState(state: State): void {
+    addState(state: State<Id, Command>): void {
         if (this._active) {
             throw new Error(`Cannot add states after the state machine has been started.`);
         }
@@ -86,12 +86,12 @@ export class StateMachine {
         this._states.set(state.id, state);
     }
 
-    addStateTransition(fromStateId: string, command: string, nextStateId: string): void {
+    addStateTransition(fromStateId: Id, command: Command, nextStateId: Id): void {
         if (this._active) {
             throw new Error(`Cannot add state transitions after the state machine has been started.`);
         }
 
-        const transition: ITransition = { fromStateId, command, nextStateId };
+        const transition = { fromStateId, command, nextStateId };
 
         if (!this._states.has(nextStateId)) {
             throw new Error(`Can't add transition for State '${nextStateId}'. This state does not exist on the state machine.`);
@@ -103,7 +103,7 @@ export class StateMachine {
         }
     }
 
-    getState(stateId: string) {
+    getState(stateId: Id) {
         return this._states.get(stateId);
     }
 
@@ -118,11 +118,11 @@ export class StateMachine {
     /**
      * Usually this state machine should be controlled with state transitions, but in some cases we may want to force a state change.
      */
-    forceChangeState(stateId: string): void {
+    forceChangeState(stateId: Id): void {
         this._changeState(stateId);
     }
 
-    private _changeState(stateId: string): void {
+    private _changeState(stateId: Id): void {
         this._changeStateId = stateId;
         
         // Set the last update frame to an invalid number so that the update state function is forced to run.
@@ -132,12 +132,12 @@ export class StateMachine {
         this._updateState();
     }
 
-    private _getNextStateId(command: string): string {
+    private _getNextStateId(command: Command): Id {
         if (!this._transitions) {
             return null;
         }
 
-        const transition: ITransition = this._transitions.find(t => t.command === command && t.fromStateId === this._curState.id);
+        const transition = this._transitions.find(t => t.command === command && t.fromStateId === this._curState.id);
 
         if (!transition) {
             throw new Error(`[StateMachine::${this._name}] No transition found for State '${this._curState.id}' with command '${command}'`);

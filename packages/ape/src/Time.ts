@@ -1,7 +1,6 @@
 import { Clock } from 'three';
 import { IDisposable } from './misc/IDisposable';
 import { ArgEvent } from './misc/Events';
-import { PropertySpectator } from './misc/PropertySpectator';
 
 export class Time implements IDisposable {
 

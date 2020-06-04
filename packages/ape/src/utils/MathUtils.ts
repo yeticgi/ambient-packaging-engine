@@ -25,6 +25,14 @@ export function inRange(value: number, min: number, max: number): boolean {
     }
 }
 
+export function isEven(value: number): boolean {
+    return value % 2 === 0;
+}
+
+export function isOdd(value: number): boolean {
+    return !isEven(value);
+}
+
 export function clampDegAngle(value: number, min: number, max: number): number {
     if (value < -360)
         value += 360;

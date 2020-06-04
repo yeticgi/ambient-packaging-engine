@@ -4981,6 +4981,12 @@ function inRange(value, min, max) {
         return false;
     }
 }
+function isEven(value) {
+    return value % 2 === 0;
+}
+function isOdd(value) {
+    return !isEven(value);
+}
 function clampDegAngle(value, min, max) {
     if (value < -360)
         value += 360;
@@ -5867,7 +5873,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.5';
-    const _time = '1591047077758';
+    const _time = '1591218613223';
     /**
      * The date that this version of the app was built.
      */
@@ -18489,5 +18495,5 @@ class Stopwatch {
     }
 }
 
-export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, APEngineEvents, AnimatorDecorator, ArgEvent, AudioResource, CameraDecorator, CameraOrbitDecorator, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, XRInput, XRPhysics, appendLine, calculateFrustumPlanes, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isObjectVisible, loadImage, normalize, normalizeClamped, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
+export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, APEngineEvents, AnimatorDecorator, ArgEvent, AudioResource, CameraDecorator, CameraOrbitDecorator, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, XRInput, XRPhysics, appendLine, calculateFrustumPlanes, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isEven, isObjectVisible, isOdd, loadImage, normalize, normalizeClamped, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
 //# sourceMappingURL=index.js.map

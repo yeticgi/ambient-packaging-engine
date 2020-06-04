@@ -3,6 +3,8 @@ export declare function interpolate(start: number, end: number, progress: number
 export declare function interpolateClamped(start: number, end: number, progress: number, ease?: (t: number) => number): number;
 export declare function clamp(value: number, min: number, max: number): number;
 export declare function inRange(value: number, min: number, max: number): boolean;
+export declare function isEven(value: number): boolean;
+export declare function isOdd(value: number): boolean;
 export declare function clampDegAngle(value: number, min: number, max: number): number;
 export declare function pointOnSphere(center: Vector3, radius: number, rotation: Vector2): Vector3;
 export declare function pointOnCircle(center: Vector2, radius: number, angle: number): Vector2;

@@ -37,7 +37,11 @@ export declare function setLayerMask(obj: Object3D, layerMask: number, children?
  */
 export declare function debugLayersToString(obj: Object3D): string;
 export declare function isObjectVisible(obj: Object3D): boolean;
-export declare function disposeObject3d(obj: Object3D): void;
+export declare function disposeObject3d<T extends Object3D>(obj: T): void;
+/**
+ * Dispose of each object 3d in the array and then clear the array.
+ */
+export declare function disposeObject3ds(objs: Object3D[]): void;
 export declare function createDebugSphere(radius: number, color: string, lit?: boolean): Mesh;
 export declare function createDebugCube(size: number, color: string, lit?: boolean): Mesh;
 export declare function worldToScreenPosition(object3d: Object3D, camera: Camera): Vector2;

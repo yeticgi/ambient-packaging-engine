@@ -136,7 +136,7 @@ export function isObjectVisible(obj: Object3D) {
     return true;
 }
 
-export function disposeObject3d(obj: Object3D) {
+export function disposeObject3d<T extends Object3D>(obj: T) {
     if (obj) {
         obj.traverse((o) => {
             if (o instanceof Mesh) {
@@ -155,6 +155,18 @@ export function disposeObject3d(obj: Object3D) {
                 o.parent.remove(o);
             }
         });
+    }
+}
+
+/**
+ * Dispose of each object 3d in the array and then clear the array.
+ */
+export function disposeObject3ds(objs: Object3D[]) {
+    if (objs && objs.length > 0) {
+        for (let i = 0; i < objs.length; i++) {
+            disposeObject3d(objs[i]);
+        }
+        objs = [];
     }
 }
 

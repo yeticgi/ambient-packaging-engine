@@ -1,5 +1,14 @@
 import { Vector3, Vector2, MathUtils } from "three";
 
+export const Vector3_Up = new Vector3(0, 1, 0);
+export const Vector3_Down = new Vector3(0, -1, 0);
+export const Vector3_Forward = new Vector3(0, 0, 1);
+export const Vector3_Back = new Vector3(0, 0, -1);
+export const Vector3_Left = new Vector3(-1, 0, 0);
+export const Vector3_Right = new Vector3(1, 0, 0);
+export const Vector3_Zero = new Vector3(0, 0, 0);
+export const Vector3_One = new Vector3(1, 1, 1);
+
 export function interpolate(start: number, end: number, progress: number, ease?: (t: number) => number): number {
     if (ease) {
         progress = ease(progress);
@@ -66,6 +75,30 @@ export function pointOnCircle(center: Vector2, radius: number, angle: number): V
     );
 
     return point;
+}
+
+/**
+ * Tests if point is inside the given polygon. Test is done in 2d space.
+ * Reference: https://codepen.io/prisoner849/pen/ROdXzw?editors=1010
+ */
+export function pointInPolygon2D(point: Vector2, polyPoints: Vector2[]): boolean {
+
+    const x = point.x;
+    const y = point.y;
+
+    let inside = false;
+    for (let i = 0, j = polyPoints.length - 1; i < polyPoints.length; j = i++) {
+        let xi = polyPoints[i].x,
+            yi = polyPoints[i].y;
+        let xj = polyPoints[j].x,
+            yj = polyPoints[j].y;
+
+        let intersect = ((yi > y) != (yj > y)) &&
+            (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+
+    return inside;
 }
 
 export function normalize(value: number, min: number, max: number): number {

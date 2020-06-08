@@ -16,6 +16,7 @@ export * from './input/PointerEventSystem';
 export * from './device-camera/DeviceCamera';
 export * from './device-camera/readers/DeviceCameraReader';
 export * from './device-camera/readers/DeviceCameraQRReader';
+export * from './misc/Flags';
 export * from './misc/Events';
 export * from './misc/IDisposable';
 export * from './misc/StateMachine';

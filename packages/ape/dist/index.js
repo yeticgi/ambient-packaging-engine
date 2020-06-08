@@ -5910,7 +5910,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.5';
-    const _time = '1591380048089';
+    const _time = '1591630089502';
     /**
      * The date that this version of the app was built.
      */
@@ -17573,6 +17573,75 @@ class DeviceCameraQRReader extends DeviceCameraReader {
 }
 
 /**
+ * An easy to use class object for handling the concept of flags.
+ * This is an easier to understand alternative to using Bitwise operations and uses
+ * Typescript's capabilities to stay strongly typed!
+ */
+class Flags {
+    constructor(initialFlags) {
+        this._flags = Object.create(initialFlags);
+        this._flags = Object.assign(this._flags, initialFlags);
+    }
+    /**
+     * Set wether or not the given flags are enabled.
+     * If no flags are given, all available flags are assumed.
+     */
+    set(enabled, ...flags) {
+        flags = this._internalGetFlags(flags);
+        for (const flag of flags) {
+            this._flags[flag] = enabled;
+        }
+    }
+    /**
+     * Toggle the enabled state of the given flags.
+     * This will set flags that are true to false and flags that are false to true.
+     * If no flags are given, all available flags are assumed.
+     */
+    toggle(...flags) {
+        flags = this._internalGetFlags(flags);
+        for (const flag of flags) {
+            this._flags[flag] = !this._flags[flag];
+        }
+    }
+    /**
+     * Will return true if one of the given flags is enabled.
+     * If no flags are given, all available flags are assumed.
+     */
+    someEnabled(...flags) {
+        flags = this._internalGetFlags(flags);
+        for (const flag of flags) {
+            if (this._flags[flag]) {
+                return true;
+            }
+        }
+        return false;
+    }
+    /**
+     * Will return true if all of the given flags are enabled.
+     * If no flags are given, all available flags are assumed.
+     */
+    allEnabled(...flags) {
+        flags = this._internalGetFlags(flags);
+        for (const flag of flags) {
+            if (!this._flags[flag]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    _internalGetFlags(flags) {
+        if (!flags || flags.length === 0) {
+            // No flags were given, return all flags.
+            flags = Object.keys(this._flags);
+        }
+        return flags;
+    }
+    toString() {
+        return JSON.stringify(this._flags);
+    }
+}
+
+/**
  * Performs a deep comparison between two values to determine if they are
  * equivalent.
  *
@@ -18532,5 +18601,5 @@ class Stopwatch {
     }
 }
 
-export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, APEngineEvents, AnimatorDecorator, ArgEvent, AudioResource, CameraDecorator, CameraOrbitDecorator, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, Vector3_Back, Vector3_Down, Vector3_Forward, Vector3_Left, Vector3_One, Vector3_Right, Vector3_Up, Vector3_Zero, XRInput, XRPhysics, appendLine, calculateFrustumPlanes, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, disposeObject3ds, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isEven, isObjectVisible, isOdd, loadImage, normalize, normalizeClamped, pointInPolygon2D, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
+export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, APEngineEvents, AnimatorDecorator, ArgEvent, AudioResource, CameraDecorator, CameraOrbitDecorator, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, Flags, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, Vector3_Back, Vector3_Down, Vector3_Forward, Vector3_Left, Vector3_One, Vector3_Right, Vector3_Up, Vector3_Zero, XRInput, XRPhysics, appendLine, calculateFrustumPlanes, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, disposeObject3ds, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isEven, isObjectVisible, isOdd, loadImage, normalize, normalizeClamped, pointInPolygon2D, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
 //# sourceMappingURL=index.js.map

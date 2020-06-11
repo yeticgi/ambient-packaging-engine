@@ -1,6 +1,6 @@
-import React, { Component, FunctionComponent } from 'react';
+import React, { Component } from 'react';
 import './App.css';
-import { 
+import {
     ThreeContainer,
     ARButton
 } from '@yeticgi/ape-reactcomponents';
@@ -10,7 +10,8 @@ import {
     GameObject,
     MeshDecorator,
     APEResources,
-    CameraDecorator
+    CameraDecorator,
+    TapCode
 } from '@yeticgi/ape';
 import {
     Scene,
@@ -73,6 +74,10 @@ export class App extends Component<{}, IAppState> {
             url: 'public/sound/cube_tap.mp3',
             loop: false,
         });
+        APEResources.audio.add('tapcode_entered', {
+            url: 'public/sound/tapcode_entered.mp3',
+            loop: false,
+        });
 
         // Preload resources.
         await APEResources.preloadResources();
@@ -85,6 +90,14 @@ export class App extends Component<{}, IAppState> {
 
         this.onEngineUpdate = this.onEngineUpdate.bind(this);
         APEngineEvents.onUpdate.addListener(this.onEngineUpdate);
+
+        // Create a tap code that will play a sound effect when entered.
+        const tapCode = new TapCode('3342', () => {
+            // On tap code entered.
+            APEResources.audio.get('tapcode_entered').then((resource) => resource.object.play());
+        });
+        tapCode.allowKeyboardEntry = true;
+        tapCode.debugFlags.set(true, 'inputEvents', 'processing')
 
         this.setState({
             engineInitialized: true

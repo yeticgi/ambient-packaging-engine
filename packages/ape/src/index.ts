@@ -13,6 +13,7 @@ export * from './gameobject/GameObject';
 export * from './input/Input';
 export * from './input/XRInput';
 export * from './input/PointerEventSystem';
+export * from './input/TapCode';
 export * from './device-camera/DeviceCamera';
 export * from './device-camera/readers/DeviceCameraReader';
 export * from './device-camera/readers/DeviceCameraQRReader';

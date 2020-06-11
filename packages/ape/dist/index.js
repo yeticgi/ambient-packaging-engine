@@ -5910,7 +5910,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.5';
-    const _time = '1591630089502';
+    const _time = '1591885578045';
     /**
      * The date that this version of the app was built.
      */
@@ -7416,6 +7416,242 @@ class CameraOrbitDecorator extends Decorator {
     }
     onDestroy() {
         super.onDestroy();
+    }
+}
+
+/**
+ * An easy to use class for handling a simple collection of flags.
+ * This is easier to setup than bitwise flags and uses Typescript to stay strongly typed.
+ */
+class Flags {
+    constructor(initialFlags) {
+        this._flags = Object.create(initialFlags);
+        this._flags = Object.assign(this._flags, initialFlags);
+    }
+    get flagCount() {
+        return Object.keys(this._flags).length;
+    }
+    /**
+     * Set wether or not the given flags are enabled.
+     * If no flags are given, all available flags are assumed.
+     */
+    set(enabled, ...flags) {
+        flags = this._internalGetFlags(flags);
+        for (const flag of flags) {
+            this._flags[flag] = enabled;
+        }
+    }
+    /**
+     * Return the name of the flag that sits at the given index.
+     */
+    flagFromIndex(index) {
+        const keys = Object.keys(this._flags);
+        if (index >= 0 && index < keys.length) {
+            return keys[index];
+        }
+        console.error(`[Flags] Index ${index} is out of range (0 -> ${keys.length - 1})`);
+        return undefined;
+    }
+    /**
+     * Toggle the enabled state of the given flags.
+     * This will set flags that are true to false and flags that are false to true.
+     * If no flags are given, all available flags are assumed.
+     */
+    toggle(...flags) {
+        flags = this._internalGetFlags(flags);
+        for (const flag of flags) {
+            this._flags[flag] = !this._flags[flag];
+        }
+    }
+    /**
+     * Will return true if one of the given flags is enabled.
+     * If no flags are given, all available flags are assumed.
+     */
+    some(...flags) {
+        flags = this._internalGetFlags(flags);
+        for (const flag of flags) {
+            if (this._flags[flag]) {
+                return true;
+            }
+        }
+        return false;
+    }
+    /**
+     * Will return true if all of the given flags are enabled.
+     * If no flags are given, all available flags are assumed.
+     */
+    every(...flags) {
+        flags = this._internalGetFlags(flags);
+        for (const flag of flags) {
+            if (!this._flags[flag]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    /**
+     * Will return true if none of the given flags are enabled.
+     * If no flags are given, all available flags are assumed.
+     */
+    not(...flags) {
+        flags = this._internalGetFlags(flags);
+        for (const flag of flags) {
+            if (this._flags[flag]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    only(...flags) {
+        flags = this._internalGetFlags(flags);
+        const remainingFlags = new Set(Object.keys(this._flags));
+        // Check to make sure that the given flags are all enabled.
+        for (const flag of flags) {
+            if (this._flags[flag]) {
+                remainingFlags.delete(flag);
+            }
+            else {
+                // One of the given flags is not enabled.
+                return false;
+            }
+        }
+        // Now make sure all of the remaining flags are set to false.
+        for (const flag of remainingFlags) {
+            if (this._flags[flag]) {
+                // One of the remaining flags is enabled.
+                return false;
+            }
+        }
+        // Only the given flags are enabled.
+        return true;
+    }
+    _internalGetFlags(flags) {
+        if (!flags || flags.length === 0) {
+            // No flags were given, return all flags.
+            flags = Object.keys(this._flags);
+        }
+        return flags;
+    }
+    toString() {
+        return JSON.stringify(this._flags);
+    }
+}
+
+class TapCode {
+    constructor(code, onCodeEntered) {
+        /**
+         * Debug flags for this tap code object.
+         */
+        this.debugFlags = new Flags({
+            inputEvents: false,
+            processing: false,
+        });
+        /**
+         * Wether or not this tap code be triggered by entering the code via the keyboard.
+         */
+        this.allowKeyboardEntry = false;
+        this._touchCount = 0;
+        this._codeQueue = [];
+        this._codeEnteredCallback = onCodeEntered;
+        this._codeStr = code;
+        this._code = [];
+        // Convert code string into array of numbers.
+        for (let i = 0; i < code.length; i++) {
+            const n = Number.parseInt(code[i]);
+            if (Number.isInteger(n)) {
+                if (n > 0 && n <= 5) {
+                    this._code.push(n);
+                }
+                else {
+                    console.error(`[TapCode] ${n} must be in the range of 1 to 5.`);
+                }
+            }
+            else {
+                console.error(`[TapCode] ${n} is not an integer. Tap code must be string of only integer numbers in the range of 1 to 5.`);
+            }
+        }
+        // Subsribe to APEngine updates so we can reliabely read from the APEngine input module.
+        this._onEngineUpdate = this._onEngineUpdate.bind(this);
+        APEngineEvents.onUpdate.addListener(this._onEngineUpdate);
+    }
+    get code() { return this._codeStr; }
+    _onEngineUpdate() {
+        const touchCount = APEngine.input.getTouchCount();
+        if (touchCount > 0) {
+            for (let i = 0; i < touchCount; i++) {
+                const touch = APEngine.input.getTouchData(i);
+                if (APEngine.input.getTouchDown(touch.fingerIndex)) {
+                    this._touchCount++;
+                    if (this.debugFlags.some('inputEvents')) {
+                        console.log(`[TapCode] Touch began. fingerIndex: ${touch.fingerIndex}, count: ${this._touchCount}}`);
+                    }
+                }
+            }
+        }
+        let touchUp = false;
+        for (let i = 0; i < APEngine.input.getTouchCount(); i++) {
+            const touch = APEngine.input.getTouchData(i);
+            if (APEngine.input.getTouchUp(touch.fingerIndex)) {
+                touchUp = true;
+                if (this.debugFlags.some('inputEvents')) {
+                    console.log(`[TapCode] Touch ended. fingerIndex: ${touch.fingerIndex}, count: ${this._touchCount}}`);
+                }
+            }
+        }
+        if (touchUp) {
+            this._endTouch(this._touchCount);
+            this._touchCount = 0;
+        }
+        if (this.allowKeyboardEntry) {
+            if (APEngine.input.getKeyDown('1')) {
+                this._endTouch(1);
+            }
+            if (APEngine.input.getKeyDown('2')) {
+                this._endTouch(2);
+            }
+            if (APEngine.input.getKeyDown('3')) {
+                this._endTouch(3);
+            }
+            if (APEngine.input.getKeyDown('4')) {
+                this._endTouch(4);
+            }
+            if (APEngine.input.getKeyDown('5')) {
+                this._endTouch(5);
+            }
+        }
+    }
+    _endTouch(touchCount) {
+        if (touchCount < 1) {
+            return;
+        }
+        this._codeQueue.push(touchCount);
+        if (this._codeQueue.length > this._code.length) {
+            this._codeQueue.splice(0, this._codeQueue.length - this._code.length);
+        }
+        if (this.debugFlags.some('processing')) {
+            console.log(`[TapCode] Code: ${this._codeStr} Current entry: ${JSON.stringify(this._codeQueue)}`);
+        }
+        if (this._codeQueue.length < this._code.length) {
+            // Not enough taps yet.
+            if (this.debugFlags.some('processing')) ;
+            return;
+        }
+        for (let i = 0; i < this._codeQueue.length; i++) {
+            if (this._codeQueue[i] != this._code[i]) {
+                // Number doesn't match at this position yet.
+                return;
+            }
+        }
+        // Tap code success!
+        if (this.debugFlags.some('processing')) {
+            console.log(`[TapCode] ${this._codeStr} triggered!`);
+        }
+        this._codeQueue = [];
+        this._codeEnteredCallback(this);
+    }
+    dispose() {
+        this._codeEnteredCallback = null;
+        APEngineEvents.onUpdate.removeListener(this._onEngineUpdate);
     }
 }
 
@@ -17573,75 +17809,6 @@ class DeviceCameraQRReader extends DeviceCameraReader {
 }
 
 /**
- * An easy to use class object for handling the concept of flags.
- * This is an easier to understand alternative to using Bitwise operations and uses
- * Typescript's capabilities to stay strongly typed!
- */
-class Flags {
-    constructor(initialFlags) {
-        this._flags = Object.create(initialFlags);
-        this._flags = Object.assign(this._flags, initialFlags);
-    }
-    /**
-     * Set wether or not the given flags are enabled.
-     * If no flags are given, all available flags are assumed.
-     */
-    set(enabled, ...flags) {
-        flags = this._internalGetFlags(flags);
-        for (const flag of flags) {
-            this._flags[flag] = enabled;
-        }
-    }
-    /**
-     * Toggle the enabled state of the given flags.
-     * This will set flags that are true to false and flags that are false to true.
-     * If no flags are given, all available flags are assumed.
-     */
-    toggle(...flags) {
-        flags = this._internalGetFlags(flags);
-        for (const flag of flags) {
-            this._flags[flag] = !this._flags[flag];
-        }
-    }
-    /**
-     * Will return true if one of the given flags is enabled.
-     * If no flags are given, all available flags are assumed.
-     */
-    someEnabled(...flags) {
-        flags = this._internalGetFlags(flags);
-        for (const flag of flags) {
-            if (this._flags[flag]) {
-                return true;
-            }
-        }
-        return false;
-    }
-    /**
-     * Will return true if all of the given flags are enabled.
-     * If no flags are given, all available flags are assumed.
-     */
-    allEnabled(...flags) {
-        flags = this._internalGetFlags(flags);
-        for (const flag of flags) {
-            if (!this._flags[flag]) {
-                return false;
-            }
-        }
-        return true;
-    }
-    _internalGetFlags(flags) {
-        if (!flags || flags.length === 0) {
-            // No flags were given, return all flags.
-            flags = Object.keys(this._flags);
-        }
-        return flags;
-    }
-    toString() {
-        return JSON.stringify(this._flags);
-    }
-}
-
-/**
  * Performs a deep comparison between two values to determine if they are
  * equivalent.
  *
@@ -18601,5 +18768,5 @@ class Stopwatch {
     }
 }
 
-export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, APEngineEvents, AnimatorDecorator, ArgEvent, AudioResource, CameraDecorator, CameraOrbitDecorator, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, Flags, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, Vector3_Back, Vector3_Down, Vector3_Forward, Vector3_Left, Vector3_One, Vector3_Right, Vector3_Up, Vector3_Zero, XRInput, XRPhysics, appendLine, calculateFrustumPlanes, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, disposeObject3ds, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isEven, isObjectVisible, isOdd, loadImage, normalize, normalizeClamped, pointInPolygon2D, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
+export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, APEngineEvents, AnimatorDecorator, ArgEvent, AudioResource, CameraDecorator, CameraOrbitDecorator, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, Flags, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TapCode, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, Vector3_Back, Vector3_Down, Vector3_Forward, Vector3_Left, Vector3_One, Vector3_Right, Vector3_Up, Vector3_Zero, XRInput, XRPhysics, appendLine, calculateFrustumPlanes, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, disposeObject3ds, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isEven, isObjectVisible, isOdd, loadImage, normalize, normalizeClamped, pointInPolygon2D, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
 //# sourceMappingURL=index.js.map

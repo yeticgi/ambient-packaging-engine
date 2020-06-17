@@ -159,3 +159,15 @@ export function appendLine(text: string, line: string): string {
 
     return text;
 }
+
+export function sortAZ<T, K extends keyof T>(array: T[], propertyKey: K): void {
+    array.sort((a, b) => {
+        return a[propertyKey] > b[propertyKey] ? 1 : -1
+    });
+}
+
+export function sortZA<T, K extends keyof T>(array: T[], propertyKey: K): void {
+    array.sort((a, b) => {
+        return a[propertyKey] < b[propertyKey] ? 1 : -1
+    });
+}

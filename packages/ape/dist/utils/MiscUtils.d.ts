@@ -21,3 +21,5 @@ export declare function getExtension(path: string): string | null;
 export declare function loadImage(url: string): Promise<HTMLImageElement>;
 export declare function copyToClipboard(text: string): void;
 export declare function appendLine(text: string, line: string): string;
+export declare function sortAZ<T, K extends keyof T>(array: T[], propertyKey: K): void;
+export declare function sortZA<T, K extends keyof T>(array: T[], propertyKey: K): void;

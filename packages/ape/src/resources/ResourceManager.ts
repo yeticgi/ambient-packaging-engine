@@ -17,11 +17,11 @@ export class ResourceManager<T extends Resource<any, IResourceConfig>> implement
     }
 
     add(name: string, config: ConfigType<T>): void {
-        if (!this._resources.has) {
+        if (!this._resources.has(name)) {
             const resource = new this._activator(name, config);
             this._resources.set(resource.name, resource);
         } else {
-            console.warn(`Resource ${name} is already added.`);
+            console.warn(`Resource ${name} is already added. Ignoring this add call.`);
         }
     }
 

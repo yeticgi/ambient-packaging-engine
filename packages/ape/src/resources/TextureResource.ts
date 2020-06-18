@@ -8,18 +8,16 @@ export interface ITextureConfig {
     flipY?: boolean;
 }
 
-export class TextureResource extends Resource<Texture> {
+export class TextureResource extends Resource<Texture, ITextureConfig> {
     private _url: string;
     private _encoding: TextureEncoding;
     private _flipY: boolean;
 
-    constructor(name: string, config: unknown) {
+    constructor(name: string, config: ITextureConfig) {
         super(name, config);
-        
-        const textureConfig = config as ITextureConfig;
 
-        this._url = textureConfig.url;
-        this._encoding = textureConfig.encoding;
+        this._url = config.url;
+        this._encoding = config.encoding;
         this._flipY = getOptionalValue(this._flipY, true); // This is the defualt value as of ThreeJS r113
     }
 

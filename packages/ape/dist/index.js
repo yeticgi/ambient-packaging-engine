@@ -5920,7 +5920,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.5';
-    const _time = '1592408988929';
+    const _time = '1592492869341';
     /**
      * The date that this version of the app was built.
      */
@@ -18166,9 +18166,8 @@ class Resource {
 class AudioResource extends Resource {
     constructor(name, config) {
         super(name, config);
-        const audioConfig = config;
-        this._url = audioConfig.url;
-        this._loop = getOptionalValue(audioConfig.loop, false);
+        this._url = config.url;
+        this._loop = getOptionalValue(config.loop, false);
     }
     _loadObject() {
         return new Promise(((resolve, reject) => {
@@ -18429,10 +18428,9 @@ class GLTFPrefab {
 class GLTFResource extends Resource {
     constructor(name, config) {
         super(name, config);
-        const gltfConfig = config;
-        this._gltfUrl = gltfConfig.gltfUrl;
-        this._binUrl = gltfConfig.binUrl;
-        this._textureUrls = gltfConfig.textureUrls;
+        this._gltfUrl = config.gltfUrl;
+        this._binUrl = config.binUrl;
+        this._textureUrls = config.textureUrls;
     }
     _loadObject() {
         return new Promise((resolve, reject) => {
@@ -18497,9 +18495,8 @@ class GLTFResource extends Resource {
 class TextureResource extends Resource {
     constructor(name, config) {
         super(name, config);
-        const textureConfig = config;
-        this._url = textureConfig.url;
-        this._encoding = textureConfig.encoding;
+        this._url = config.url;
+        this._encoding = config.encoding;
         this._flipY = getOptionalValue(this._flipY, true); // This is the defualt value as of ThreeJS r113
     }
     _loadObject() {
@@ -18527,8 +18524,7 @@ class TextureResource extends Resource {
 class ImageResource extends Resource {
     constructor(name, config) {
         super(name, config);
-        const textureConfig = config;
-        this._url = textureConfig.url;
+        this._url = config.url;
     }
     _loadObject() {
         return loadImage(this._url);

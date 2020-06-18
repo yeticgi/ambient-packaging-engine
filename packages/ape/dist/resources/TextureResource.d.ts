@@ -5,11 +5,11 @@ export interface ITextureConfig {
     encoding?: TextureEncoding;
     flipY?: boolean;
 }
-export declare class TextureResource extends Resource<Texture> {
+export declare class TextureResource extends Resource<Texture, ITextureConfig> {
     private _url;
     private _encoding;
     private _flipY;
-    constructor(name: string, config: unknown);
+    constructor(name: string, config: ITextureConfig);
     protected _loadObject(): Promise<Texture>;
     protected _unloadObject(): void;
 }

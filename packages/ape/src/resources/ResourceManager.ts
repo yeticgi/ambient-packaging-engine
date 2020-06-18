@@ -2,19 +2,21 @@
 import { Resource, IResourceConfig } from './Resource';
 import { IDisposable } from "../misc/IDisposable";
 
+type ConfigType<T> = T extends Resource<any, infer P> ? P : never;
+
 /**
  * A Resource Manager is a generic class that manages any type of Resouce that it is created for.
  * Resource Managers load, track, retrieve, and dipose of any Resources assigned to it.
  */
-export class ResourceManager<T extends Resource<{}>> implements IDisposable {
+export class ResourceManager<T extends Resource<any, IResourceConfig>> implements IDisposable {
     private _resources: Map<string, T> = new Map();
     private _activator: { new(name: string, config: IResourceConfig): T };
 
-    constructor(resourceActivator: { new(name: string, config: unknown): T }) {
+    constructor(resourceActivator: { new(name: string, config: any): T }) {
         this._activator = resourceActivator;
     }
 
-    add(name: string, config: IResourceConfig): void {
+    add(name: string, config: ConfigType<T>): void {
         const resource = new this._activator(name, config);
         this._resources.set(resource.name, resource);
     }
@@ -41,7 +43,7 @@ export class ResourceManager<T extends Resource<{}>> implements IDisposable {
 
     async preload(): Promise<void> {
         if (this._resources.size > 0) {
-            const resources: Resource<any>[] = Array.from(this._resources.values());
+            const resources: Resource<any, any>[] = Array.from(this._resources.values());
             for (let resource of resources) {
                 if (!resource.loaded) {
                     await resource.load();
@@ -55,7 +57,7 @@ export class ResourceManager<T extends Resource<{}>> implements IDisposable {
      */
     allLoaded(): boolean {
         if (this._resources.size > 0) {
-            const resources: Resource<any>[] = Array.from(this._resources.values());
+            const resources: Resource<any, any>[] = Array.from(this._resources.values());
             for (let resource of resources) {
                 if (!resource.loaded) {
                     return false;

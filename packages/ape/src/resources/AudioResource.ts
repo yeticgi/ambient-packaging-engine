@@ -7,17 +7,15 @@ export interface IAudioConfig extends IResourceConfig {
     loop?: boolean
 }
 
-export class AudioResource extends Resource<Howl> {
+export class AudioResource extends Resource<Howl, IAudioConfig> {
     private _url: string;
     private _loop: boolean;
 
-    constructor(name: string, config: unknown) {
+    constructor(name: string, config: IAudioConfig) {
         super(name, config);
 
-        const audioConfig = config as IAudioConfig;
-
-        this._url = audioConfig.url;
-        this._loop = getOptionalValue(audioConfig.loop, false);
+        this._url = config.url;
+        this._loop = getOptionalValue(config.loop, false);
     }
 
     protected _loadObject(): Promise<Howl> {

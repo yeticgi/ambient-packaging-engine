@@ -5,15 +5,13 @@ export interface IImageConfig {
     url: string
 }
 
-export class ImageResource extends Resource<HTMLImageElement> {
+export class ImageResource extends Resource<HTMLImageElement, IImageConfig> {
     private _url: string;
 
-    constructor(name: string, config: unknown) {
+    constructor(name: string, config: IImageConfig) {
         super(name, config);
-        
-        const textureConfig = config as IImageConfig;
 
-        this._url = textureConfig.url;
+        this._url = config.url;
     }
 
     protected _loadObject(): Promise<HTMLImageElement> {

@@ -11,19 +11,17 @@ export interface IGLTFConfig extends IResourceConfig {
     textureUrls?: string[];
 }
 
-export class GLTFResource extends Resource<GLTFPrefab> {
+export class GLTFResource extends Resource<GLTFPrefab, IGLTFConfig> {
     private _gltfUrl: string;
     private _binUrl?: string;
     private _textureUrls?: string[];
 
-    constructor(name: string, config: unknown) {
+    constructor(name: string, config: IGLTFConfig) {
         super(name, config);
 
-        const gltfConfig = config as IGLTFConfig;
-
-        this._gltfUrl = gltfConfig.gltfUrl;
-        this._binUrl = gltfConfig.binUrl;
-        this._textureUrls = gltfConfig.textureUrls;
+        this._gltfUrl = config.gltfUrl;
+        this._binUrl = config.binUrl;
+        this._textureUrls = config.textureUrls;
     }
 
     protected _loadObject(): Promise<GLTFPrefab> {

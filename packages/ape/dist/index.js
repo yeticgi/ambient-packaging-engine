@@ -5920,7 +5920,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.5';
-    const _time = '1592494598451';
+    const _time = '1592495118283';
     /**
      * The date that this version of the app was built.
      */
@@ -18058,6 +18058,9 @@ class ResourceManager {
             resource.unload();
             this._resources.delete(name);
         }
+    }
+    has(name) {
+        return this._resources.has(name);
     }
     get(name) {
         return __awaiter(this, void 0, void 0, function* () {

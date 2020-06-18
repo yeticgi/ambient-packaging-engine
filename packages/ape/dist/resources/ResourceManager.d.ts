@@ -13,6 +13,7 @@ export declare class ResourceManager<T extends Resource<any, IResourceConfig>> i
     });
     add(name: string, config: ConfigType<T>): void;
     unload(name: string): void;
+    has(name: string): boolean;
     get(name: string): Promise<T>;
     preload(): Promise<void>;
     /**

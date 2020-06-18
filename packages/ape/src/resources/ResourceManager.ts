@@ -17,8 +17,12 @@ export class ResourceManager<T extends Resource<any, IResourceConfig>> implement
     }
 
     add(name: string, config: ConfigType<T>): void {
-        const resource = new this._activator(name, config);
-        this._resources.set(resource.name, resource);
+        if (!this._resources.has) {
+            const resource = new this._activator(name, config);
+            this._resources.set(resource.name, resource);
+        } else {
+            console.warn(`Resource ${name} is already added.`);
+        }
     }
 
     unload(name: string) {
@@ -27,6 +31,10 @@ export class ResourceManager<T extends Resource<any, IResourceConfig>> implement
             resource.unload();
             this._resources.delete(name);
         }
+    }
+
+    has(name: string): boolean {
+        return this._resources.has(name);
     }
 
     async get(name: string): Promise<T> {

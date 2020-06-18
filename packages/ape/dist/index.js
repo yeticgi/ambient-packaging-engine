@@ -5920,7 +5920,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.5';
-    const _time = '1592492869341';
+    const _time = '1592494598451';
     /**
      * The date that this version of the app was built.
      */
@@ -18044,8 +18044,13 @@ class ResourceManager {
         this._activator = resourceActivator;
     }
     add(name, config) {
-        const resource = new this._activator(name, config);
-        this._resources.set(resource.name, resource);
+        if (!this._resources.has) {
+            const resource = new this._activator(name, config);
+            this._resources.set(resource.name, resource);
+        }
+        else {
+            console.warn(`Resource ${name} is already added.`);
+        }
     }
     unload(name) {
         if (this._resources.has(name)) {

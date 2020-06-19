@@ -5920,7 +5920,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.5';
-    const _time = '1592496487035';
+    const _time = '1592598899358';
     /**
      * The date that this version of the app was built.
      */
@@ -18192,6 +18192,7 @@ class AudioResource extends Resource {
         }));
     }
     _unloadObject() {
+        console.log(`[AudioResource] ${this.name} unload object`);
         this.object.unload();
     }
 }
@@ -18525,6 +18526,7 @@ class TextureResource extends Resource {
         }));
     }
     _unloadObject() {
+        console.log(`[TextureResource] ${this.name} unload object`);
         this.object.dispose();
     }
 }

@@ -47,6 +47,7 @@ export class TextureResource extends Resource<Texture, ITextureConfig> {
     }
 
     protected _unloadObject(): void {
+        console.log(`[TextureResource] ${this.name} unload object`);
         this.object.dispose();
     }
 }

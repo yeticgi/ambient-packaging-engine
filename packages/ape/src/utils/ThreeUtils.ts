@@ -217,3 +217,11 @@ export function worldToScreenPosition(object3d: Object3D, camera: Camera): Vecto
 
     return new Vector2(pos.x, pos.y);
 }
+
+export function getMaterials(mesh: Mesh): Material[] {
+    if (Array.isArray(mesh.material)) {
+        return mesh.material;
+    } else {
+        return [mesh.material];
+    }
+}

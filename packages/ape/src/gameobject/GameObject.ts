@@ -109,6 +109,10 @@ export class GameObject extends Object3D {
     private _destroyState: DestroyState = DestroyState.None;
     private _prevVisible: boolean = false;
 
+    get destroyed(): boolean {
+        return this._destroyState !== DestroyState.None;
+    }
+
     constructor(name?: string) {
         super();
         
@@ -131,10 +135,12 @@ export class GameObject extends Object3D {
     }
 
     getDecorator<T extends Decorator>(type: { new(): T }): T {
-        for (let i = 0; i < this._decorators.length; i++) {
-            const decorator = this._decorators[i];
-            if (decorator instanceof type) {
-                return decorator;
+        if (!this.destroyed) {
+            for (let i = 0; i < this._decorators.length; i++) {
+                const decorator = this._decorators[i];
+                if (decorator instanceof type && !decorator.destroyed) {
+                    return decorator;
+                }
             }
         }
 
@@ -144,10 +150,12 @@ export class GameObject extends Object3D {
     getDecorators<T extends Decorator>(type: { new(): T }): T[] {
         let decorators: T[] = [];
 
-        for (let i = 0; i < this._decorators.length; i++) {
-            const decorator = this._decorators[i];
-            if (decorator instanceof type) {
-                decorators.push(decorator);
+        if (!this.destroyed) {
+            for (let i = 0; i < this._decorators.length; i++) {
+                const decorator = this._decorators[i];
+                if (decorator instanceof type && !decorator.destroyed) {
+                    decorators.push(decorator);
+                }
             }
         }
 
@@ -215,7 +223,7 @@ export class GameObject extends Object3D {
      * Called for each three js frame.
      */
     onUpdate() {
-        if (this._destroyState !== DestroyState.None) {
+        if (this.destroyed) {
             return;
         }
 
@@ -247,7 +255,7 @@ export class GameObject extends Object3D {
      * Called for each three js frame but after all onUpdate calls have been made.
      */
     onLateUpdate() {
-        if (this._destroyState !== DestroyState.None) {
+        if (this.destroyed) {
             return;
         }
 

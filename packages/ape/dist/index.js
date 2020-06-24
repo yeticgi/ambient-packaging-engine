@@ -4650,6 +4650,9 @@ let GameObject = /** @class */ (() => {
             }
             return null;
         }
+        get destroyed() {
+            return this._destroyState !== DestroyState.None;
+        }
         addDecorator(decorator) {
             if (this._decorators.some((d) => d === decorator)) {
                 // Decorator is already added.
@@ -4661,20 +4664,24 @@ let GameObject = /** @class */ (() => {
             return decorator;
         }
         getDecorator(type) {
-            for (let i = 0; i < this._decorators.length; i++) {
-                const decorator = this._decorators[i];
-                if (decorator instanceof type) {
-                    return decorator;
+            if (!this.destroyed) {
+                for (let i = 0; i < this._decorators.length; i++) {
+                    const decorator = this._decorators[i];
+                    if (decorator instanceof type && !decorator.destroyed) {
+                        return decorator;
+                    }
                 }
             }
             return null;
         }
         getDecorators(type) {
             let decorators = [];
-            for (let i = 0; i < this._decorators.length; i++) {
-                const decorator = this._decorators[i];
-                if (decorator instanceof type) {
-                    decorators.push(decorator);
+            if (!this.destroyed) {
+                for (let i = 0; i < this._decorators.length; i++) {
+                    const decorator = this._decorators[i];
+                    if (decorator instanceof type && !decorator.destroyed) {
+                        decorators.push(decorator);
+                    }
                 }
             }
             if (decorators.length > 0) {
@@ -4737,7 +4744,7 @@ let GameObject = /** @class */ (() => {
          * Called for each three js frame.
          */
         onUpdate() {
-            if (this._destroyState !== DestroyState.None) {
+            if (this.destroyed) {
                 return;
             }
             let isVisible = GameObject.isGameObjectVisible(this);
@@ -4765,7 +4772,7 @@ let GameObject = /** @class */ (() => {
          * Called for each three js frame but after all onUpdate calls have been made.
          */
         onLateUpdate() {
-            if (this._destroyState !== DestroyState.None) {
+            if (this.destroyed) {
                 return;
             }
             const isVisible = this.visibleChangeCheck();
@@ -5928,7 +5935,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.5';
-    const _time = '1592850824912';
+    const _time = '1593030614374';
     /**
      * The date that this version of the app was built.
      */

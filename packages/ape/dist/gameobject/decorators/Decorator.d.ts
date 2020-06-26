@@ -36,6 +36,10 @@ export declare abstract class Decorator {
      */
     onLateUpdate(): void;
     /**
+     * Called when the GameObject that this Decorator is attached to is marked for destruction.
+     */
+    onWillDestroy(): void;
+    /**
      * Called once when the Decorator is being destroyed.
      */
     protected onDestroy(): void;

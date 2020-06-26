@@ -4543,6 +4543,12 @@ class Decorator {
         // console.log(`[Decorator] ${this.constructor.name} on ${this.gameObject.name} onLateUpdate`);
     }
     /**
+     * Called when the GameObject that this Decorator is attached to is marked for destruction.
+     */
+    onWillDestroy() {
+        // console.log(`[Decorator] ${this.constructor.name} on ${this.gameObject.name} onWillDestroy`);
+    }
+    /**
      * Called once when the Decorator is being destroyed.
      */
     onDestroy() {
@@ -4581,6 +4587,8 @@ let GameObject = /** @class */ (() => {
                     if (go._destroyState === DestroyState.None) {
                         GameObject.__APEngine_destroyQueue.push(go);
                         go._destroyState = DestroyState.WillDestroy;
+                        // Inform all gameObject decorators that it will be destroyed.
+                        gameObject._decorators.forEach(d => d.onWillDestroy());
                     }
                 }
             });
@@ -5935,7 +5943,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.5';
-    const _time = '1593030614374';
+    const _time = '1593191500516';
     /**
      * The date that this version of the app was built.
      */

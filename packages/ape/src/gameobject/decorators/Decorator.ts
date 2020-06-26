@@ -84,6 +84,13 @@ export abstract class Decorator {
     }
 
     /**
+     * Called when the GameObject that this Decorator is attached to is marked for destruction.
+     */
+    onWillDestroy() {
+        // console.log(`[Decorator] ${this.constructor.name} on ${this.gameObject.name} onWillDestroy`);
+    }
+
+    /**
      * Called once when the Decorator is being destroyed.
      */
     protected onDestroy() {

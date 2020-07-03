@@ -40,6 +40,35 @@ class Event {
     }
 }
 /**
+ * Event that has no arguments and has listeners that return promises.
+ */
+class PromiseEvent {
+    constructor() {
+        this._listeners = [];
+    }
+    addListener(listener) {
+        this._listeners.push(listener);
+    }
+    removeListener(listener) {
+        const index = this._listeners.indexOf(listener);
+        if (index !== -1) {
+            this._listeners.splice(index, 1);
+        }
+    }
+    removeAllListeners() {
+        this._listeners = [];
+    }
+    invoke() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const promises = [...this._listeners].map(l => l());
+            yield Promise.all(promises);
+        });
+    }
+    dispose() {
+        this.removeAllListeners();
+    }
+}
+/**
  * Event that takes typed argument.
  */
 class ArgEvent {
@@ -62,6 +91,35 @@ class ArgEvent {
         const listeners = [...this._listeners];
         listeners.forEach(l => {
             l(arg);
+        });
+    }
+    dispose() {
+        this.removeAllListeners();
+    }
+}
+/**
+ * Event that takes typed argument and has listeners that return promises.
+ */
+class PromiseArgEvent {
+    constructor() {
+        this._listeners = [];
+    }
+    addListener(listener) {
+        this._listeners.push(listener);
+    }
+    removeListener(listener) {
+        const index = this._listeners.indexOf(listener);
+        if (index !== -1) {
+            this._listeners.splice(index, 1);
+        }
+    }
+    removeAllListeners() {
+        this._listeners = [];
+    }
+    invoke(arg) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const promises = [...this._listeners].map(l => l(arg));
+            yield Promise.all(promises);
         });
     }
     dispose() {
@@ -5956,7 +6014,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.6';
-    const _time = '1593747455875';
+    const _time = '1593786260687';
     /**
      * The date that this version of the app was built.
      */
@@ -18820,5 +18878,5 @@ class Stopwatch {
     }
 }
 
-export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, APEngineEvents, AnimatorDecorator, ArgEvent, AudioResource, CameraDecorator, CameraOrbitDecorator, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, Flags, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TapCode, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, Vector3_Back, Vector3_Down, Vector3_Forward, Vector3_Left, Vector3_One, Vector3_Right, Vector3_Up, Vector3_Zero, XRInput, XRPhysics, appendLine, calculateFrustumPlanes, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, disposeObject3ds, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getMaterials, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isEven, isObjectVisible, isOdd, loadImage, normalize, normalizeClamped, pointInPolygon2D, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, sortAZ, sortZA, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
+export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, APEngineEvents, AnimatorDecorator, ArgEvent, AudioResource, CameraDecorator, CameraOrbitDecorator, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, Flags, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PromiseArgEvent, PromiseEvent, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TapCode, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, Vector3_Back, Vector3_Down, Vector3_Forward, Vector3_Left, Vector3_One, Vector3_Right, Vector3_Up, Vector3_Zero, XRInput, XRPhysics, appendLine, calculateFrustumPlanes, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, disposeObject3ds, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getMaterials, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isEven, isObjectVisible, isOdd, loadImage, normalize, normalizeClamped, pointInPolygon2D, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, sortAZ, sortZA, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
 //# sourceMappingURL=index.js.map

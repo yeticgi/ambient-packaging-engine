@@ -44,6 +44,42 @@ export class Event implements IDisposable {
 export declare type EventListener = () => void;
 
 /**
+ * Event that has no arguments and has listeners that return promises.
+ */
+export class PromiseEvent implements IDisposable {
+    private _listeners: PromiseEventListener[] = [];
+
+    public addListener(listener: PromiseEventListener) {
+        this._listeners.push(listener);
+    }
+
+    public removeListener(listener: PromiseEventListener) {
+        const index = this._listeners.indexOf(listener);
+        if (index !== -1) {
+            this._listeners.splice(index, 1);
+        }
+    }
+
+    public removeAllListeners() {
+        this._listeners = [];
+    }
+
+    public async invoke() {
+        const promises = [...this._listeners].map(l => l());
+        await Promise.all(promises);
+    }
+
+    public dispose() {
+        this.removeAllListeners();
+    }
+}
+
+/**
+ * Signature of event listener that has no arguments.
+ */
+export declare type PromiseEventListener = () => Promise<void>;
+
+/**
  * Event that takes typed argument.
  */
 export class ArgEvent<T> implements IDisposable {
@@ -80,6 +116,42 @@ export class ArgEvent<T> implements IDisposable {
  * Signature of event listener that accepts typed argument.
  */
 export declare type ArgEventListener<T> = (arg: T) => void;
+
+/**
+ * Event that takes typed argument and has listeners that return promises.
+ */
+export class PromiseArgEvent<T> implements IDisposable {
+    private _listeners: PromiseArgEventListener<T>[] = [];
+
+    public addListener(listener: PromiseArgEventListener<T>) {
+        this._listeners.push(listener);
+    }
+
+    public removeListener(listener: PromiseArgEventListener<T>) {
+        const index = this._listeners.indexOf(listener);
+        if (index !== -1) {
+            this._listeners.splice(index, 1);
+        }
+    }
+
+    public removeAllListeners() {
+        this._listeners = [];
+    }
+
+    public async invoke(arg: T): Promise<void> {
+        const promises = [...this._listeners].map(l => l(arg));
+        await Promise.all(promises);
+    }
+
+    public dispose() {
+        this.removeAllListeners();
+    }
+}
+
+/**
+ * Signature of promise arg event listener that accepts typed argument.
+ */
+export declare type PromiseArgEventListener<T> = (arg: T) => Promise<void>;
 
 /**
  * Shout is a global event dispatcher.  

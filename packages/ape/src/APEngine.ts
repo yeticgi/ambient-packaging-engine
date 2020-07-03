@@ -76,7 +76,7 @@ export namespace APEngine {
         
         // Create input module.
         input = new Input({
-            appElement: webglRenderer.domElement,
+            inputElement: webglRenderer.domElement,
             canvasElement: webglRenderer.domElement,
             time: time,
             getUIHtmlElements: () => []

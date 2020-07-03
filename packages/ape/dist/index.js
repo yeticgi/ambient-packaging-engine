@@ -3553,11 +3553,7 @@ class Input {
         this._handleContextMenu = this._handleContextMenu.bind(this);
         this._handleKeyDown = this._handleKeyDown.bind(this);
         this._handleKeyUp = this._handleKeyUp.bind(this);
-        this._options.appElement.addEventListener('mousedown', this._handleMouseDown);
-        this._options.appElement.addEventListener('mousemove', this._handleMouseMove);
-        this._options.appElement.addEventListener('mouseup', this._handleMouseUp);
-        this._options.appElement.addEventListener('wheel', this._handleWheel);
-        this._options.appElement.addEventListener('touchstart', this._handleTouchStart);
+        this.setInputElement(this._options.inputElement);
         document.addEventListener('keydown', this._handleKeyDown);
         document.addEventListener('keyup', this._handleKeyUp);
         // Context menu is only important on the view
@@ -3613,14 +3609,31 @@ class Input {
         let elements = document.elementsFromPoint(clientPos.x, clientPos.y);
         return some_1(elements, e => e === element);
     }
+    /**
+     * Set the element that the input module will attach it's event listeners to.
+     * By default this is usually the three js webgl canvas but sometimes you want to attach the input event listeners
+     * on to a higher order html element and that's where this function comes in handy.
+     */
+    setInputElement(element) {
+        if (this._options.inputElement) {
+            this._options.inputElement.removeEventListener('mousedown', this._handleMouseDown);
+            this._options.inputElement.removeEventListener('mousemove', this._handleMouseMove);
+            this._options.inputElement.removeEventListener('mouseup', this._handleMouseUp);
+            this._options.inputElement.removeEventListener('wheel', this._handleWheel);
+            this._options.inputElement.removeEventListener('touchstart', this._handleTouchStart);
+        }
+        this._options.inputElement = element;
+        if (this._options.inputElement) {
+            this._options.inputElement.addEventListener('mousedown', this._handleMouseDown);
+            this._options.inputElement.addEventListener('mousemove', this._handleMouseMove);
+            this._options.inputElement.addEventListener('mouseup', this._handleMouseUp);
+            this._options.inputElement.addEventListener('wheel', this._handleWheel);
+            this._options.inputElement.addEventListener('touchstart', this._handleTouchStart);
+        }
+    }
     dispose() {
         console.log('[Input] dispose');
-        let element = document.getElementById('app');
-        element.removeEventListener('mousedown', this._handleMouseDown);
-        element.removeEventListener('mousemove', this._handleMouseMove);
-        element.removeEventListener('mouseup', this._handleMouseUp);
-        element.removeEventListener('wheel', this._handleWheel);
-        element.removeEventListener('touchstart', this._handleTouchStart);
+        this.setInputElement(null);
         document.removeEventListener('keydown', this._handleKeyDown);
         document.removeEventListener('keyup', this._handleKeyUp);
         // Context menu is only important on the view
@@ -5942,8 +5955,8 @@ var APEngineBuildInfo;
     /**
      * Version number of the app.
      */
-    APEngineBuildInfo.version = '0.2.5';
-    const _time = '1593191500516';
+    APEngineBuildInfo.version = '0.2.6';
+    const _time = '1593747455875';
     /**
      * The date that this version of the app was built.
      */
@@ -6468,7 +6481,7 @@ var APEngine;
         });
         // Create input module.
         APEngine.input = new Input({
-            appElement: APEngine.webglRenderer.domElement,
+            inputElement: APEngine.webglRenderer.domElement,
             canvasElement: APEngine.webglRenderer.domElement,
             time: APEngine.time,
             getUIHtmlElements: () => []

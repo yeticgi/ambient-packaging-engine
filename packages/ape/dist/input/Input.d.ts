@@ -3,7 +3,7 @@ import { Time } from '../Time';
 import { IDisposable } from '../misc/IDisposable';
 interface IOptions {
     time: Time;
-    appElement: HTMLElement;
+    inputElement: HTMLElement;
     canvasElement: HTMLCanvasElement;
     getUIHtmlElements(): HTMLElement[];
 }
@@ -56,6 +56,12 @@ export declare class Input implements IDisposable {
      */
     static eventIsOverElement(clientPos: Vector2, element: HTMLElement): boolean;
     constructor(options: IOptions);
+    /**
+     * Set the element that the input module will attach it's event listeners to.
+     * By default this is usually the three js webgl canvas but sometimes you want to attach the input event listeners
+     * on to a higher order html element and that's where this function comes in handy.
+     */
+    setInputElement(element: HTMLElement): void;
     dispose(): void;
     /**
      * Determines if the mouse down event happened directly over the given element.

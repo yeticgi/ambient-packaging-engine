@@ -34,7 +34,6 @@ export class AudioResource extends Resource<Howl, IAudioConfig> {
     }
 
     protected _unloadObject(): void {
-        console.log(`[AudioResource] ${this.name} unload object`);
         this.object.unload();
     }
 }

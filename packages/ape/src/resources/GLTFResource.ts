@@ -92,7 +92,6 @@ export class GLTFResource extends Resource<GLTFPrefab, IGLTFConfig> {
     }
 
     protected _unloadObject(): void {
-        console.log(`[GLTFResource] ${this.name} unload object`);
         this.object.dispose();
     }
 }

@@ -9,7 +9,7 @@ export declare const Vector3_Zero: Vector3;
 export declare const Vector3_One: Vector3;
 export declare function interpolate(start: number, end: number, progress: number, ease?: (t: number) => number): number;
 export declare function interpolateClamped(start: number, end: number, progress: number, ease?: (t: number) => number): number;
-export declare function clamp(value: number, min: number, max: number): number;
+export declare function clamp(value: number, min?: number, max?: number): number;
 export declare function inRange(value: number, min: number, max: number): boolean;
 export declare function isEven(value: number): boolean;
 export declare function isOdd(value: number): boolean;

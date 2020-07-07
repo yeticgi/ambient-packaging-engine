@@ -1,4 +1,5 @@
 import { Vector3, Vector2, MathUtils } from "three";
+import { hasValue } from "./MiscUtils";
 
 export const Vector3_Up = new Vector3(0, 1, 0);
 export const Vector3_Down = new Vector3(0, -1, 0);
@@ -22,8 +23,15 @@ export function interpolateClamped(start: number, end: number, progress: number,
     return clamp(value, start, end);
 }
 
-export function clamp(value: number, min: number, max: number): number {
-    return Math.max(min, Math.min(max, value));
+export function clamp(value: number, min?: number, max?: number): number {
+    if (hasValue(min) && value < min) {
+        value = min;
+    }
+    if (hasValue(max) && value > max) {
+        value = max;
+    }
+
+    return value;
 }
 
 export function inRange(value: number, min: number, max: number): boolean {

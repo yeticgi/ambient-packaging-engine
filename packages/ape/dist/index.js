@@ -5046,107 +5046,6 @@ class PerformanceStats {
     }
 }
 
-const Vector3_Up = new Vector3(0, 1, 0);
-const Vector3_Down = new Vector3(0, -1, 0);
-const Vector3_Forward = new Vector3(0, 0, 1);
-const Vector3_Back = new Vector3(0, 0, -1);
-const Vector3_Left = new Vector3(-1, 0, 0);
-const Vector3_Right = new Vector3(1, 0, 0);
-const Vector3_Zero = new Vector3(0, 0, 0);
-const Vector3_One = new Vector3(1, 1, 1);
-function interpolate(start, end, progress, ease) {
-    if (ease) {
-        progress = ease(progress);
-    }
-    return (1 - progress) * start + progress * end;
-}
-function interpolateClamped(start, end, progress, ease) {
-    const value = interpolate(start, end, progress, ease);
-    return clamp(value, start, end);
-}
-function clamp(value, min, max) {
-    return Math.max(min, Math.min(max, value));
-}
-function inRange(value, min, max) {
-    if (value <= max && value >= min) {
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-function isEven(value) {
-    return value % 2 === 0;
-}
-function isOdd(value) {
-    return !isEven(value);
-}
-function clampDegAngle(value, min, max) {
-    if (value < -360)
-        value += 360;
-    if (value > 360)
-        value -= 360;
-    return clamp(value, min, max);
-}
-function pointOnSphere(center, radius, rotation) {
-    /*
-        Reference: https://stackoverflow.com/questions/11819833/finding-3d-coordinates-from-point-with-known-xyz-angles-radius-and-origin
-        x = origin.x + radius * math.cos(math.rad(rotation.y)) * math.cos(math.rad(rotation.x))
-        y = origin.y + radius * math.sin(math.rad(rotation.x))
-        z = origin.z + radius * math.sin(math.rad(rotation.y)) * math.cos(math.rad(rotation.x))
-     */
-    const pos = new Vector3();
-    pos.x = center.x + radius * Math.cos(MathUtils.DEG2RAD * rotation.y) * Math.cos(MathUtils.DEG2RAD * rotation.x);
-    pos.y = center.y + radius * Math.sin(MathUtils.DEG2RAD * rotation.x);
-    pos.z = center.z + radius * Math.sin(MathUtils.DEG2RAD * rotation.y) * Math.cos(MathUtils.DEG2RAD * rotation.x);
-    return pos;
-}
-function pointOnCircle(center, radius, angle) {
-    const angleRad = angle * MathUtils.DEG2RAD;
-    const point = new Vector2(center.x + radius * Math.sin(angleRad), center.y + radius * Math.cos(angleRad));
-    return point;
-}
-/**
- * Tests if point is inside the given polygon. Test is done in 2d space.
- * Reference: https://codepen.io/prisoner849/pen/ROdXzw?editors=1010
- */
-function pointInPolygon2D(point, polyPoints) {
-    const x = point.x;
-    const y = point.y;
-    let inside = false;
-    for (let i = 0, j = polyPoints.length - 1; i < polyPoints.length; j = i++) {
-        let xi = polyPoints[i].x, yi = polyPoints[i].y;
-        let xj = polyPoints[j].x, yj = polyPoints[j].y;
-        let intersect = ((yi > y) != (yj > y)) &&
-            (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-        if (intersect)
-            inside = !inside;
-    }
-    return inside;
-}
-function normalize(value, min, max) {
-    return (value - min) / (max - min);
-}
-function normalizeClamped(value, min, max) {
-    value = clamp(value, min, max);
-    return (value - min) / (max - min);
-}
-function unnormalize(normal, min, max) {
-    return normal * (max - min) + min;
-}
-function unnormalizeClamped(normal, min, max) {
-    normal = clamp(normal, 0.0, 1.0);
-    return normal * (max - min) + min;
-}
-function calculateFrustumPlanes(size, aspect) {
-    return {
-        left: -size * aspect / 2,
-        right: size * aspect / 2,
-        top: size / 2,
-        bottom: -size / 2,
-    };
-}
-
 function hasValue(obj) {
     return obj !== undefined && obj !== null;
 }
@@ -5294,6 +5193,113 @@ function sortZA(array, propertyKey) {
     array.sort((a, b) => {
         return a[propertyKey] < b[propertyKey] ? 1 : -1;
     });
+}
+
+const Vector3_Up = new Vector3(0, 1, 0);
+const Vector3_Down = new Vector3(0, -1, 0);
+const Vector3_Forward = new Vector3(0, 0, 1);
+const Vector3_Back = new Vector3(0, 0, -1);
+const Vector3_Left = new Vector3(-1, 0, 0);
+const Vector3_Right = new Vector3(1, 0, 0);
+const Vector3_Zero = new Vector3(0, 0, 0);
+const Vector3_One = new Vector3(1, 1, 1);
+function interpolate(start, end, progress, ease) {
+    if (ease) {
+        progress = ease(progress);
+    }
+    return (1 - progress) * start + progress * end;
+}
+function interpolateClamped(start, end, progress, ease) {
+    const value = interpolate(start, end, progress, ease);
+    return clamp(value, start, end);
+}
+function clamp(value, min, max) {
+    if (hasValue(min) && value < min) {
+        value = min;
+    }
+    if (hasValue(max) && value > max) {
+        value = max;
+    }
+    return value;
+}
+function inRange(value, min, max) {
+    if (value <= max && value >= min) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+function isEven(value) {
+    return value % 2 === 0;
+}
+function isOdd(value) {
+    return !isEven(value);
+}
+function clampDegAngle(value, min, max) {
+    if (value < -360)
+        value += 360;
+    if (value > 360)
+        value -= 360;
+    return clamp(value, min, max);
+}
+function pointOnSphere(center, radius, rotation) {
+    /*
+        Reference: https://stackoverflow.com/questions/11819833/finding-3d-coordinates-from-point-with-known-xyz-angles-radius-and-origin
+        x = origin.x + radius * math.cos(math.rad(rotation.y)) * math.cos(math.rad(rotation.x))
+        y = origin.y + radius * math.sin(math.rad(rotation.x))
+        z = origin.z + radius * math.sin(math.rad(rotation.y)) * math.cos(math.rad(rotation.x))
+     */
+    const pos = new Vector3();
+    pos.x = center.x + radius * Math.cos(MathUtils.DEG2RAD * rotation.y) * Math.cos(MathUtils.DEG2RAD * rotation.x);
+    pos.y = center.y + radius * Math.sin(MathUtils.DEG2RAD * rotation.x);
+    pos.z = center.z + radius * Math.sin(MathUtils.DEG2RAD * rotation.y) * Math.cos(MathUtils.DEG2RAD * rotation.x);
+    return pos;
+}
+function pointOnCircle(center, radius, angle) {
+    const angleRad = angle * MathUtils.DEG2RAD;
+    const point = new Vector2(center.x + radius * Math.sin(angleRad), center.y + radius * Math.cos(angleRad));
+    return point;
+}
+/**
+ * Tests if point is inside the given polygon. Test is done in 2d space.
+ * Reference: https://codepen.io/prisoner849/pen/ROdXzw?editors=1010
+ */
+function pointInPolygon2D(point, polyPoints) {
+    const x = point.x;
+    const y = point.y;
+    let inside = false;
+    for (let i = 0, j = polyPoints.length - 1; i < polyPoints.length; j = i++) {
+        let xi = polyPoints[i].x, yi = polyPoints[i].y;
+        let xj = polyPoints[j].x, yj = polyPoints[j].y;
+        let intersect = ((yi > y) != (yj > y)) &&
+            (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect)
+            inside = !inside;
+    }
+    return inside;
+}
+function normalize(value, min, max) {
+    return (value - min) / (max - min);
+}
+function normalizeClamped(value, min, max) {
+    value = clamp(value, min, max);
+    return (value - min) / (max - min);
+}
+function unnormalize(normal, min, max) {
+    return normal * (max - min) + min;
+}
+function unnormalizeClamped(normal, min, max) {
+    normal = clamp(normal, 0.0, 1.0);
+    return normal * (max - min) + min;
+}
+function calculateFrustumPlanes(size, aspect) {
+    return {
+        left: -size * aspect / 2,
+        right: size * aspect / 2,
+        top: size / 2,
+        bottom: -size / 2,
+    };
 }
 
 class PerformanceResolutionScalar {
@@ -6025,7 +6031,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.6';
-    const _time = '1594153084682';
+    const _time = '1594154850658';
     /**
      * The date that this version of the app was built.
      */

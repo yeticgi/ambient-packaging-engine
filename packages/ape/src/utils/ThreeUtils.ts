@@ -13,7 +13,8 @@ import {
     MeshStandardMaterial,
     Material,
     Camera,
-    Vector3
+    Vector3,
+    Quaternion
 } from 'three';
 
 /**
@@ -216,6 +217,21 @@ export function worldToScreenPosition(object3d: Object3D, camera: Camera): Vecto
     pos.z = 0;
 
     return new Vector2(pos.x, pos.y);
+}
+
+/**
+ * Return the world direction for the given local direction from the object's perspective.
+ * @param localDirection The local direction.
+ * @param obj The object to return the world direction for.
+ */
+export function objectWorldDirection(
+    localDirection: Vector3,
+    obj: Object3D
+): Vector3 {
+    const worldRotation = new Quaternion();
+    worldRotation.setFromRotationMatrix(obj.matrixWorld);
+    const forward = localDirection.clone().applyQuaternion(worldRotation);
+    return forward;
 }
 
 export function getMaterials(mesh: Mesh): Material[] {

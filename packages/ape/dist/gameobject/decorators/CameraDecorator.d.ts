@@ -2,9 +2,12 @@ import { IDecoratorOptions, Decorator } from "./Decorator";
 import { GameObject } from "../GameObject";
 import { PerspectiveCamera, OrthographicCamera } from "three";
 export declare type CameraType = 'perspective' | 'orthographic';
+export declare type FieldOfViewType = 'vertical' | 'horizontal';
 export interface ICameraDecoratorOptions extends IDecoratorOptions {
     cameraType?: CameraType;
-    fov?: number;
+    fovType?: FieldOfViewType;
+    vFov?: number;
+    hFov?: number;
     zoom?: number;
     aspect?: number;
     near?: number;
@@ -30,7 +33,9 @@ export declare class CameraDecorator extends Decorator {
      */
     static get Cameras(): Readonly<CameraDecorator[]>;
     private _cameraType;
-    private _fov;
+    private _fovType;
+    private _vFov;
+    private _hFov;
     private _zoom;
     private _aspect;
     private _near;
@@ -46,10 +51,24 @@ export declare class CameraDecorator extends Decorator {
     get cameraType(): CameraType;
     set cameraType(value: CameraType);
     /**
-     * Field of View for perspective camera. No affect on orthographic cameras.
+     * Field of View type for perspective camera. The field of view type dictates
+     * how vertical fov is calculated based on the aspect ratio. No affect on orthographic cameras.
      */
-    get fov(): number;
-    set fov(value: number);
+    get fovType(): FieldOfViewType;
+    set fovType(value: FieldOfViewType);
+    /**
+     * Vertical field of view for perspective camera. No affect on orthographic cameras.
+     * If field of view type is set to horizontal, the vertical field of view will be dynamic.
+     * This is the default FOV that Three JS cameras use.
+     */
+    get vFov(): number;
+    set vFov(value: number);
+    /**
+     * Horizontal field of view for perspective camera. No affect on orthographic cameras.
+     * Only has an affect if the field of view type is set to horizontal.
+     */
+    get hFov(): number;
+    set hFov(value: number);
     /**
      * Zoom level of the camera.
      */

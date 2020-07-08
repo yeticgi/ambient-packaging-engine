@@ -6031,7 +6031,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.6';
-    const _time = '1594154850658';
+    const _time = '1594215283975';
     /**
      * The date that this version of the app was built.
      */
@@ -6255,15 +6255,43 @@ let CameraDecorator = /** @class */ (() => {
             }
         }
         /**
-         * Field of View for perspective camera. No affect on orthographic cameras.
+         * Field of View type for perspective camera. The field of view type dictates
+         * how vertical fov is calculated based on the aspect ratio. No affect on orthographic cameras.
          */
-        get fov() { return this._fov; }
-        set fov(value) {
-            if (this._fov !== value) {
-                this._fov = value;
+        get fovType() { return this._fovType; }
+        set fovType(value) {
+            if (this._fovType !== value) {
+                this._fovType = value;
                 if (this._camera && this._camera instanceof PerspectiveCamera) {
-                    this._camera.fov = this._fov;
+                    this.resize();
+                }
+            }
+        }
+        /**
+         * Vertical field of view for perspective camera. No affect on orthographic cameras.
+         * If field of view type is set to horizontal, the vertical field of view will be dynamic.
+         * This is the default FOV that Three JS cameras use.
+         */
+        get vFov() { return this._vFov; }
+        set vFov(value) {
+            if (this._vFov !== value) {
+                this._vFov = value;
+                if (this._camera && this._camera instanceof PerspectiveCamera) {
+                    this._camera.fov = this._vFov;
                     this._camera.updateProjectionMatrix();
+                }
+            }
+        }
+        /**
+         * Horizontal field of view for perspective camera. No affect on orthographic cameras.
+         * Only has an affect if the field of view type is set to horizontal.
+         */
+        get hFov() { return this._hFov; }
+        set hFov(value) {
+            if (this._hFov !== value) {
+                this._hFov = value;
+                if (this._camera && this._camera instanceof PerspectiveCamera) {
+                    this.resize();
                 }
             }
         }
@@ -6343,7 +6371,9 @@ let CameraDecorator = /** @class */ (() => {
         configure(options) {
             super.configure(options);
             this._cameraType = getOptionalValue(options.cameraType, 'perspective');
-            this._fov = getOptionalValue(options.fov, 50);
+            this._fovType = getOptionalValue(options.fovType, 'vertical');
+            this._vFov = getOptionalValue(options.vFov, 50);
+            this._hFov = getOptionalValue(options.hFov, 50);
             this._zoom = getOptionalValue(options.zoom, 1);
             this._aspect = getOptionalValue(options.aspect, window.innerWidth / window.innerHeight);
             this._far = getOptionalValue(options.far, 2000);
@@ -6359,6 +6389,7 @@ let CameraDecorator = /** @class */ (() => {
             APEngineEvents.onXRSessionStarted.addListener(this._onXRSessionStarted);
             this._onXRSessionEnded = this._onXRSessionEnded.bind(this);
             APEngineEvents.onXRSessionEnded.addListener(this._onXRSessionEnded);
+            this.resize();
         }
         onVisible() {
             super.onVisible();
@@ -6377,9 +6408,17 @@ let CameraDecorator = /** @class */ (() => {
         }
         resize() {
             if (this._camera) {
-                // Update aspect ratio with new winodw size.
                 this.aspect = window.innerWidth / window.innerHeight;
-                if (this._camera instanceof OrthographicCamera) {
+                if (this._camera instanceof PerspectiveCamera) {
+                    if (this._fovType === 'horizontal') {
+                        // Reference: https://github.com/mrdoob/three.js/issues/15968#issuecomment-475986352
+                        this.vFov = Math.atan(Math.tan(this._hFov * Math.PI / 360) / this.aspect) * 360 / Math.PI;
+                    }
+                    else {
+                        this._hFov = 2 * Math.atan(Math.tan(this.vFov * Math.PI / 180 / 2) * this.aspect) * 180 / Math.PI;
+                    }
+                }
+                else {
                     // Update frustum planes for othrogtraphic camera using new aspect ratio.
                     const planes = calculateFrustumPlanes(this._size, this._aspect);
                     this._camera.left = planes.left;
@@ -6416,7 +6455,7 @@ let CameraDecorator = /** @class */ (() => {
                 return;
             }
             if (this._cameraType === 'perspective') {
-                this._camera = new PerspectiveCamera(this._fov, this._aspect, this._near, this._far);
+                this._camera = new PerspectiveCamera(this._vFov, this._aspect, this._near, this._far);
             }
             else if (this._cameraType === 'orthographic') {
                 const planes = calculateFrustumPlanes(this._size, this._aspect);
@@ -6431,6 +6470,7 @@ let CameraDecorator = /** @class */ (() => {
                 // Add camera to this gameObject.
                 this.gameObject.add(this._camera);
             }
+            this.resize();
         }
         _removeCamera() {
             if (!this._camera) {

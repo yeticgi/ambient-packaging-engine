@@ -1,5 +1,5 @@
 export declare function hasValue(obj: any): boolean;
-export declare function getOptionalValue(obj: any, defaultValue: any): any;
+export declare function getOptionalValue<T>(obj: T, defaultValue: T): T;
 /**
  * Post the given data object as JSON to the provided URL.
  * @returns - Promise that resolves to a Response or null if an exception occured.

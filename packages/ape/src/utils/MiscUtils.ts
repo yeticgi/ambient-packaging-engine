@@ -4,7 +4,7 @@ export function hasValue(obj: any): boolean {
     return obj !== undefined && obj !== null;
 }
 
-export function getOptionalValue(obj: any, defaultValue: any): any {
+export function getOptionalValue<T>(obj: T, defaultValue: T): T {
     return obj !== undefined && obj !== null ? obj : defaultValue;
 }
 

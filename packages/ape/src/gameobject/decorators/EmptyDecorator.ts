@@ -38,6 +38,10 @@ export class EmptyDecorator extends Decorator {
     onLateUpdate(): void {
         super.onLateUpdate();
     }
+    
+    onWillDestroy(): void {
+        super.onWillDestroy();
+    }
 
     onDestroy(): void {
         super.onDestroy();

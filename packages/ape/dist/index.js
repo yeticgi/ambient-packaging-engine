@@ -3699,37 +3699,55 @@ class Input {
         this._options = null;
     }
     /**
-     * Determines if the mouse down event happened directly over the given element.
+     * Determines if the input down event happened directly over the given element.
      * @param element The element to test.
      */
-    isMouseButtonDownOnElement(element) {
+    isDownOnElement(element) {
         const downElement = this._targetData.inputDown;
         return Input.isElementContainedByOrEqual(downElement, element);
     }
     /**
-     * Determines if the mouse down event happened directly over any of the given elements.
+     * Determines if the input down event happened directly over any of the given elements.
      * @param elements The elements to test.
      */
-    isMouseButtonDownOnAnyElements(elements) {
+    isDownOnAnyElements(elements) {
         const downElement = this._targetData.inputDown;
         const matchingElement = elements.find(e => Input.isElementContainedByOrEqual(downElement, e));
         return !!matchingElement;
     }
     /**
-     * Determines if the mouse is currently focusing the given html element.
+     * Determines if the input down event happened directly over any of the input elements.
+     */
+    isDownOnAnyInputElement() {
+        const downElement = this._targetData.inputDown;
+        const inputElements = [this._options.canvasElement, ...this._options.getUIHtmlElements()];
+        const matchingElement = inputElements.find(e => Input.isElementContainedByOrEqual(downElement, e));
+        return !!matchingElement;
+    }
+    /**
+     * Determines if the input is currently focusing the given html element.
      * @param element The element to test.
      */
-    isMouseFocusingOnElement(element) {
+    isFocusingOnElement(element) {
         const overElement = this._targetData.inputOver;
         return Input.isElementContainedByOrEqual(overElement, element);
     }
     /**
-     * Determines if the mouse is currently focusing any of the given html elements.
+     * Determines if the input is currently focusing any of the given html elements.
      * @param elements The elements to test.
      */
-    isMouseFocusingOnAnyElements(elements) {
+    isFocusingOnAnyElements(elements) {
         const overElement = this._targetData.inputOver;
         const matchingElement = elements.find(e => Input.isElementContainedByOrEqual(overElement, e));
+        return !!matchingElement;
+    }
+    /**
+     * Determines if the input is currently focusing on any of the input elements.
+     */
+    isFocusingOnAnyInputElement() {
+        const overElement = this._targetData.inputOver;
+        const inputElements = [this._options.canvasElement, ...this._options.getUIHtmlElements()];
+        const matchingElement = inputElements.find(e => Input.isElementContainedByOrEqual(overElement, e));
         return !!matchingElement;
     }
     /**
@@ -4214,7 +4232,7 @@ class Input {
         }
     }
     _handleWheel(event) {
-        if (this.isMouseFocusingOnElement(this._options.canvasElement)) {
+        if (this.isFocusingOnElement(this._options.canvasElement)) {
             event.preventDefault();
         }
         let wheelFrame = {
@@ -6031,7 +6049,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.6';
-    const _time = '1594215283975';
+    const _time = '1594220627356';
     /**
      * The date that this version of the app was built.
      */

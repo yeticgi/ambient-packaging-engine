@@ -64,25 +64,33 @@ export declare class Input implements IDisposable {
     setInputElement(element: HTMLElement): void;
     dispose(): void;
     /**
-     * Determines if the mouse down event happened directly over the given element.
+     * Determines if the input down event happened directly over the given element.
      * @param element The element to test.
      */
-    isMouseButtonDownOnElement(element: HTMLElement): boolean;
+    isDownOnElement(element: HTMLElement): boolean;
     /**
-     * Determines if the mouse down event happened directly over any of the given elements.
+     * Determines if the input down event happened directly over any of the given elements.
      * @param elements The elements to test.
      */
-    isMouseButtonDownOnAnyElements(elements: HTMLElement[]): boolean;
+    isDownOnAnyElements(elements: HTMLElement[]): boolean;
     /**
-     * Determines if the mouse is currently focusing the given html element.
+     * Determines if the input down event happened directly over any of the input elements.
+     */
+    isDownOnAnyInputElement(): boolean;
+    /**
+     * Determines if the input is currently focusing the given html element.
      * @param element The element to test.
      */
-    isMouseFocusingOnElement(element: HTMLElement): boolean;
+    isFocusingOnElement(element: HTMLElement): boolean;
     /**
-     * Determines if the mouse is currently focusing any of the given html elements.
+     * Determines if the input is currently focusing any of the given html elements.
      * @param elements The elements to test.
      */
-    isMouseFocusingOnAnyElements(elements: HTMLElement[]): boolean;
+    isFocusingOnAnyElements(elements: HTMLElement[]): boolean;
+    /**
+     * Determines if the input is currently focusing on any of the input elements.
+     */
+    isFocusingOnAnyInputElement(): boolean;
     /**
      * Determines if the given event is for any of the the given elements and should
      * therefore be intercepted.

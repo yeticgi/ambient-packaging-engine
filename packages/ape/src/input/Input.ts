@@ -191,19 +191,19 @@ export class Input implements IDisposable {
     }
 
     /**
-     * Determines if the mouse down event happened directly over the given element.
+     * Determines if the input down event happened directly over the given element.
      * @param element The element to test.
      */
-    public isMouseButtonDownOnElement(element: HTMLElement): boolean {
+    public isDownOnElement(element: HTMLElement): boolean {
         const downElement = this._targetData.inputDown;
         return Input.isElementContainedByOrEqual(downElement, element);
     }
 
     /**
-     * Determines if the mouse down event happened directly over any of the given elements.
+     * Determines if the input down event happened directly over any of the given elements.
      * @param elements The elements to test.
      */
-    public isMouseButtonDownOnAnyElements(elements: HTMLElement[]): boolean {
+    public isDownOnAnyElements(elements: HTMLElement[]): boolean {
         const downElement = this._targetData.inputDown;
         const matchingElement = elements.find(e =>
             Input.isElementContainedByOrEqual(downElement, e)
@@ -212,21 +212,45 @@ export class Input implements IDisposable {
     }
 
     /**
-     * Determines if the mouse is currently focusing the given html element.
+     * Determines if the input down event happened directly over any of the input elements.
+     */
+    public isDownOnAnyInputElement(): boolean {
+        const downElement = this._targetData.inputDown;
+        const inputElements = [this._options.canvasElement, ...this._options.getUIHtmlElements()];
+        const matchingElement = inputElements.find(e => 
+            Input.isElementContainedByOrEqual(downElement, e)
+        );
+        return !!matchingElement;
+    }
+
+    /**
+     * Determines if the input is currently focusing the given html element.
      * @param element The element to test.
      */
-    public isMouseFocusingOnElement(element: HTMLElement): boolean {
+    public isFocusingOnElement(element: HTMLElement): boolean {
         const overElement = this._targetData.inputOver;
         return Input.isElementContainedByOrEqual(overElement, element);
     }
 
     /**
-     * Determines if the mouse is currently focusing any of the given html elements.
+     * Determines if the input is currently focusing any of the given html elements.
      * @param elements The elements to test.
      */
-    public isMouseFocusingOnAnyElements(elements: HTMLElement[]): boolean {
+    public isFocusingOnAnyElements(elements: HTMLElement[]): boolean {
         const overElement = this._targetData.inputOver;
         const matchingElement = elements.find(e =>
+            Input.isElementContainedByOrEqual(overElement, e)
+        );
+        return !!matchingElement;
+    }
+
+    /**
+     * Determines if the input is currently focusing on any of the input elements.
+     */
+    public isFocusingOnAnyInputElement(): boolean {
+        const overElement = this._targetData.inputOver;
+        const inputElements = [this._options.canvasElement, ...this._options.getUIHtmlElements()];
+        const matchingElement = inputElements.find(e => 
             Input.isElementContainedByOrEqual(overElement, e)
         );
         return !!matchingElement;
@@ -849,7 +873,7 @@ export class Input implements IDisposable {
     }
 
     private _handleWheel(event: WheelEvent) {
-        if (this.isMouseFocusingOnElement(this._options.canvasElement)) {
+        if (this.isFocusingOnElement(this._options.canvasElement)) {
             event.preventDefault();
         }
 

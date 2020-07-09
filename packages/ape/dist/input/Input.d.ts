@@ -13,6 +13,7 @@ export declare class Input implements IDisposable {
      * 0: Disabled, 1: Down/Up events, 2: Move events
      */
     debugLevel: number;
+    stopTouchPropogation: boolean;
     private _mouseData;
     private _touchData;
     private _keyData;

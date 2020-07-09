@@ -1,7 +1,4 @@
-import { APEngine } from "../APEngine";
-import { APEngineEvents } from "../APEngineEvents";
 import { IDisposable } from "../misc/IDisposable";
-import { RepeatWrapping } from "three";
 import { Flags } from "../misc/Flags";
 
 export class TapCode implements IDisposable {
@@ -45,52 +42,53 @@ export class TapCode implements IDisposable {
                 console.error(`[TapCode] ${n} is not an integer. Tap code must be string of only integer numbers in the range of 1 to 5.`);
             }
         }
+        this._onKeyDown = this._onKeyDown.bind(this);
+        this._onTouchStart = this._onTouchStart.bind(this);
+        this._onTouchEnd = this._onTouchEnd.bind(this);
 
-        // Subsribe to APEngine updates so we can reliabely read from the APEngine input module.
-        this._onEngineUpdate = this._onEngineUpdate.bind(this);
-        APEngineEvents.onUpdate.addListener(this._onEngineUpdate);
+        document.body.addEventListener('keydown', this._onKeyDown);
+        document.body.addEventListener('touchstart', this._onTouchStart);
+        document.body.addEventListener('touchend', this._onTouchEnd);
     }
 
-    private _onEngineUpdate(): void {
-        const touchCount = APEngine.input.getTouchCount();
-        if (touchCount > 0) {
-            for (let i = 0; i < touchCount; i++) {
-                const touch = APEngine.input.getTouchData(i);
-
-                if (APEngine.input.getTouchDown(touch.fingerIndex)) {
-                    this._touchCount++;
-
-                    if (this.debugFlags.some('inputEvents')) {
-                        console.log(`[TapCode] Touch began. fingerIndex: ${touch.fingerIndex}, count: ${this._touchCount}}`);
-                    }
-                }
+    private _onKeyDown(event: KeyboardEvent): void {
+        if (!event.repeat && this.allowKeyboardEntry) {
+            switch (event.key) {
+                case '1': 
+                    this._endTouch(1);
+                    break;
+                case '2':
+                    this._endTouch(2);
+                    break;
+                case '3':
+                    this._endTouch(3);
+                    break;
+                case '4':
+                    this._endTouch(4);
+                    break;
+                case '5':
+                    this._endTouch(5);
+                    break;
             }
         }
+    }
 
-        let touchUp = false;
-        for (let i = 0; i < APEngine.input.getTouchCount(); i++) {
-            const touch = APEngine.input.getTouchData(i);
+    private _onTouchStart(event: TouchEvent): void {
+        this._touchCount = event.touches.length;
 
-            if (APEngine.input.getTouchUp(touch.fingerIndex)) {
-                touchUp = true;
-
-                if (this.debugFlags.some('inputEvents')) {
-                    console.log(`[TapCode] Touch ended. fingerIndex: ${touch.fingerIndex}, count: ${this._touchCount}}`);
-                }
-            }
+        if (this.debugFlags.some('inputEvents')) {
+            console.log(`[TapCode] Touch began. count: ${this._touchCount}`);
         }
+    }
 
-        if (touchUp) {
+    private _onTouchEnd(event: TouchEvent): void {
+        if (event.touches.length < this._touchCount) {
+            if (this.debugFlags.some('inputEvents')) {
+                console.log(`[TapCode] Touch ended. count: ${this._touchCount}`);
+            }
+
             this._endTouch(this._touchCount);
             this._touchCount = 0;
-        }
-
-        if (this.allowKeyboardEntry) {
-            if (APEngine.input.getKeyDown('1')) { this._endTouch(1); }
-            if (APEngine.input.getKeyDown('2')) { this._endTouch(2); }
-            if (APEngine.input.getKeyDown('3')) { this._endTouch(3); }
-            if (APEngine.input.getKeyDown('4')) { this._endTouch(4); }
-            if (APEngine.input.getKeyDown('5')) { this._endTouch(5); }
         }
     }
 
@@ -135,6 +133,9 @@ export class TapCode implements IDisposable {
 
     dispose(): void {
         this._codeEnteredCallback = null;
-        APEngineEvents.onUpdate.removeListener(this._onEngineUpdate);
+
+        document.body.removeEventListener('keydown', this._onKeyDown);
+        document.body.removeEventListener('touchstart', this._onTouchStart);
+        document.body.removeEventListener('touchend', this._onTouchEnd);
     }
 }

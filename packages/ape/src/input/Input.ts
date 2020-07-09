@@ -18,6 +18,8 @@ export class Input implements IDisposable {
      */
     public debugLevel: number = 0;
 
+    public stopTouchPropogation = true;
+
     // Internal pointer data.
     private _mouseData: MouseData;
     private _touchData: TouchData[];
@@ -988,7 +990,9 @@ export class Input implements IDisposable {
             this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
 
-        event.stopImmediatePropagation();
+        if (this.stopTouchPropogation) {
+            event.stopImmediatePropagation();
+        }
 
         if (
             this.isEventForAnyElement(event, [
@@ -1045,7 +1049,9 @@ export class Input implements IDisposable {
             this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
 
-        event.stopImmediatePropagation();
+        if (this.stopTouchPropogation) {
+            event.stopImmediatePropagation();
+        }
 
         const count = this._touchListenerCounts.get(evt.target) || 0;
         if (count <= evt.changedTouches.length) {
@@ -1124,7 +1130,9 @@ export class Input implements IDisposable {
             this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch) return;
 
-        event.stopImmediatePropagation();
+        if (this.stopTouchPropogation) {
+            event.stopImmediatePropagation();
+        }
 
         const count = this._touchListenerCounts.get(evt.target) || 0;
         if (count <= evt.changedTouches.length) {

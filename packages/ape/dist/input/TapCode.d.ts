@@ -19,7 +19,9 @@ export declare class TapCode implements IDisposable {
     private _codeQueue;
     get code(): string;
     constructor(code: string, onCodeEntered: (tapCode: TapCode) => void);
-    private _onEngineUpdate;
+    private _onKeyDown;
+    private _onTouchStart;
+    private _onTouchEnd;
     private _endTouch;
     dispose(): void;
 }

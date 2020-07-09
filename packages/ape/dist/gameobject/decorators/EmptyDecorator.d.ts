@@ -14,5 +14,6 @@ export declare class EmptyDecorator extends Decorator {
     onStart(): void;
     onUpdate(): void;
     onLateUpdate(): void;
+    onWillDestroy(): void;
     onDestroy(): void;
 }

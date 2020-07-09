@@ -3573,6 +3573,7 @@ class Input {
          * 0: Disabled, 1: Down/Up events, 2: Move events
          */
         this.debugLevel = 0;
+        this.stopTouchPropogation = true;
         this._inputType = InputType.Undefined;
         this._options = options;
         this._mouseData = {
@@ -4312,7 +4313,9 @@ class Input {
             this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch)
             return;
-        event.stopImmediatePropagation();
+        if (this.stopTouchPropogation) {
+            event.stopImmediatePropagation();
+        }
         if (this.isEventForAnyElement(event, [
             this._options.canvasElement,
             ...this._options.getUIHtmlElements(),
@@ -4349,7 +4352,9 @@ class Input {
             this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch)
             return;
-        event.stopImmediatePropagation();
+        if (this.stopTouchPropogation) {
+            event.stopImmediatePropagation();
+        }
         const count = this._touchListenerCounts.get(evt.target) || 0;
         if (count <= evt.changedTouches.length) {
             evt.target.removeEventListener('touchmove', this._handleTouchMove);
@@ -4403,7 +4408,9 @@ class Input {
             this._inputType = InputType.Touch;
         if (this._inputType != InputType.Touch)
             return;
-        event.stopImmediatePropagation();
+        if (this.stopTouchPropogation) {
+            event.stopImmediatePropagation();
+        }
         const count = this._touchListenerCounts.get(evt.target) || 0;
         if (count <= evt.changedTouches.length) {
             evt.target.removeEventListener('touchmove', this._handleTouchMove);
@@ -6049,7 +6056,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.6';
-    const _time = '1594220627356';
+    const _time = '1594320086440';
     /**
      * The date that this version of the app was built.
      */
@@ -7749,54 +7756,48 @@ class TapCode {
                 console.error(`[TapCode] ${n} is not an integer. Tap code must be string of only integer numbers in the range of 1 to 5.`);
             }
         }
-        // Subsribe to APEngine updates so we can reliabely read from the APEngine input module.
-        this._onEngineUpdate = this._onEngineUpdate.bind(this);
-        APEngineEvents.onUpdate.addListener(this._onEngineUpdate);
+        this._onKeyDown = this._onKeyDown.bind(this);
+        this._onTouchStart = this._onTouchStart.bind(this);
+        this._onTouchEnd = this._onTouchEnd.bind(this);
+        document.body.addEventListener('keydown', this._onKeyDown);
+        document.body.addEventListener('touchstart', this._onTouchStart);
+        document.body.addEventListener('touchend', this._onTouchEnd);
     }
     get code() { return this._codeStr; }
-    _onEngineUpdate() {
-        const touchCount = APEngine.input.getTouchCount();
-        if (touchCount > 0) {
-            for (let i = 0; i < touchCount; i++) {
-                const touch = APEngine.input.getTouchData(i);
-                if (APEngine.input.getTouchDown(touch.fingerIndex)) {
-                    this._touchCount++;
-                    if (this.debugFlags.some('inputEvents')) {
-                        console.log(`[TapCode] Touch began. fingerIndex: ${touch.fingerIndex}, count: ${this._touchCount}}`);
-                    }
-                }
+    _onKeyDown(event) {
+        if (!event.repeat && this.allowKeyboardEntry) {
+            switch (event.key) {
+                case '1':
+                    this._endTouch(1);
+                    break;
+                case '2':
+                    this._endTouch(2);
+                    break;
+                case '3':
+                    this._endTouch(3);
+                    break;
+                case '4':
+                    this._endTouch(4);
+                    break;
+                case '5':
+                    this._endTouch(5);
+                    break;
             }
         }
-        let touchUp = false;
-        for (let i = 0; i < APEngine.input.getTouchCount(); i++) {
-            const touch = APEngine.input.getTouchData(i);
-            if (APEngine.input.getTouchUp(touch.fingerIndex)) {
-                touchUp = true;
-                if (this.debugFlags.some('inputEvents')) {
-                    console.log(`[TapCode] Touch ended. fingerIndex: ${touch.fingerIndex}, count: ${this._touchCount}}`);
-                }
-            }
+    }
+    _onTouchStart(event) {
+        this._touchCount = event.touches.length;
+        if (this.debugFlags.some('inputEvents')) {
+            console.log(`[TapCode] Touch began. count: ${this._touchCount}`);
         }
-        if (touchUp) {
+    }
+    _onTouchEnd(event) {
+        if (event.touches.length < this._touchCount) {
+            if (this.debugFlags.some('inputEvents')) {
+                console.log(`[TapCode] Touch ended. count: ${this._touchCount}`);
+            }
             this._endTouch(this._touchCount);
             this._touchCount = 0;
-        }
-        if (this.allowKeyboardEntry) {
-            if (APEngine.input.getKeyDown('1')) {
-                this._endTouch(1);
-            }
-            if (APEngine.input.getKeyDown('2')) {
-                this._endTouch(2);
-            }
-            if (APEngine.input.getKeyDown('3')) {
-                this._endTouch(3);
-            }
-            if (APEngine.input.getKeyDown('4')) {
-                this._endTouch(4);
-            }
-            if (APEngine.input.getKeyDown('5')) {
-                this._endTouch(5);
-            }
         }
     }
     _endTouch(touchCount) {
@@ -7830,7 +7831,9 @@ class TapCode {
     }
     dispose() {
         this._codeEnteredCallback = null;
-        APEngineEvents.onUpdate.removeListener(this._onEngineUpdate);
+        document.body.removeEventListener('keydown', this._onKeyDown);
+        document.body.removeEventListener('touchstart', this._onTouchStart);
+        document.body.removeEventListener('touchend', this._onTouchEnd);
     }
 }
 

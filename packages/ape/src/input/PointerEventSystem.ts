@@ -88,6 +88,8 @@ export class PointerEventSystem implements IDisposable {
     }
 
     removeListener(listener: IPointerEventListener): void {
+        if (this._pointerDown === listener) { this._pointerDown = null; }
+        if (this._pointerEnter === listener) { this._pointerEnter = null; }
         this._listeners.delete(listener);
     }
 

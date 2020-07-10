@@ -28,7 +28,7 @@ export class GameObject extends Object3D {
                     go._destroyState = DestroyState.WillDestroy;
 
                     // Inform all gameObject decorators that it will be destroyed.
-                    gameObject._decorators.forEach(d => d.onWillDestroy());
+                    go._decorators.forEach(d => d.onWillDestroy());
                 }
             }
         });

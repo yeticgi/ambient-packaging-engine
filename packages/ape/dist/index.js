@@ -4684,7 +4684,7 @@ let GameObject = /** @class */ (() => {
                         GameObject.__APEngine_destroyQueue.push(go);
                         go._destroyState = DestroyState.WillDestroy;
                         // Inform all gameObject decorators that it will be destroyed.
-                        gameObject._decorators.forEach(d => d.onWillDestroy());
+                        go._decorators.forEach(d => d.onWillDestroy());
                     }
                 }
             });
@@ -5912,6 +5912,12 @@ class PointerEventSystem {
         }
     }
     removeListener(listener) {
+        if (this._pointerDown === listener) {
+            this._pointerDown = null;
+        }
+        if (this._pointerEnter === listener) {
+            this._pointerEnter = null;
+        }
         this._listeners.delete(listener);
     }
     update(input, cameraDecorator) {
@@ -6056,7 +6062,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.6';
-    const _time = '1594320086440';
+    const _time = '1594417434786';
     /**
      * The date that this version of the app was built.
      */

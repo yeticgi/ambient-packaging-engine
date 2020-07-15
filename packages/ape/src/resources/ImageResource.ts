@@ -15,7 +15,11 @@ export class ImageResource extends Resource<HTMLImageElement, IImageConfig> {
     }
 
     protected _loadObject(): Promise<HTMLImageElement> {
-        return loadImage(this._url);
+        const onProgress = (event: ProgressEvent<EventTarget>) => {
+            this._loadProgress.set(event.loaded, event.total);
+        }
+
+        return loadImage(this._url, onProgress);
     }
 
     protected _unloadObject(): void {

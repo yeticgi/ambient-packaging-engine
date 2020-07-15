@@ -1,6 +1,7 @@
 
 import { Resource, IResourceConfig } from './Resource';
 import { IDisposable } from "../misc/IDisposable";
+import { Progress } from './Progress';
 
 type ConfigType<T> = T extends Resource<any, infer P> ? P : never;
 
@@ -11,6 +12,7 @@ type ConfigType<T> = T extends Resource<any, infer P> ? P : never;
 export class ResourceManager<T extends Resource<any, IResourceConfig>> implements IDisposable {
     private _resources: Map<string, T> = new Map();
     private _activator: { new(name: string, config: IResourceConfig): T };
+    private _progress = new Progress();
 
     constructor(resourceActivator: { new(name: string, config: any): T }) {
         this._activator = resourceActivator;
@@ -52,11 +54,7 @@ export class ResourceManager<T extends Resource<any, IResourceConfig>> implement
     async preload(): Promise<void> {
         if (this._resources.size > 0) {
             const resources: Resource<any, any>[] = Array.from(this._resources.values());
-            for (let resource of resources) {
-                if (!resource.loaded) {
-                    await resource.load();
-                }
-            }
+            await Promise.all(resources.map(r => r.load()));
         }
     }
 
@@ -74,6 +72,25 @@ export class ResourceManager<T extends Resource<any, IResourceConfig>> implement
             return true;
         } else {
             return true;
+        }
+    }
+
+    /**
+     * Returns the combined loading progress (in range of 0-1) of all resources that are currently in this Resource Manager.
+     */
+    getLoadProgress(): Readonly<Progress> {
+        this._progress.set(0, 0);
+
+        if (this._resources.size > 0) {
+            for (const [resourceName, resource] of this._resources) {
+                this._progress.loaded += resource.loadProgress.loaded;
+                this._progress.total += resource.loadProgress.total;
+            }
+            
+            return this._progress;
+        } else {
+            this._progress.complete();
+            return this._progress;
         }
     }
 

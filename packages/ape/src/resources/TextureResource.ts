@@ -38,6 +38,7 @@ export class TextureResource extends Resource<Texture, ITextureConfig> {
                     resolve(texture);
                 },
                 (progressEvent) => {
+                    this._loadProgress.set(progressEvent.loaded, progressEvent.total);
                 },
                 (errorEvent) => {
                     reject(errorEvent);

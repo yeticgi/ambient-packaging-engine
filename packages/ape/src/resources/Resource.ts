@@ -1,4 +1,5 @@
 import { IDisposable } from "../misc/IDisposable";
+import { Progress } from "./Progress";
 
 export interface IResourceConfig {
 }
@@ -13,12 +14,18 @@ export abstract class Resource<O, K extends IResourceConfig> implements IDisposa
     private _loaded: boolean = false;
     private _object: O = null;
 
+    protected _loadProgress = new Progress();
+
     get name(): string {
         return this._name;
     }
 
     get loaded(): boolean {
         return this._loaded;
+    }
+
+    get loadProgress(): Readonly<Progress> {
+        return this._loadProgress;
     }
 
     get object(): O {
@@ -33,11 +40,13 @@ export abstract class Resource<O, K extends IResourceConfig> implements IDisposa
         try {
             if (!this._loaded) {
                 this._object = await this._loadObject();
+                this._loadProgress.complete();
                 this._loaded = true;
             }
             return this;
         } catch(error) {
             this._loaded = false;
+            this._loadProgress.reset();
             console.error(`Could not load resource ${this.name}.`);
             console.error(error);
         }
@@ -48,6 +57,7 @@ export abstract class Resource<O, K extends IResourceConfig> implements IDisposa
             this._unloadObject();
         }
         this._object = null;
+        this._loadProgress.reset();
     }
 
     dispose(): void {

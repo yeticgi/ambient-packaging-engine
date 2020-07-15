@@ -81,7 +81,8 @@ export class GLTFResource extends Resource<GLTFPrefab, IGLTFConfig> {
                     const prefab = new GLTFPrefab(gltf.scene, gltf.animations);
                     resolve(prefab);
                 },
-                () => {
+                (progressEvent) => {
+                    this._loadProgress.set(progressEvent.loaded, progressEvent.total);
                 },
                 (errorEvent) => {
                     console.error(`[GLTFResource] ${this.name} Error: ${errorEvent}`);

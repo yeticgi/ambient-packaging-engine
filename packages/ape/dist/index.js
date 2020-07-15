@@ -5173,12 +5173,17 @@ function getExtension(path) {
  * Load the image from the given url (or from the cache if the browser as it stored).
  * @param url Location of the image to load.
  */
-function loadImage(url) {
+function loadImage(url, onProgress) {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise(((resolve, reject) => {
             const img = new Image();
             img.addEventListener('load', (event) => {
                 resolve(img);
+            });
+            img.addEventListener('progress', (event) => {
+                if (onProgress) {
+                    onProgress(event);
+                }
             });
             img.addEventListener('error', (event) => {
                 reject(event);
@@ -6062,7 +6067,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.6';
-    const _time = '1594417434786';
+    const _time = '1594832180280';
     /**
      * The date that this version of the app was built.
      */
@@ -18212,6 +18217,35 @@ class PropertySpectator {
     }
 }
 
+class Progress {
+    constructor() {
+        this.loaded = 0;
+        this.total = 1;
+    }
+    set(loaded, total) {
+        this.loaded = loaded;
+        this.total = total;
+    }
+    complete() {
+        this.loaded = this.total;
+    }
+    reset() {
+        this.loaded = 0;
+    }
+    /**
+     * Return the progress as a percentage value in the range of 0-1.
+     */
+    asPercentage() {
+        if (this.total > 0) {
+            return this.loaded / this.total;
+        }
+        else {
+            // Assume that if the progress has no total value that it is 100% complete.
+            return 1;
+        }
+    }
+}
+
 /**
  * A Resource Manager is a generic class that manages any type of Resouce that it is created for.
  * Resource Managers load, track, retrieve, and dipose of any Resources assigned to it.
@@ -18219,6 +18253,7 @@ class PropertySpectator {
 class ResourceManager {
     constructor(resourceActivator) {
         this._resources = new Map();
+        this._progress = new Progress();
         this._activator = resourceActivator;
     }
     add(name, config) {
@@ -18258,11 +18293,7 @@ class ResourceManager {
         return __awaiter(this, void 0, void 0, function* () {
             if (this._resources.size > 0) {
                 const resources = Array.from(this._resources.values());
-                for (let resource of resources) {
-                    if (!resource.loaded) {
-                        yield resource.load();
-                    }
-                }
+                yield Promise.all(resources.map(r => r.load()));
             }
         });
     }
@@ -18281,6 +18312,23 @@ class ResourceManager {
         }
         else {
             return true;
+        }
+    }
+    /**
+     * Returns the combined loading progress (in range of 0-1) of all resources that are currently in this Resource Manager.
+     */
+    getLoadProgress() {
+        this._progress.set(0, 0);
+        if (this._resources.size > 0) {
+            for (const [resourceName, resource] of this._resources) {
+                this._progress.loaded += resource.loadProgress.loaded;
+                this._progress.total += resource.loadProgress.total;
+            }
+            return this._progress;
+        }
+        else {
+            this._progress.complete();
+            return this._progress;
         }
     }
     /**
@@ -18311,6 +18359,7 @@ class Resource {
         this._name = undefined;
         this._loaded = false;
         this._object = null;
+        this._loadProgress = new Progress();
         this._name = name;
     }
     get name() {
@@ -18318,6 +18367,9 @@ class Resource {
     }
     get loaded() {
         return this._loaded;
+    }
+    get loadProgress() {
+        return this._loadProgress;
     }
     get object() {
         return this._object;
@@ -18327,12 +18379,14 @@ class Resource {
             try {
                 if (!this._loaded) {
                     this._object = yield this._loadObject();
+                    this._loadProgress.complete();
                     this._loaded = true;
                 }
                 return this;
             }
             catch (error) {
                 this._loaded = false;
+                this._loadProgress.reset();
                 console.error(`Could not load resource ${this.name}.`);
                 console.error(error);
             }
@@ -18343,6 +18397,7 @@ class Resource {
             this._unloadObject();
         }
         this._object = null;
+        this._loadProgress.reset();
     }
     dispose() {
         this.unload();
@@ -18665,7 +18720,8 @@ class GLTFResource extends Resource {
             gltfLoader.load(this._gltfUrl, (gltf) => {
                 const prefab = new GLTFPrefab(gltf.scene, gltf.animations);
                 resolve(prefab);
-            }, () => {
+            }, (progressEvent) => {
+                this._loadProgress.set(progressEvent.loaded, progressEvent.total);
             }, (errorEvent) => {
                 console.error(`[GLTFResource] ${this.name} Error: ${errorEvent}`);
                 reject(errorEvent);
@@ -18696,6 +18752,7 @@ class TextureResource extends Resource {
                 texture.needsUpdate = true;
                 resolve(texture);
             }, (progressEvent) => {
+                this._loadProgress.set(progressEvent.loaded, progressEvent.total);
             }, (errorEvent) => {
                 reject(errorEvent);
             });
@@ -18712,7 +18769,10 @@ class ImageResource extends Resource {
         this._url = config.url;
     }
     _loadObject() {
-        return loadImage(this._url);
+        const onProgress = (event) => {
+            this._loadProgress.set(event.loaded, event.total);
+        };
+        return loadImage(this._url, onProgress);
     }
     _unloadObject() {
     }
@@ -18727,6 +18787,7 @@ var APEResources;
     APEResources.gltf = new ResourceManager(GLTFResource);
     APEResources.textures = new ResourceManager(TextureResource);
     APEResources.images = new ResourceManager(ImageResource);
+    var _progress = new Progress();
     /**
      * Preload all resource managers.
      */
@@ -18741,6 +18802,17 @@ var APEResources;
         });
     }
     APEResources.preloadResources = preloadResources;
+    function getLoadProgress() {
+        _progress.set(0, 0);
+        const managers = [APEResources.audio, APEResources.gltf, APEResources.textures, APEResources.images];
+        for (const manager of managers) {
+            const managerProgress = manager.getLoadProgress();
+            _progress.loaded += managerProgress.loaded;
+            _progress.total += managerProgress.total;
+        }
+        return _progress;
+    }
+    APEResources.getLoadProgress = getLoadProgress;
     /**
      * Dispose of all resource managers.
      */

@@ -3,6 +3,7 @@ import { AudioResource } from './AudioResource';
 import { GLTFResource } from './GLTFResource';
 import { TextureResource } from './TextureResource';
 import { ImageResource } from './ImageResource';
+import { Progress } from './Progress';
 
 /**
  * Contains all the core APEngine Resource Managers and related objects.
@@ -14,6 +15,8 @@ export namespace APEResources {
     export const textures = new ResourceManager(TextureResource);
     export const images = new ResourceManager(ImageResource);
 
+    var _progress = new Progress();
+
     /**
      * Preload all resource managers.
      */
@@ -24,6 +27,20 @@ export namespace APEResources {
             textures.preload(),
             images.preload()
         ]);
+    }
+
+    export function getLoadProgress(): Readonly<Progress> {
+        _progress.set(0, 0);
+
+        const managers = [audio, gltf, textures, images];
+
+        for (const manager of managers) {
+            const managerProgress = manager.getLoadProgress();
+            _progress.loaded += managerProgress.loaded;
+            _progress.total += managerProgress.total;
+        }
+
+        return _progress;
     }
 
     /**

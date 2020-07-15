@@ -3,6 +3,7 @@ import { AudioResource } from './AudioResource';
 import { GLTFResource } from './GLTFResource';
 import { TextureResource } from './TextureResource';
 import { ImageResource } from './ImageResource';
+import { Progress } from './Progress';
 /**
  * Contains all the core APEngine Resource Managers and related objects.
  */
@@ -15,6 +16,7 @@ export declare namespace APEResources {
      * Preload all resource managers.
      */
     function preloadResources(): Promise<void>;
+    function getLoadProgress(): Readonly<Progress>;
     /**
      * Dispose of all resource managers.
      */

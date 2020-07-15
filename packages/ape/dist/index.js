@@ -6067,7 +6067,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.6';
-    const _time = '1594832180280';
+    const _time = '1594834954855';
     /**
      * The date that this version of the app was built.
      */
@@ -18321,8 +18321,8 @@ class ResourceManager {
         this._progress.set(0, 0);
         if (this._resources.size > 0) {
             for (const [resourceName, resource] of this._resources) {
-                this._progress.loaded += resource.loadProgress.loaded;
-                this._progress.total += resource.loadProgress.total;
+                this._progress.loaded += resource.progress.loaded;
+                this._progress.total += resource.progress.total;
             }
             return this._progress;
         }
@@ -18359,7 +18359,7 @@ class Resource {
         this._name = undefined;
         this._loaded = false;
         this._object = null;
-        this._loadProgress = new Progress();
+        this._progress = new Progress();
         this._name = name;
     }
     get name() {
@@ -18368,8 +18368,8 @@ class Resource {
     get loaded() {
         return this._loaded;
     }
-    get loadProgress() {
-        return this._loadProgress;
+    get progress() {
+        return this._progress;
     }
     get object() {
         return this._object;
@@ -18379,14 +18379,14 @@ class Resource {
             try {
                 if (!this._loaded) {
                     this._object = yield this._loadObject();
-                    this._loadProgress.complete();
+                    this._progress.complete();
                     this._loaded = true;
                 }
                 return this;
             }
             catch (error) {
                 this._loaded = false;
-                this._loadProgress.reset();
+                this._progress.reset();
                 console.error(`Could not load resource ${this.name}.`);
                 console.error(error);
             }
@@ -18397,7 +18397,7 @@ class Resource {
             this._unloadObject();
         }
         this._object = null;
-        this._loadProgress.reset();
+        this._progress.reset();
     }
     dispose() {
         this.unload();
@@ -18721,7 +18721,7 @@ class GLTFResource extends Resource {
                 const prefab = new GLTFPrefab(gltf.scene, gltf.animations);
                 resolve(prefab);
             }, (progressEvent) => {
-                this._loadProgress.set(progressEvent.loaded, progressEvent.total);
+                this._progress.set(progressEvent.loaded, progressEvent.total);
             }, (errorEvent) => {
                 console.error(`[GLTFResource] ${this.name} Error: ${errorEvent}`);
                 reject(errorEvent);
@@ -18752,7 +18752,7 @@ class TextureResource extends Resource {
                 texture.needsUpdate = true;
                 resolve(texture);
             }, (progressEvent) => {
-                this._loadProgress.set(progressEvent.loaded, progressEvent.total);
+                this._progress.set(progressEvent.loaded, progressEvent.total);
             }, (errorEvent) => {
                 reject(errorEvent);
             });
@@ -18770,7 +18770,7 @@ class ImageResource extends Resource {
     }
     _loadObject() {
         const onProgress = (event) => {
-            this._loadProgress.set(event.loaded, event.total);
+            this._progress.set(event.loaded, event.total);
         };
         return loadImage(this._url, onProgress);
     }

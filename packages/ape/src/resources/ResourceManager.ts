@@ -83,8 +83,8 @@ export class ResourceManager<T extends Resource<any, IResourceConfig>> implement
 
         if (this._resources.size > 0) {
             for (const [resourceName, resource] of this._resources) {
-                this._progress.loaded += resource.loadProgress.loaded;
-                this._progress.total += resource.loadProgress.total;
+                this._progress.loaded += resource.progress.loaded;
+                this._progress.total += resource.progress.total;
             }
             
             return this._progress;

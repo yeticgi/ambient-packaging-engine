@@ -14,7 +14,7 @@ export abstract class Resource<O, K extends IResourceConfig> implements IDisposa
     private _loaded: boolean = false;
     private _object: O = null;
 
-    protected _loadProgress = new Progress();
+    protected _progress = new Progress();
 
     get name(): string {
         return this._name;
@@ -24,8 +24,8 @@ export abstract class Resource<O, K extends IResourceConfig> implements IDisposa
         return this._loaded;
     }
 
-    get loadProgress(): Readonly<Progress> {
-        return this._loadProgress;
+    get progress(): Readonly<Progress> {
+        return this._progress;
     }
 
     get object(): O {
@@ -40,13 +40,13 @@ export abstract class Resource<O, K extends IResourceConfig> implements IDisposa
         try {
             if (!this._loaded) {
                 this._object = await this._loadObject();
-                this._loadProgress.complete();
+                this._progress.complete();
                 this._loaded = true;
             }
             return this;
         } catch(error) {
             this._loaded = false;
-            this._loadProgress.reset();
+            this._progress.reset();
             console.error(`Could not load resource ${this.name}.`);
             console.error(error);
         }
@@ -57,7 +57,7 @@ export abstract class Resource<O, K extends IResourceConfig> implements IDisposa
             this._unloadObject();
         }
         this._object = null;
-        this._loadProgress.reset();
+        this._progress.reset();
     }
 
     dispose(): void {

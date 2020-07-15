@@ -50,23 +50,15 @@ export class ResourceManager<T extends Resource<any, IResourceConfig>> implement
             throw new Error(`Could not get resource: ${name}`);
         }
     }
-
-    /**
-     * Returns the loading progress of specified resource.
-     */
-    getResourceProgress(name: string): Readonly<Progress> {
-        if (this._resources.has(name)) {
-            const resource = this._resources.get(name);
-            return resource.progress;
-        } else {
-            return null;
-        }
+    
+    lookup(name: string): T {
+        return this._resources.get(name);
     }
 
     /**
      * Returns the combined loading progress of all resources that are currently in this Resource Manager.
      */
-    getManagerProgress(): Readonly<Progress> {
+    getLoadProgress(): Readonly<Progress> {
         this._progress.set(0, 0);
 
         if (this._resources.size > 0) {

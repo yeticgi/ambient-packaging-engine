@@ -17,14 +17,11 @@ export declare class ResourceManager<T extends Resource<any, IResourceConfig>> i
     unload(name: string): void;
     has(name: string): boolean;
     get(name: string): Promise<T>;
-    /**
-     * Returns the loading progress of specified resource.
-     */
-    getResourceProgress(name: string): Readonly<Progress>;
+    lookup(name: string): T;
     /**
      * Returns the combined loading progress of all resources that are currently in this Resource Manager.
      */
-    getManagerProgress(): Readonly<Progress>;
+    getLoadProgress(): Readonly<Progress>;
     preload(): Promise<void>;
     /**
      * Returns wether all Resources that are currently in this Resource Manager are loaded or not.

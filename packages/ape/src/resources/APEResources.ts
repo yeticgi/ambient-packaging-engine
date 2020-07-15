@@ -35,7 +35,7 @@ export namespace APEResources {
         const managers = [audio, gltf, textures, images];
 
         for (const manager of managers) {
-            const managerProgress = manager.getManagerProgress();
+            const managerProgress = manager.getLoadProgress();
             _progress.loaded += managerProgress.loaded;
             _progress.total += managerProgress.total;
         }

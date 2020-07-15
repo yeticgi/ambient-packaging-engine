@@ -6067,7 +6067,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.6';
-    const _time = '1594835744870';
+    const _time = '1594842865554';
     /**
      * The date that this version of the app was built.
      */
@@ -18289,22 +18289,13 @@ class ResourceManager {
             }
         });
     }
-    /**
-     * Returns the loading progress of specified resource.
-     */
-    getResourceProgress(name) {
-        if (this._resources.has(name)) {
-            const resource = this._resources.get(name);
-            return resource.progress;
-        }
-        else {
-            return null;
-        }
+    lookup(name) {
+        return this._resources.get(name);
     }
     /**
      * Returns the combined loading progress of all resources that are currently in this Resource Manager.
      */
-    getManagerProgress() {
+    getLoadProgress() {
         this._progress.set(0, 0);
         if (this._resources.size > 0) {
             for (const [resourceName, resource] of this._resources) {
@@ -18818,7 +18809,7 @@ var APEResources;
         _progress.set(0, 0);
         const managers = [APEResources.audio, APEResources.gltf, APEResources.textures, APEResources.images];
         for (const manager of managers) {
-            const managerProgress = manager.getManagerProgress();
+            const managerProgress = manager.getLoadProgress();
             _progress.loaded += managerProgress.loaded;
             _progress.total += managerProgress.total;
         }

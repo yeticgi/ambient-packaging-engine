@@ -29,13 +29,13 @@ export namespace APEResources {
         ]);
     }
 
-    export function getLoadProgress(): Readonly<Progress> {
+    export function getProgress(): Readonly<Progress> {
         _progress.set(0, 0);
 
         const managers = [audio, gltf, textures, images];
 
         for (const manager of managers) {
-            const managerProgress = manager.getLoadProgress();
+            const managerProgress = manager.getManagerProgress();
             _progress.loaded += managerProgress.loaded;
             _progress.total += managerProgress.total;
         }

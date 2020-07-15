@@ -6067,7 +6067,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.6';
-    const _time = '1594834954855';
+    const _time = '1594835744870';
     /**
      * The date that this version of the app was built.
      */
@@ -18289,6 +18289,35 @@ class ResourceManager {
             }
         });
     }
+    /**
+     * Returns the loading progress of specified resource.
+     */
+    getResourceProgress(name) {
+        if (this._resources.has(name)) {
+            const resource = this._resources.get(name);
+            return resource.progress;
+        }
+        else {
+            return null;
+        }
+    }
+    /**
+     * Returns the combined loading progress of all resources that are currently in this Resource Manager.
+     */
+    getManagerProgress() {
+        this._progress.set(0, 0);
+        if (this._resources.size > 0) {
+            for (const [resourceName, resource] of this._resources) {
+                this._progress.loaded += resource.progress.loaded;
+                this._progress.total += resource.progress.total;
+            }
+            return this._progress;
+        }
+        else {
+            this._progress.complete();
+            return this._progress;
+        }
+    }
     preload() {
         return __awaiter(this, void 0, void 0, function* () {
             if (this._resources.size > 0) {
@@ -18312,23 +18341,6 @@ class ResourceManager {
         }
         else {
             return true;
-        }
-    }
-    /**
-     * Returns the combined loading progress (in range of 0-1) of all resources that are currently in this Resource Manager.
-     */
-    getLoadProgress() {
-        this._progress.set(0, 0);
-        if (this._resources.size > 0) {
-            for (const [resourceName, resource] of this._resources) {
-                this._progress.loaded += resource.progress.loaded;
-                this._progress.total += resource.progress.total;
-            }
-            return this._progress;
-        }
-        else {
-            this._progress.complete();
-            return this._progress;
         }
     }
     /**
@@ -18802,17 +18814,17 @@ var APEResources;
         });
     }
     APEResources.preloadResources = preloadResources;
-    function getLoadProgress() {
+    function getProgress() {
         _progress.set(0, 0);
         const managers = [APEResources.audio, APEResources.gltf, APEResources.textures, APEResources.images];
         for (const manager of managers) {
-            const managerProgress = manager.getLoadProgress();
+            const managerProgress = manager.getManagerProgress();
             _progress.loaded += managerProgress.loaded;
             _progress.total += managerProgress.total;
         }
         return _progress;
     }
-    APEResources.getLoadProgress = getLoadProgress;
+    APEResources.getProgress = getProgress;
     /**
      * Dispose of all resource managers.
      */

@@ -16,7 +16,7 @@ export declare namespace APEResources {
      * Preload all resource managers.
      */
     function preloadResources(): Promise<void>;
-    function getLoadProgress(): Readonly<Progress>;
+    function getProgress(): Readonly<Progress>;
     /**
      * Dispose of all resource managers.
      */

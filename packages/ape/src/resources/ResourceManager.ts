@@ -51,6 +51,37 @@ export class ResourceManager<T extends Resource<any, IResourceConfig>> implement
         }
     }
 
+    /**
+     * Returns the loading progress of specified resource.
+     */
+    getResourceProgress(name: string): Readonly<Progress> {
+        if (this._resources.has(name)) {
+            const resource = this._resources.get(name);
+            return resource.progress;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns the combined loading progress of all resources that are currently in this Resource Manager.
+     */
+    getManagerProgress(): Readonly<Progress> {
+        this._progress.set(0, 0);
+
+        if (this._resources.size > 0) {
+            for (const [resourceName, resource] of this._resources) {
+                this._progress.loaded += resource.progress.loaded;
+                this._progress.total += resource.progress.total;
+            }
+            
+            return this._progress;
+        } else {
+            this._progress.complete();
+            return this._progress;
+        }
+    }
+
     async preload(): Promise<void> {
         if (this._resources.size > 0) {
             const resources: Resource<any, any>[] = Array.from(this._resources.values());
@@ -72,25 +103,6 @@ export class ResourceManager<T extends Resource<any, IResourceConfig>> implement
             return true;
         } else {
             return true;
-        }
-    }
-
-    /**
-     * Returns the combined loading progress (in range of 0-1) of all resources that are currently in this Resource Manager.
-     */
-    getLoadProgress(): Readonly<Progress> {
-        this._progress.set(0, 0);
-
-        if (this._resources.size > 0) {
-            for (const [resourceName, resource] of this._resources) {
-                this._progress.loaded += resource.progress.loaded;
-                this._progress.total += resource.progress.total;
-            }
-            
-            return this._progress;
-        } else {
-            this._progress.complete();
-            return this._progress;
         }
     }
 

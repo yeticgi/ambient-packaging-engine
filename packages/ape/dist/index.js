@@ -6067,7 +6067,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.6';
-    const _time = '1594842865554';
+    const _time = '1595253035950';
     /**
      * The date that this version of the app was built.
      */
@@ -18036,10 +18036,18 @@ function isEqual(value, other) {
 var isEqual_1 = isEqual;
 
 class State {
-    constructor(id) {
+    constructor(id, stateMachine) {
         this._id = id;
+        this._stateMachine = stateMachine;
     }
+    /**
+     * The id of the state.
+     */
     get id() { return this._id; }
+    /**
+     * The state machine that the state belongs to.
+     */
+    get stateMachine() { return this._stateMachine; }
 }
 class StateMachine {
     constructor(name) {
@@ -18057,8 +18065,21 @@ class StateMachine {
         this.onStateExit = new ArgEvent();
         this._name = name;
     }
+    /**
+     * The name of the state machine.
+     */
     get name() { return this._name; }
+    /**
+     * The current state that the state machine is in.
+     */
     get currentState() { return this._curState; }
+    /**
+     * The previous transition used to get to the current state.
+     */
+    get previousTransition() { return this._prevTransition; }
+    /**
+     * Startup the state machine in the given state.
+     */
     start(startingStateId) {
         if (this._active) {
             return;
@@ -18067,12 +18088,18 @@ class StateMachine {
         this._changeState(startingStateId);
         this.update();
     }
+    /**
+     * Pause updating the state machine.
+     */
     pause() {
         if (!this._active) {
             return;
         }
         this._active = false;
     }
+    /**
+     * Resume updating the state machine.
+     */
     resume() {
         if (this._active) {
             return;
@@ -18080,12 +18107,18 @@ class StateMachine {
         this._active = true;
         this.update();
     }
+    /**
+     * Add the given state to the state machine.
+     */
     addState(state) {
         if (this._active) {
             throw new Error(`Cannot add states after the state machine has been started.`);
         }
         this._states.set(state.id, state);
     }
+    /**
+     * Add the given transition to the state machine.
+     */
     addStateTransition(fromStateId, command, nextStateId) {
         if (this._active) {
             throw new Error(`Cannot add state transitions after the state machine has been started.`);
@@ -18099,9 +18132,15 @@ class StateMachine {
             this._transitions.push(transition);
         }
     }
+    /**
+     * Return the state that is assigned the given state id.
+     */
     getState(stateId) {
         return this._states.get(stateId);
     }
+    /**
+     * Update the state machine. Should be called once per frame.
+     */
     update() {
         if (!this._active) {
             return;
@@ -18114,6 +18153,23 @@ class StateMachine {
     forceChangeState(stateId) {
         this._changeState(stateId);
     }
+    /**
+     * Dispose of the state machine.
+     */
+    dispose() {
+        for (const [id, state] of this._states) {
+            state.dispose();
+        }
+        this._active = false;
+        this._curState = null;
+        this._changeStateId = null;
+        this._lastStateUpdate = null;
+        this._transitions = [];
+        this._states = new Map();
+        this._prevTransition = null;
+        this.onStateEnter.removeAllListeners();
+        this.onStateExit.removeAllListeners();
+    }
     _changeState(stateId) {
         this._changeStateId = stateId;
         // Set the last update frame to an invalid number so that the update state function is forced to run.
@@ -18121,7 +18177,7 @@ class StateMachine {
         // Run the update state function immediately to respond to change the state in the same frame.
         this._updateState();
     }
-    _getNextStateId(command) {
+    _getTransition(command) {
         if (!this._transitions) {
             return null;
         }
@@ -18129,7 +18185,7 @@ class StateMachine {
         if (!transition) {
             throw new Error(`[StateMachine::${this._name}] No transition found for State '${this._curState.id}' with command '${command}'`);
         }
-        return transition.nextStateId;
+        return transition;
     }
     _updateState() {
         if (this._lastStateUpdate === APEngine.time.frameCount) {
@@ -18163,11 +18219,12 @@ class StateMachine {
             }
             const command = this._curState.onStateUpdate();
             if (command) {
+                const transition = this._getTransition(command);
+                this._prevTransition = transition;
                 if (this.debugLevel >= 2) {
-                    console.log(`[StateMachine::${this._name}] ${this._curState.id} Command: ${command}, NextStateId: ${this._getNextStateId(command)}. Frame: ${APEngine.time.frameCount}`);
+                    console.log(`[StateMachine::${this._name}] ${this._curState.id} Command: ${command}, NextStateId: ${transition.nextStateId}. Frame: ${APEngine.time.frameCount}`);
                 }
-                const nextStateId = this._getNextStateId(command);
-                this._changeState(nextStateId);
+                this._changeState(transition.nextStateId);
             }
         }
     }

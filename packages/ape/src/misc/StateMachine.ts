@@ -1,19 +1,31 @@
 import { ArgEvent } from "./Events";
 import { APEngine } from "../APEngine";
 import isEqual from "lodash/isEqual";
+import { IDisposable } from "./IDisposable";
 
 export abstract class State<Id, Command> {
     private _id: Id;
+    private _stateMachine: StateMachine<Id, Command>;
 
+    /**
+     * The id of the state.
+     */
     get id(): Id { return this._id }
 
-    constructor(id: Id) {
+    /**
+     * The state machine that the state belongs to.
+     */
+    get stateMachine(): StateMachine<Id, Command> { return this._stateMachine }
+
+    constructor(id: Id, stateMachine: StateMachine<Id, Command>) {
         this._id = id;
+        this._stateMachine = stateMachine;
     }
 
     abstract onStateEnter(): void;
     abstract onStateUpdate(): Command;
     abstract onStateExit(): void;
+    abstract dispose(): void;
 }
 
 interface ITransition<Id, Command> {
@@ -22,7 +34,7 @@ interface ITransition<Id, Command> {
     nextStateId: Id
 }
 
-export class StateMachine<Id, Command> {
+export class StateMachine<Id, Command> implements IDisposable {
     /**
      * Debug level for this state machine.  
      * 0 = Disabled  
@@ -39,9 +51,22 @@ export class StateMachine<Id, Command> {
     private _changeStateId: Id;
     private _lastStateUpdate: number;
     private _active: boolean;
+    private _prevTransition: ITransition<Id, Command>;
 
+    /**
+     * The name of the state machine.
+     */
     get name(): string { return this._name; } 
+
+    /**
+     * The current state that the state machine is in.
+     */
     get currentState(): State<Id, Command> { return this._curState; }
+
+    /**
+     * The previous transition used to get to the current state.
+     */
+    get previousTransition(): ITransition<Id, Command> { return this._prevTransition; }
 
     onStateEnter: ArgEvent<Id> = new ArgEvent();
     onStateExit: ArgEvent<Id> = new ArgEvent();
@@ -50,6 +75,9 @@ export class StateMachine<Id, Command> {
         this._name = name;
     }
 
+    /**
+     * Startup the state machine in the given state.
+     */
     start(startingStateId: Id): void {
         if (this._active) {
             return;
@@ -61,6 +89,9 @@ export class StateMachine<Id, Command> {
         this.update();
     }
 
+    /**
+     * Pause updating the state machine.
+     */
     pause(): void {
         if (!this._active) {
             return;
@@ -69,6 +100,9 @@ export class StateMachine<Id, Command> {
         this._active = false;
     }
 
+    /**
+     * Resume updating the state machine.
+     */
     resume(): void {
         if (this._active) {
             return;
@@ -78,6 +112,9 @@ export class StateMachine<Id, Command> {
         this.update();
     }
 
+    /**
+     * Add the given state to the state machine.
+     */
     addState(state: State<Id, Command>): void {
         if (this._active) {
             throw new Error(`Cannot add states after the state machine has been started.`);
@@ -86,6 +123,9 @@ export class StateMachine<Id, Command> {
         this._states.set(state.id, state);
     }
 
+    /**
+     * Add the given transition to the state machine.
+     */
     addStateTransition(fromStateId: Id, command: Command, nextStateId: Id): void {
         if (this._active) {
             throw new Error(`Cannot add state transitions after the state machine has been started.`);
@@ -103,10 +143,16 @@ export class StateMachine<Id, Command> {
         }
     }
 
+    /**
+     * Return the state that is assigned the given state id.
+     */
     getState(stateId: Id) {
         return this._states.get(stateId);
     }
 
+    /**
+     * Update the state machine. Should be called once per frame.
+     */
     update(): void {
         if (!this._active) {
             return;
@@ -122,6 +168,26 @@ export class StateMachine<Id, Command> {
         this._changeState(stateId);
     }
 
+    /**
+     * Dispose of the state machine.
+     */
+    dispose(): void {
+        for (const [id, state] of this._states) {
+            state.dispose();
+        }
+
+        this._active = false;
+        this._curState = null;
+        this._changeStateId = null;
+        this._lastStateUpdate = null;
+        this._transitions = [];
+        this._states = new Map();
+        this._prevTransition = null;
+
+        this.onStateEnter.removeAllListeners();
+        this.onStateExit.removeAllListeners();
+    }
+
     private _changeState(stateId: Id): void {
         this._changeStateId = stateId;
         
@@ -132,7 +198,7 @@ export class StateMachine<Id, Command> {
         this._updateState();
     }
 
-    private _getNextStateId(command: Command): Id {
+    private _getTransition(command: Command): ITransition<Id, Command> {
         if (!this._transitions) {
             return null;
         }
@@ -143,7 +209,7 @@ export class StateMachine<Id, Command> {
             throw new Error(`[StateMachine::${this._name}] No transition found for State '${this._curState.id}' with command '${command}'`);
         }
 
-        return transition.nextStateId;
+        return transition;
     }
 
     private _updateState(): void {
@@ -186,12 +252,14 @@ export class StateMachine<Id, Command> {
             const command = this._curState.onStateUpdate();
 
             if (command) {
+                const transition = this._getTransition(command);
+                this._prevTransition = transition;
+
                 if (this.debugLevel >= 2) {
-                    console.log(`[StateMachine::${this._name}] ${this._curState.id} Command: ${command}, NextStateId: ${this._getNextStateId(command)}. Frame: ${APEngine.time.frameCount}`);
+                    console.log(`[StateMachine::${this._name}] ${this._curState.id} Command: ${command}, NextStateId: ${transition.nextStateId}. Frame: ${APEngine.time.frameCount}`);
                 }
 
-                const nextStateId = this._getNextStateId(command);
-                this._changeState(nextStateId);
+                this._changeState(transition.nextStateId);
             }
         }
     }

@@ -109,6 +109,37 @@ export function pointInPolygon2D(point: Vector2, polyPoints: Vector2[]): boolean
     return inside;
 }
 
+export function calculateRowOffsets(rowLength: number, cellWidth: number, alignment: 'start' | 'center' | 'end'): number[] {
+    if (rowLength <= 0) {
+        return [];
+    }
+
+    const totalWidth: number = (rowLength - 1) * cellWidth;
+
+    // Our start x and offset will be different based on which how we want to align the children.
+    let startX: number;
+    let offset: number;
+    if (alignment == 'start') {
+        startX = 0;
+        offset = -cellWidth;
+    } else if (alignment == 'center') {
+        startX = -(totalWidth * 0.5);
+        offset = cellWidth;
+    } else {
+        startX = 0;
+        offset = cellWidth;
+    }
+
+    const rowOffsets: number[] = [];
+    for (let i = 0; i < rowLength; i++) {
+        rowOffsets.push(
+            startX + (offset * i)
+        );
+    }
+
+    return rowOffsets;
+}
+
 export function normalize(value: number, min: number, max: number): number {
     return (value - min) / (max - min);
 }

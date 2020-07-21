@@ -5309,6 +5309,32 @@ function pointInPolygon2D(point, polyPoints) {
     }
     return inside;
 }
+function calculateRowOffsets(rowLength, cellWidth, alignment) {
+    if (rowLength <= 0) {
+        return [];
+    }
+    const totalWidth = (rowLength - 1) * cellWidth;
+    // Our start x and offset will be different based on which how we want to align the children.
+    let startX;
+    let offset;
+    if (alignment == 'start') {
+        startX = 0;
+        offset = -cellWidth;
+    }
+    else if (alignment == 'center') {
+        startX = -(totalWidth * 0.5);
+        offset = cellWidth;
+    }
+    else {
+        startX = 0;
+        offset = cellWidth;
+    }
+    const rowOffsets = [];
+    for (let i = 0; i < rowLength; i++) {
+        rowOffsets.push(startX + (offset * i));
+    }
+    return rowOffsets;
+}
 function normalize(value, min, max) {
     return (value - min) / (max - min);
 }
@@ -5750,6 +5776,22 @@ function findParentScene(object3d) {
     }
 }
 /**
+ * Is the object a child of the given parent object.
+ * @param parent The parent object that we want to know if the other object is a child of.
+ * @param object The object that we want to know if is a child of the parent object.
+ */
+function isObjectChildOf(object, parent) {
+    if (!parent || !object.parent) {
+        return false;
+    }
+    if (object.parent === parent) {
+        return true;
+    }
+    else {
+        return isObjectChildOf(object.parent, parent);
+    }
+}
+/**
  * Convert the Box3 object to a box2 object. Basically discards the z components of the Box3's min and max.
  * @param box3 The Box3 to convert to a Box2.
  */
@@ -6067,7 +6109,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.6';
-    const _time = '1595345833852';
+    const _time = '1595362878610';
     /**
      * The date that this version of the app was built.
      */
@@ -19118,5 +19160,5 @@ class Stopwatch {
     }
 }
 
-export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, APEngineEvents, AnimatorDecorator, ArgEvent, AudioResource, CameraDecorator, CameraOrbitDecorator, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, Flags, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PromiseArgEvent, PromiseEvent, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TapCode, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, Vector3_Back, Vector3_Down, Vector3_Forward, Vector3_Left, Vector3_One, Vector3_Right, Vector3_Up, Vector3_Zero, XRInput, XRPhysics, appendLine, calculateFrustumPlanes, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, disposeObject3ds, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getMaterials, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isEven, isObjectVisible, isOdd, loadImage, normalize, normalizeClamped, objectWorldDirection, pointInPolygon2D, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, sortAZ, sortZA, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
+export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, APEngineEvents, AnimatorDecorator, ArgEvent, AudioResource, CameraDecorator, CameraOrbitDecorator, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, Flags, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PromiseArgEvent, PromiseEvent, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TapCode, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, Vector3_Back, Vector3_Down, Vector3_Forward, Vector3_Left, Vector3_One, Vector3_Right, Vector3_Up, Vector3_Zero, XRInput, XRPhysics, appendLine, calculateFrustumPlanes, calculateRowOffsets, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, disposeObject3ds, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getMaterials, getOptionalValue, hasValue, inRange, interpolate, interpolateClamped, isEven, isObjectChildOf, isObjectVisible, isOdd, loadImage, normalize, normalizeClamped, objectWorldDirection, pointInPolygon2D, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, sortAZ, sortZA, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
 //# sourceMappingURL=index.js.map

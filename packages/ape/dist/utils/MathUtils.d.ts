@@ -21,6 +21,7 @@ export declare function pointOnCircle(center: Vector2, radius: number, angle: nu
  * Reference: https://codepen.io/prisoner849/pen/ROdXzw?editors=1010
  */
 export declare function pointInPolygon2D(point: Vector2, polyPoints: Vector2[]): boolean;
+export declare function calculateRowOffsets(rowLength: number, cellWidth: number, alignment: 'start' | 'center' | 'end'): number[];
 export declare function normalize(value: number, min: number, max: number): number;
 export declare function normalizeClamped(value: number, min: number, max: number): number;
 export declare function unnormalize(normal: number, min: number, max: number): number;

@@ -63,6 +63,23 @@ export function findParentScene(object3d: Object3D): Scene {
 }
 
 /**
+ * Is the object a child of the given parent object.
+ * @param parent The parent object that we want to know if the other object is a child of.
+ * @param object The object that we want to know if is a child of the parent object.
+ */
+export function isObjectChildOf(object: Object3D, parent: Object3D): boolean {
+    if (!parent || !object.parent) {
+        return false;
+    }
+
+    if (object.parent === parent) {
+        return true;
+    } else {
+        return isObjectChildOf(object.parent, parent);
+    }
+}
+
+/**
  * Convert the Box3 object to a box2 object. Basically discards the z components of the Box3's min and max.
  * @param box3 The Box3 to convert to a Box2.
  */

@@ -8,13 +8,20 @@ import { GLTFPrefab } from "./GLTFPrefab";
 export interface IGLTFConfig extends IResourceConfig {
     gltfUrl: string;
     binUrl?: string;
-    textureUrls?: string[];
+    textureUrls?: GLTFTextureRedirect[] | string[];
+}
+
+export interface GLTFTextureRedirect {
+    filename: string;
+    redirectUrl: string;
 }
 
 export class GLTFResource extends Resource<GLTFPrefab, IGLTFConfig> {
     private _gltfUrl: string;
     private _binUrl?: string;
-    private _textureUrls?: string[];
+    private _textureUrls?: GLTFTextureRedirect[] | string[];
+
+    private static _sentTextureUrlObsoleteWarning: boolean = false;
 
     constructor(name: string, config: IGLTFConfig) {
         super(name, config);
@@ -38,7 +45,7 @@ export class GLTFResource extends Resource<GLTFPrefab, IGLTFConfig> {
                     return url;
                 }
 
-                //Redirect gltf relative url to CDN asset location.
+                // Redirect gltf relative url to CDN asset location.
                 const filename = getFilename(url);
                 const ext = getExtension(url);
 
@@ -46,6 +53,7 @@ export class GLTFResource extends Resource<GLTFPrefab, IGLTFConfig> {
                     // Do not redirect draco specific files.
                     return url;
                 }
+
                 let redirectUrl: string = null;
                 
                 if (ext === 'gltf' || ext === 'glb') {
@@ -57,7 +65,23 @@ export class GLTFResource extends Resource<GLTFPrefab, IGLTFConfig> {
                 } else {
                     // Assume that url is for texture image.
                     if (this._textureUrls) {
-                        redirectUrl = this._textureUrls.find((textureUrl) => filename === getFilename(textureUrl));
+                        if (isStringArray(this._textureUrls)) {
+                            if (!GLTFResource._sentTextureUrlObsoleteWarning) {
+                                console.warn(`[GLTFResource] WARNING! OBSOLETE! It is highly recommended that GLTFResource textureUrls be in GLTFTextureRedirect format and not a plain string array.
+                                The string array implementation was designed for a specific CDN use case and requires that filesnames match. This filename matching does 
+                                not work if using local assets that are hashed at build time.
+                                `);
+
+                                GLTFResource._sentTextureUrlObsoleteWarning = true;
+                            }
+
+                            redirectUrl = this._textureUrls.find((textureUrl) => filename === getFilename(textureUrl));
+                        } else {
+                            const textureRedirect = this._textureUrls.find((tr) => filename === tr.filename);
+                            if (textureRedirect) {
+                                redirectUrl = textureRedirect.redirectUrl;
+                            }
+                        }
                     }
                 }
 
@@ -95,4 +119,14 @@ export class GLTFResource extends Resource<GLTFPrefab, IGLTFConfig> {
     protected _unloadObject(): void {
         this.object.dispose();
     }
+}
+
+function isStringArray(value: any): value is string[] {
+    if (value && Array.isArray(value) && value.length > 0) {
+        if (typeof value[0] === 'string') {
+            return true;
+        }
+    }
+
+    return false;
 }

@@ -24,6 +24,7 @@ export interface PlayClipOptions {
     normalizedStartTime?: number;
 }
 export declare class AnimatorDecorator extends Decorator {
+    debug: boolean;
     private _mixer;
     private _clips;
     private _actionTracker;

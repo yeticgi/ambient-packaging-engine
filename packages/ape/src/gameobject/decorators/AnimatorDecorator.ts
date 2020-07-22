@@ -37,11 +37,14 @@ export interface AnimatorEvent {
 }
 
 class ActionTracker {
-    debug: boolean = false;
-
     private _actions: AnimationAction[] = [];
+    private _animator: AnimatorDecorator;
 
     get count(): number { return this._actions.length }
+
+    constructor(animator: AnimatorDecorator) { 
+        this._animator = animator;
+    }
 
     contains(action: AnimationAction): boolean {
         return this._actions.some(a => a === action);
@@ -70,6 +73,11 @@ class ActionTracker {
         if (!this.contains(action)) {
             this._actions.push(action);
             added = true;
+
+            if (this._animator.debug) {
+                console.log(`${this._animator.gameObject.name} added action ${action.getClip().name}.`);
+            }
+
             this.print();
         }
 
@@ -85,6 +93,11 @@ class ActionTracker {
 
         if (startCount !== this._actions.length) {
             removed = true;
+
+            if (this._animator.debug) {
+                console.log(`${this._animator.gameObject.name} removed action ${action.getClip().name}.`);
+            }
+
             this.print();
         }
 
@@ -92,10 +105,11 @@ class ActionTracker {
     }
 
     print(): void {
-        if (this.debug) {
-            let message: string = `actions: ${this._actions.length}`;
+        if (this._animator.debug) {
+            let message: string = `${this._animator.gameObject.name} actions: ${this._actions.length}`;
             for (const action of this._actions) {
-                message += `\n  clipName: ${action.getClip().name}`
+                message += `\n  ${action.getClip().name}`;
+                message += `\n    effectiveWeight: ${action.getEffectiveWeight()}`;
             }
     
             console.log(message);
@@ -124,9 +138,11 @@ export interface PlayClipOptions {
 
 export class AnimatorDecorator extends Decorator {
 
+    debug: boolean = false;
+
     private _mixer: AnimationMixer;
     private _clips: Map<string, AnimationClip> = new Map();
-    private _actionTracker = new ActionTracker();
+    private _actionTracker = new ActionTracker(this);
     private _timeScale: number = 1.0;
     private _visible: boolean;
 
@@ -209,6 +225,10 @@ export class AnimatorDecorator extends Decorator {
             options = {};
         }
 
+        if (this.debug) {
+            console.log(`${this.gameObject.name} play ${clipName} with options: ${JSON.stringify(options)}`);
+        }
+
         // Get action for clip.
         const action = this._mixer.clipAction(clip).reset();
 
@@ -219,17 +239,37 @@ export class AnimatorDecorator extends Decorator {
             actionsWithWeight = actionsWithWeight.filter(a => a !== action);
         }
 
+        if (this.debug) {
+            if (actionsWithWeight && actionsWithWeight.length > 0) {
+                let message = `${this.gameObject.name} other actions with weight: ${actionsWithWeight.length}`;
+                for (const action of actionsWithWeight) {
+                    message += `\n  ${action.getClip().name}`;
+                    message += `\n    effectiveWeight: ${action.getEffectiveWeight()}`;
+                }
+
+                console.log(message);
+            } else {
+                console.log(`${this.gameObject.name} no other actions with weight.`);
+            }
+        }
+
         if (actionsWithWeight &&
             actionsWithWeight.length > 0 && 
             options.transitionDuration > 0
         ) {
             // Fade out the action that still have weight.
             for (let i = 0; i < actionsWithWeight.length; i++) {
+                if (this.debug) {
+                    console.log(`${this.gameObject.name} fade out action ${actionsWithWeight[i].getClip().name} over ${options.transitionDuration} seconds`);
+                }
                 actionsWithWeight[i].stopFading();
                 actionsWithWeight[i].fadeOut(options.transitionDuration);
             }
 
             // Fade in the new action.
+            if (this.debug) {
+                console.log(`${this.gameObject.name} fade in action ${action.getClip().name} over ${options.transitionDuration} seconds`);
+            }
             action.stopFading();
             action.fadeIn(options.transitionDuration);
         } else {
@@ -273,7 +313,11 @@ export class AnimatorDecorator extends Decorator {
     }
 
     stopAll(): void {
-        for (let i = 0; i < this._actionTracker.count; i++) {
+        if (this.debug) {
+            console.log(`${this.gameObject.name} stop all ${this._actionTracker.count} actions.`);
+        }
+
+        for (let i = this._actionTracker.count - 1; i >= 0; i--) {
             const action = this._actionTracker.getByIndex(i);
             action.stop();
             this._actionTracker.remove(action);
@@ -295,6 +339,10 @@ export class AnimatorDecorator extends Decorator {
     private _onActionLoop(e: DispatcherEvent): void {
         const loopEvent = e as ActionLoopEvent;
 
+        if (this.debug) {
+            console.log(`${this.gameObject.name} on action ${loopEvent.action.getClip().name} loop`);
+        }
+
         this.onAnimationLoop.invoke({
             clipName: loopEvent.action.getClip().name
         });
@@ -302,6 +350,10 @@ export class AnimatorDecorator extends Decorator {
 
     private _onActionFinished(e: DispatcherEvent): void {
         const finishEvent = e as ActionFinishedEvent;
+
+        if (this.debug) {
+            console.log(`${this.gameObject.name} on action ${finishEvent.action.getClip().name} finished`);
+        }
 
         this.onAnimationFinished.invoke({
             clipName: finishEvent.action.getClip().name

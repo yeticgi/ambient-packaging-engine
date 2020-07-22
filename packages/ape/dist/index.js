@@ -6109,7 +6109,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.6';
-    const _time = '1595362878610';
+    const _time = '1595437986029';
     /**
      * The date that this version of the app was built.
      */
@@ -6816,9 +6816,9 @@ var ThreeDevTools;
 })(ThreeDevTools || (ThreeDevTools = {}));
 
 class ActionTracker {
-    constructor() {
-        this.debug = false;
+    constructor(animator) {
         this._actions = [];
+        this._animator = animator;
     }
     get count() { return this._actions.length; }
     contains(action) {
@@ -6845,6 +6845,9 @@ class ActionTracker {
         if (!this.contains(action)) {
             this._actions.push(action);
             added = true;
+            if (this._animator.debug) {
+                console.log(`${this._animator.gameObject.name} added action ${action.getClip().name}.`);
+            }
             this.print();
         }
         return added;
@@ -6857,15 +6860,19 @@ class ActionTracker {
         });
         if (startCount !== this._actions.length) {
             removed = true;
+            if (this._animator.debug) {
+                console.log(`${this._animator.gameObject.name} removed action ${action.getClip().name}.`);
+            }
             this.print();
         }
         return removed;
     }
     print() {
-        if (this.debug) {
-            let message = `actions: ${this._actions.length}`;
+        if (this._animator.debug) {
+            let message = `${this._animator.gameObject.name} actions: ${this._actions.length}`;
             for (const action of this._actions) {
-                message += `\n  clipName: ${action.getClip().name}`;
+                message += `\n  ${action.getClip().name}`;
+                message += `\n    effectiveWeight: ${action.getEffectiveWeight()}`;
             }
             console.log(message);
         }
@@ -6874,8 +6881,9 @@ class ActionTracker {
 class AnimatorDecorator extends Decorator {
     constructor() {
         super(...arguments);
+        this.debug = false;
         this._clips = new Map();
-        this._actionTracker = new ActionTracker();
+        this._actionTracker = new ActionTracker(this);
         this._timeScale = 1.0;
         this.onAnimationLoop = new ArgEvent();
         this.onAnimationFinished = new ArgEvent();
@@ -6943,6 +6951,9 @@ class AnimatorDecorator extends Decorator {
         if (!options) {
             options = {};
         }
+        if (this.debug) {
+            console.log(`${this.gameObject.name} play ${clipName} with options: ${JSON.stringify(options)}`);
+        }
         // Get action for clip.
         const action = this._mixer.clipAction(clip).reset();
         // Get list of actions that still have weight.
@@ -6951,15 +6962,34 @@ class AnimatorDecorator extends Decorator {
             // Filter out the clip that we are about to start playing.
             actionsWithWeight = actionsWithWeight.filter(a => a !== action);
         }
+        if (this.debug) {
+            if (actionsWithWeight && actionsWithWeight.length > 0) {
+                let message = `${this.gameObject.name} other actions with weight: ${actionsWithWeight.length}`;
+                for (const action of actionsWithWeight) {
+                    message += `\n  ${action.getClip().name}`;
+                    message += `\n    effectiveWeight: ${action.getEffectiveWeight()}`;
+                }
+                console.log(message);
+            }
+            else {
+                console.log(`${this.gameObject.name} no other actions with weight.`);
+            }
+        }
         if (actionsWithWeight &&
             actionsWithWeight.length > 0 &&
             options.transitionDuration > 0) {
             // Fade out the action that still have weight.
             for (let i = 0; i < actionsWithWeight.length; i++) {
+                if (this.debug) {
+                    console.log(`${this.gameObject.name} fade out action ${actionsWithWeight[i].getClip().name} over ${options.transitionDuration} seconds`);
+                }
                 actionsWithWeight[i].stopFading();
                 actionsWithWeight[i].fadeOut(options.transitionDuration);
             }
             // Fade in the new action.
+            if (this.debug) {
+                console.log(`${this.gameObject.name} fade in action ${action.getClip().name} over ${options.transitionDuration} seconds`);
+            }
             action.stopFading();
             action.fadeIn(options.transitionDuration);
         }
@@ -6995,7 +7025,10 @@ class AnimatorDecorator extends Decorator {
         }
     }
     stopAll() {
-        for (let i = 0; i < this._actionTracker.count; i++) {
+        if (this.debug) {
+            console.log(`${this.gameObject.name} stop all ${this._actionTracker.count} actions.`);
+        }
+        for (let i = this._actionTracker.count - 1; i >= 0; i--) {
             const action = this._actionTracker.getByIndex(i);
             action.stop();
             this._actionTracker.remove(action);
@@ -7012,12 +7045,18 @@ class AnimatorDecorator extends Decorator {
     }
     _onActionLoop(e) {
         const loopEvent = e;
+        if (this.debug) {
+            console.log(`${this.gameObject.name} on action ${loopEvent.action.getClip().name} loop`);
+        }
         this.onAnimationLoop.invoke({
             clipName: loopEvent.action.getClip().name
         });
     }
     _onActionFinished(e) {
         const finishEvent = e;
+        if (this.debug) {
+            console.log(`${this.gameObject.name} on action ${finishEvent.action.getClip().name} finished`);
+        }
         this.onAnimationFinished.invoke({
             clipName: finishEvent.action.getClip().name
         });

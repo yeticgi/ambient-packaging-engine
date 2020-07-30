@@ -6109,7 +6109,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.2.6';
-    const _time = '1595437986029';
+    const _time = '1596138546847';
     /**
      * The date that this version of the app was built.
      */
@@ -18870,10 +18870,12 @@ let GLTFResource = /** @class */ (() => {
                     return redirectUrl;
                 });
                 const gltfLoader = new GLTFLoader(loadingManager);
-                const dracoLoader = new DRACOLoader(loadingManager);
-                dracoLoader.setDecoderPath('public/draco/');
-                dracoLoader.setDecoderConfig({ type: 'js' });
-                gltfLoader.setDRACOLoader(dracoLoader);
+                if (!GLTFResource._dracoLoader) {
+                    GLTFResource._dracoLoader = new DRACOLoader(loadingManager);
+                    GLTFResource._dracoLoader.setDecoderPath('public/draco/');
+                    GLTFResource._dracoLoader.setDecoderConfig({ type: 'js' });
+                }
+                gltfLoader.setDRACOLoader(GLTFResource._dracoLoader);
                 gltfLoader.load(this._gltfUrl, (gltf) => {
                     const prefab = new GLTFPrefab(gltf.scene, gltf.animations);
                     resolve(prefab);
@@ -18890,6 +18892,7 @@ let GLTFResource = /** @class */ (() => {
         }
     }
     GLTFResource._sentTextureUrlObsoleteWarning = false;
+    GLTFResource._dracoLoader = null;
     return GLTFResource;
 })();
 function isStringArray(value) {

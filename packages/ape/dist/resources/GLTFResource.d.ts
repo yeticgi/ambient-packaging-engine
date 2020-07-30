@@ -14,6 +14,7 @@ export declare class GLTFResource extends Resource<GLTFPrefab, IGLTFConfig> {
     private _binUrl?;
     private _textureUrls?;
     private static _sentTextureUrlObsoleteWarning;
+    private static _dracoLoader;
     constructor(name: string, config: IGLTFConfig);
     protected _loadObject(): Promise<GLTFPrefab>;
     protected _unloadObject(): void;

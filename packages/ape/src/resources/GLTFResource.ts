@@ -22,6 +22,7 @@ export class GLTFResource extends Resource<GLTFPrefab, IGLTFConfig> {
     private _textureUrls?: GLTFTextureRedirect[] | string[];
 
     private static _sentTextureUrlObsoleteWarning: boolean = false;
+    private static _dracoLoader: DRACOLoader = null;
 
     constructor(name: string, config: IGLTFConfig) {
         super(name, config);
@@ -94,10 +95,12 @@ export class GLTFResource extends Resource<GLTFPrefab, IGLTFConfig> {
 
             const gltfLoader = new GLTFLoader(loadingManager);
 
-            const dracoLoader = new DRACOLoader(loadingManager);
-            dracoLoader.setDecoderPath('public/draco/');
-            dracoLoader.setDecoderConfig({ type: 'js' });
-            gltfLoader.setDRACOLoader(dracoLoader);
+            if (!GLTFResource._dracoLoader) {
+                GLTFResource._dracoLoader = new DRACOLoader(loadingManager);
+                GLTFResource._dracoLoader.setDecoderPath('public/draco/');
+                GLTFResource._dracoLoader.setDecoderConfig({ type: 'js' });
+            }
+            gltfLoader.setDRACOLoader(GLTFResource._dracoLoader);
 
             gltfLoader.load(
                 this._gltfUrl,

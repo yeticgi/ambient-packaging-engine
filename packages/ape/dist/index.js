@@ -5492,16 +5492,13 @@ class PerformanceResolutionScalarDebugUI {
  * If the condition function returns false, it will continue to be called at a regular interval until
  * the condition function returns true.
  * @param condition A function that must return true in order for the promise to resolve.
- * @param timeout An optional timeout value. Must be greater than 0. If condition is not met before timeout (ms), then the promise is rejected. Will default to 10 seconds (10000ms) by default. If you want a different timeout, you must provide a value.
- * @param tickRate A optiona tick rate value. Must be greater than 0. How frequently the condition function should be called (in ms).
+ * @param timeout An optional timeout value. Must be greater than 0 to be used. If condition is not met before timeout (ms), then the promise is rejected.
+ * @param tickRate A optional tick rate value. Must be greater than 0. How frequently the condition function should be called (in ms).
  */
 function waitForCondition(condition, timeout, tickRate) {
     return __awaiter(this, void 0, void 0, function* () {
         if (typeof tickRate !== 'number' || tickRate <= 0) {
             tickRate = 30;
-        }
-        if (typeof timeout !== 'number' || timeout <= 0) {
-            timeout = 10000;
         }
         return new Promise((resolve, reject) => {
             let tickTimeoutId;
@@ -6108,8 +6105,8 @@ var APEngineBuildInfo;
     /**
      * Version number of the app.
      */
-    APEngineBuildInfo.version = '0.2.6';
-    const _time = '1596138546847';
+    APEngineBuildInfo.version = '0.3.0';
+    const _time = '1596745200053';
     /**
      * The date that this version of the app was built.
      */

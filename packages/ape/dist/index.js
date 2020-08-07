@@ -6106,7 +6106,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.3.0';
-    const _time = '1596830759011';
+    const _time = '1596831450192';
     /**
      * The date that this version of the app was built.
      */
@@ -18849,7 +18849,6 @@ let GLTFResource = /** @class */ (() => {
                     resolve(prefab);
                 }, (progressEvent) => {
                     this._progress = progressEvent.loaded / progressEvent.total;
-                    console.log(`gltf resource ${this.name} progress loaded ${progressEvent.loaded}, total ${progressEvent.total}, progress: ${this._progress}`);
                 }, (errorEvent) => {
                     console.error(`[GLTFResource] ${this.name} Error: ${errorEvent}`);
                     reject(errorEvent);
@@ -18893,7 +18892,6 @@ class TextureResource extends Resource {
                 resolve(texture);
             }, (progressEvent) => {
                 this._progress = progressEvent.loaded / progressEvent.total;
-                console.log(`texture resource ${this.name} progress loaded ${progressEvent.loaded}, total ${progressEvent.total}, progress: ${this._progress}`);
             }, (errorEvent) => {
                 reject(errorEvent);
             });
@@ -18912,7 +18910,6 @@ class ImageResource extends Resource {
     _loadObject() {
         const onProgress = (event) => {
             this._progress = event.loaded / event.total;
-            console.log(`image resource ${this.name} progress loaded ${event.loaded}, total ${event.total}, progress: ${this._progress}`);
         };
         return loadImage(this._url, onProgress);
     }

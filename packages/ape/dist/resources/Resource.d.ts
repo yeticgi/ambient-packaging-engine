@@ -1,5 +1,4 @@
 import { IDisposable } from "../misc/IDisposable";
-import { Progress } from "./Progress";
 export interface IResourceConfig {
 }
 /**
@@ -11,10 +10,10 @@ export declare abstract class Resource<O, K extends IResourceConfig> implements 
     private _name;
     private _loaded;
     private _object;
-    protected _progress: Progress;
+    protected _progress: number;
     get name(): string;
     get loaded(): boolean;
-    get progress(): Readonly<Progress>;
+    get progress(): number;
     get object(): O;
     constructor(name: string, config: K);
     load(): Promise<Resource<O, K>>;

@@ -1,7 +1,7 @@
 
 import { Resource, IResourceConfig } from './Resource';
 import { IDisposable } from "../misc/IDisposable";
-import { Progress } from './Progress';
+import { ResourceProgressMap } from './ResourceProgress';
 
 type ConfigType<T> = T extends Resource<any, infer P> ? P : never;
 
@@ -10,9 +10,8 @@ type ConfigType<T> = T extends Resource<any, infer P> ? P : never;
  * Resource Managers load, track, retrieve, and dipose of any Resources assigned to it.
  */
 export class ResourceManager<T extends Resource<any, IResourceConfig>> implements IDisposable {
-    private _resources: Map<string, T> = new Map();
+    private _resources = new Map<string, T>();
     private _activator: { new(name: string, config: IResourceConfig): T };
-    private _progress = new Progress();
 
     constructor(resourceActivator: { new(name: string, config: any): T }) {
         this._activator = resourceActivator;
@@ -39,6 +38,10 @@ export class ResourceManager<T extends Resource<any, IResourceConfig>> implement
         return this._resources.has(name);
     }
 
+    count(): number {
+        return this._resources.size;
+    }
+
     async get(name: string): Promise<T> {
         if (this._resources.has(name)) {
             const resource = this._resources.get(name);
@@ -58,19 +61,17 @@ export class ResourceManager<T extends Resource<any, IResourceConfig>> implement
     /**
      * Returns the combined loading progress of all resources that are currently in this Resource Manager.
      */
-    getLoadProgress(): Readonly<Progress> {
-        this._progress.set(0, 0);
-
+    getLoadProgress(): Readonly<number> {
         if (this._resources.size > 0) {
+            let pTotal = 0;
+
             for (const [resourceName, resource] of this._resources) {
-                this._progress.loaded += resource.progress.loaded;
-                this._progress.total += resource.progress.total;
+                pTotal += resource.progress;
             }
             
-            return this._progress;
+            return pTotal / this._resources.size;
         } else {
-            this._progress.complete();
-            return this._progress;
+            return 1;
         }
     }
 

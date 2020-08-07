@@ -16,7 +16,7 @@ export class ImageResource extends Resource<HTMLImageElement, IImageConfig> {
 
     protected _loadObject(): Promise<HTMLImageElement> {
         const onProgress = (event: ProgressEvent<EventTarget>) => {
-            this._progress.set(event.loaded, event.total);
+            this._progress = event.loaded / event.total;
         } 
         return loadImage(this._url, onProgress);
     }

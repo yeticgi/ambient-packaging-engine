@@ -109,7 +109,7 @@ export class GLTFResource extends Resource<GLTFPrefab, IGLTFConfig> {
                     resolve(prefab);
                 },
                 (progressEvent) => {
-                    this._progress.set(progressEvent.loaded, progressEvent.total);
+                    this._progress = progressEvent.loaded / progressEvent.total;
                 },
                 (errorEvent) => {
                     console.error(`[GLTFResource] ${this.name} Error: ${errorEvent}`);

@@ -6106,7 +6106,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.3.0';
-    const _time = '1596745200053';
+    const _time = '1596830759011';
     /**
      * The date that this version of the app was built.
      */
@@ -18352,35 +18352,6 @@ class PropertySpectator {
     }
 }
 
-class Progress {
-    constructor() {
-        this.loaded = 0;
-        this.total = 1;
-    }
-    set(loaded, total) {
-        this.loaded = loaded;
-        this.total = total;
-    }
-    complete() {
-        this.loaded = this.total;
-    }
-    reset() {
-        this.loaded = 0;
-    }
-    /**
-     * Return the progress as a percentage value in the range of 0-1.
-     */
-    asPercentage() {
-        if (this.total > 0) {
-            return this.loaded / this.total;
-        }
-        else {
-            // Assume that if the progress has no total value that it is 100% complete.
-            return 1;
-        }
-    }
-}
-
 /**
  * A Resource Manager is a generic class that manages any type of Resouce that it is created for.
  * Resource Managers load, track, retrieve, and dipose of any Resources assigned to it.
@@ -18388,7 +18359,6 @@ class Progress {
 class ResourceManager {
     constructor(resourceActivator) {
         this._resources = new Map();
-        this._progress = new Progress();
         this._activator = resourceActivator;
     }
     add(name, config) {
@@ -18409,6 +18379,9 @@ class ResourceManager {
     }
     has(name) {
         return this._resources.has(name);
+    }
+    count() {
+        return this._resources.size;
     }
     get(name) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -18431,17 +18404,15 @@ class ResourceManager {
      * Returns the combined loading progress of all resources that are currently in this Resource Manager.
      */
     getLoadProgress() {
-        this._progress.set(0, 0);
         if (this._resources.size > 0) {
+            let pTotal = 0;
             for (const [resourceName, resource] of this._resources) {
-                this._progress.loaded += resource.progress.loaded;
-                this._progress.total += resource.progress.total;
+                pTotal += resource.progress;
             }
-            return this._progress;
+            return pTotal / this._resources.size;
         }
         else {
-            this._progress.complete();
-            return this._progress;
+            return 1;
         }
     }
     preload() {
@@ -18497,7 +18468,7 @@ class Resource {
         this._name = undefined;
         this._loaded = false;
         this._object = null;
-        this._progress = new Progress();
+        this._progress = 0;
         this._name = name;
     }
     get name() {
@@ -18517,14 +18488,14 @@ class Resource {
             try {
                 if (!this._loaded) {
                     this._object = yield this._loadObject();
-                    this._progress.complete();
+                    this._progress = 1;
                     this._loaded = true;
                 }
                 return this;
             }
             catch (error) {
                 this._loaded = false;
-                this._progress.reset();
+                this._progress = 0;
                 console.error(`Could not load resource ${this.name}.`);
                 console.error(error);
             }
@@ -18535,7 +18506,7 @@ class Resource {
             this._unloadObject();
         }
         this._object = null;
-        this._progress.reset();
+        this._progress = 0;
     }
     dispose() {
         this.unload();
@@ -18877,7 +18848,8 @@ let GLTFResource = /** @class */ (() => {
                     const prefab = new GLTFPrefab(gltf.scene, gltf.animations);
                     resolve(prefab);
                 }, (progressEvent) => {
-                    this._progress.set(progressEvent.loaded, progressEvent.total);
+                    this._progress = progressEvent.loaded / progressEvent.total;
+                    console.log(`gltf resource ${this.name} progress loaded ${progressEvent.loaded}, total ${progressEvent.total}, progress: ${this._progress}`);
                 }, (errorEvent) => {
                     console.error(`[GLTFResource] ${this.name} Error: ${errorEvent}`);
                     reject(errorEvent);
@@ -18920,7 +18892,8 @@ class TextureResource extends Resource {
                 texture.needsUpdate = true;
                 resolve(texture);
             }, (progressEvent) => {
-                this._progress.set(progressEvent.loaded, progressEvent.total);
+                this._progress = progressEvent.loaded / progressEvent.total;
+                console.log(`texture resource ${this.name} progress loaded ${progressEvent.loaded}, total ${progressEvent.total}, progress: ${this._progress}`);
             }, (errorEvent) => {
                 reject(errorEvent);
             });
@@ -18938,11 +18911,54 @@ class ImageResource extends Resource {
     }
     _loadObject() {
         const onProgress = (event) => {
-            this._progress.set(event.loaded, event.total);
+            this._progress = event.loaded / event.total;
+            console.log(`image resource ${this.name} progress loaded ${event.loaded}, total ${event.total}, progress: ${this._progress}`);
         };
         return loadImage(this._url, onProgress);
     }
     _unloadObject() {
+    }
+}
+
+class ResourceProgress {
+    constructor(id, weight) {
+        this.value = 0;
+        this._id = id;
+        this._weight = weight;
+    }
+    get id() { return this._id; }
+    get weight() { return this._weight; }
+}
+class ResourceProgressMap {
+    constructor() {
+        this._progressMap = new Map();
+    }
+    addProgressObject(config) {
+        let p = this._progressMap.get(config.id);
+        if (!p) {
+            p = new ResourceProgress(config.id, config.weight);
+            this._progressMap.set(config.id, p);
+        }
+        return p;
+    }
+    removeProgressObject(id) {
+        this._progressMap.delete(id);
+    }
+    clearProgressObjects() {
+        this._progressMap = new Map();
+    }
+    calculateWeightedMean() {
+        if (this._progressMap.size === 0) {
+            return 0;
+        }
+        let pSum = 0;
+        let wSum = 0;
+        for (const [id, p] of this._progressMap) {
+            pSum += p.value * p.weight;
+            wSum += p.weight;
+        }
+        const mean = pSum / wSum;
+        return mean;
     }
 }
 
@@ -18955,7 +18971,6 @@ var APEResources;
     APEResources.gltf = new ResourceManager(GLTFResource);
     APEResources.textures = new ResourceManager(TextureResource);
     APEResources.images = new ResourceManager(ImageResource);
-    var _progress = new Progress();
     /**
      * Preload all resource managers.
      */
@@ -18971,14 +18986,16 @@ var APEResources;
     }
     APEResources.preloadResources = preloadResources;
     function getProgress() {
-        _progress.set(0, 0);
-        const managers = [APEResources.audio, APEResources.gltf, APEResources.textures, APEResources.images];
-        for (const manager of managers) {
-            const managerProgress = manager.getLoadProgress();
-            _progress.loaded += managerProgress.loaded;
-            _progress.total += managerProgress.total;
-        }
-        return _progress;
+        const progressMap = new ResourceProgressMap();
+        const audioProgress = progressMap.addProgressObject({ id: 'audio', weight: APEResources.audio.count() });
+        audioProgress.value = APEResources.audio.getLoadProgress();
+        const gltfProgress = progressMap.addProgressObject({ id: 'gltf', weight: APEResources.gltf.count() });
+        gltfProgress.value = APEResources.gltf.getLoadProgress();
+        const textureProgress = progressMap.addProgressObject({ id: 'textures', weight: APEResources.textures.count() });
+        textureProgress.value = APEResources.textures.getLoadProgress();
+        const imageProgress = progressMap.addProgressObject({ id: 'images', weight: APEResources.images.count() });
+        imageProgress.value = APEResources.images.getLoadProgress();
+        return progressMap.calculateWeightedMean();
     }
     APEResources.getProgress = getProgress;
     /**

@@ -3,7 +3,7 @@ import { AudioResource } from './AudioResource';
 import { GLTFResource } from './GLTFResource';
 import { TextureResource } from './TextureResource';
 import { ImageResource } from './ImageResource';
-import { Progress } from './Progress';
+import { ResourceProgressMap } from './ResourceProgress';
 
 /**
  * Contains all the core APEngine Resource Managers and related objects.
@@ -14,8 +14,6 @@ export namespace APEResources {
     export const gltf = new ResourceManager(GLTFResource);
     export const textures = new ResourceManager(TextureResource);
     export const images = new ResourceManager(ImageResource);
-
-    var _progress = new Progress();
 
     /**
      * Preload all resource managers.
@@ -29,18 +27,22 @@ export namespace APEResources {
         ]);
     }
 
-    export function getProgress(): Readonly<Progress> {
-        _progress.set(0, 0);
+    export function getProgress(): Readonly<number> {
+        const progressMap = new ResourceProgressMap();
 
-        const managers = [audio, gltf, textures, images];
+        const audioProgress = progressMap.addProgressObject({ id: 'audio', weight: audio.count() });
+        audioProgress.value = audio.getLoadProgress();
 
-        for (const manager of managers) {
-            const managerProgress = manager.getLoadProgress();
-            _progress.loaded += managerProgress.loaded;
-            _progress.total += managerProgress.total;
-        }
+        const gltfProgress = progressMap.addProgressObject({ id: 'gltf', weight: gltf.count() });
+        gltfProgress.value = gltf.getLoadProgress();
 
-        return _progress;
+        const textureProgress = progressMap.addProgressObject({ id: 'textures', weight: textures.count() });
+        textureProgress.value = textures.getLoadProgress();
+
+        const imageProgress = progressMap.addProgressObject({ id: 'images', weight: images.count() });
+        imageProgress.value = images.getLoadProgress();
+
+        return progressMap.calculateWeightedMean();
     }
 
     /**

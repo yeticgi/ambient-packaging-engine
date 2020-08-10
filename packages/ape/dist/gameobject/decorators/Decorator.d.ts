@@ -4,6 +4,7 @@ export interface IDecoratorOptions {
 export declare abstract class Decorator {
     static destroy(decorator: Decorator): void;
     private _configured;
+    private _willDestroy;
     private _destroyed;
     private _started;
     private _gameObject;

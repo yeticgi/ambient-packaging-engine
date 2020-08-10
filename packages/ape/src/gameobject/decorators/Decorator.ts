@@ -10,12 +10,15 @@ export abstract class Decorator {
             return;
         }
 
-        // Inform decorator that it is being destroyed.
+        if (!decorator._willDestroy) {
+            decorator.onWillDestroy();
+        }
+
         decorator.onDestroy();
-        decorator._destroyed = true;
     }
 
     private _configured: boolean = false;
+    private _willDestroy: boolean = false;
     private _destroyed: boolean = false;
     private _started: boolean = false;
     private _gameObject: GameObject = null;
@@ -87,6 +90,7 @@ export abstract class Decorator {
      * Called when the GameObject that this Decorator is attached to is marked for destruction.
      */
     onWillDestroy() {
+        this._willDestroy = true;
         // console.log(`[Decorator] ${this.constructor.name} on ${this.gameObject.name} onWillDestroy`);
     }
 
@@ -94,6 +98,7 @@ export abstract class Decorator {
      * Called once when the Decorator is being destroyed.
      */
     protected onDestroy() {
+        this._destroyed = true;
         // console.log(`[Decorator] ${this.constructor.name} on ${this.gameObject.name} onDestroy`);
     }
 }

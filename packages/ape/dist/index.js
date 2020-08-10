@@ -4574,6 +4574,7 @@ class WheelData {
 class Decorator {
     constructor() {
         this._configured = false;
+        this._willDestroy = false;
         this._destroyed = false;
         this._started = false;
         this._gameObject = null;
@@ -4582,9 +4583,10 @@ class Decorator {
         if (decorator._destroyed) {
             return;
         }
-        // Inform decorator that it is being destroyed.
+        if (!decorator._willDestroy) {
+            decorator.onWillDestroy();
+        }
         decorator.onDestroy();
-        decorator._destroyed = true;
     }
     get destroyed() {
         return this._destroyed;
@@ -4642,12 +4644,14 @@ class Decorator {
      * Called when the GameObject that this Decorator is attached to is marked for destruction.
      */
     onWillDestroy() {
+        this._willDestroy = true;
         // console.log(`[Decorator] ${this.constructor.name} on ${this.gameObject.name} onWillDestroy`);
     }
     /**
      * Called once when the Decorator is being destroyed.
      */
     onDestroy() {
+        this._destroyed = true;
         // console.log(`[Decorator] ${this.constructor.name} on ${this.gameObject.name} onDestroy`);
     }
 }
@@ -6105,8 +6109,8 @@ var APEngineBuildInfo;
     /**
      * Version number of the app.
      */
-    APEngineBuildInfo.version = '0.3.0';
-    const _time = '1596831450192';
+    APEngineBuildInfo.version = '0.3.1';
+    const _time = '1597078986720';
     /**
      * The date that this version of the app was built.
      */

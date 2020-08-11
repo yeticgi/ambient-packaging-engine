@@ -2,7 +2,7 @@ import { IDisposable } from './misc/IDisposable';
 import { ArgEvent } from './misc/Events';
 export declare class Time implements IDisposable {
     /**
-     * Scalar value for how fast time passes. 0 = paused, 1.0 = normal, 2.0 = 2x fast, 4.0 = 4x fast, etc.
+     * Scalar value for how fast time passes. 0 = paused, 0.5 = half speed, 1.0 = normal, 2.0 = 2x fast, 4.0 = 4x fast, etc.
      */
     timeScale: number;
     onUpdate: ArgEvent<Time>;
@@ -10,6 +10,8 @@ export declare class Time implements IDisposable {
     private _timeSinceStart;
     private _deltaTime;
     private _clock;
+    private _timeWaitPromises;
+    private _frameWaitPromises;
     constructor();
     /**
      * Number of frames that have passed since this game view was created.
@@ -24,5 +26,14 @@ export declare class Time implements IDisposable {
      */
     get deltaTime(): number;
     update(): void;
+    /**
+     * Return a promise that waits the given number of seconds before resolving.
+     * @param seconds Number of seconds to wait before resolving the promise.
+     */
+    waitForSeconds(seconds: number): Promise<void>;
+    /**
+     * Return a promise that resolves once the next frame has started.
+     */
+    waitForNextFrame(): Promise<void>;
     dispose(): void;
 }

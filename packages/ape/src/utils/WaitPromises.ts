@@ -46,8 +46,10 @@ export async function waitForCondition(condition: () => boolean, timeout?: numbe
 /**
  * Return a promise that waits the given number of seconds before resolving.
  * @param seconds Number of seconds to wait before resolving the promise.
+ * @deprecated Use APEngine.time.waitForSeconds instead. This allows the promise to be responsive to pause/timescale.
  */
 export async function waitForSeconds(seconds: number): Promise<void> {
+    console.warn(`DEPRECATED: Use APEngine.time.waitForSeconds instead. This allows the promise to be responsive to pause/timescale.`)
     if (seconds > 0) {
         return new Promise<void>((resolve, reject) => {
             window.setTimeout(() => {

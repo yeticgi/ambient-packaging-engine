@@ -186,13 +186,15 @@ var Shout;
 class Time {
     constructor() {
         /**
-         * Scalar value for how fast time passes. 0 = paused, 1.0 = normal, 2.0 = 2x fast, 4.0 = 4x fast, etc.
+         * Scalar value for how fast time passes. 0 = paused, 0.5 = half speed, 1.0 = normal, 2.0 = 2x fast, 4.0 = 4x fast, etc.
          */
         this.timeScale = 1.0;
         this.onUpdate = new ArgEvent();
         this._frameCount = 0;
         this._timeSinceStart = 0;
         this._deltaTime = 0;
+        this._timeWaitPromises = [];
+        this._frameWaitPromises = [];
         this._frameCount = 0;
         this._timeSinceStart = 0;
         this._deltaTime = 0;
@@ -222,7 +224,61 @@ class Time {
         const clockDelta = this._clock.getDelta();
         this._deltaTime = clockDelta * this.timeScale;
         this._timeSinceStart += this._deltaTime;
+        // Check frame wait promises and resolve any that are complete.
+        if (this._frameWaitPromises.length > 0) {
+            this._frameWaitPromises = this._frameWaitPromises.filter((fw) => {
+                if (fw.frame <= this._frameCount) {
+                    fw.resolve();
+                    return false;
+                }
+                else {
+                    return true;
+                }
+            });
+        }
+        // Check time wait promises and resolve any that are complete.
+        if (this._timeWaitPromises.length > 0) {
+            this._timeWaitPromises = this._timeWaitPromises.filter((tw) => {
+                if (tw.resolveTime <= this._timeSinceStart) {
+                    tw.resolve();
+                    return false;
+                }
+                else {
+                    return true;
+                }
+            });
+        }
         this.onUpdate.invoke(this);
+    }
+    /**
+     * Return a promise that waits the given number of seconds before resolving.
+     * @param seconds Number of seconds to wait before resolving the promise.
+     */
+    waitForSeconds(seconds) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (seconds <= 0) {
+                return;
+            }
+            return new Promise((resolve) => {
+                this._timeWaitPromises.push({
+                    resolveTime: this._timeSinceStart + seconds,
+                    resolve
+                });
+            });
+        });
+    }
+    /**
+     * Return a promise that resolves once the next frame has started.
+     */
+    waitForNextFrame() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve) => {
+                this._frameWaitPromises.push({
+                    frame: this._frameCount + 1,
+                    resolve
+                });
+            });
+        });
     }
     dispose() {
     }
@@ -5537,9 +5593,11 @@ function waitForCondition(condition, timeout, tickRate) {
 /**
  * Return a promise that waits the given number of seconds before resolving.
  * @param seconds Number of seconds to wait before resolving the promise.
+ * @deprecated Use APEngine.time.waitForSeconds instead. This allows the promise to be responsive to pause/timescale.
  */
 function waitForSeconds(seconds) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.warn(`DEPRECATED: Use APEngine.time.waitForSeconds instead. This allows the promise to be responsive to pause/timescale.`);
         if (seconds > 0) {
             return new Promise((resolve, reject) => {
                 window.setTimeout(() => {
@@ -6109,8 +6167,8 @@ var APEngineBuildInfo;
     /**
      * Version number of the app.
      */
-    APEngineBuildInfo.version = '0.3.1';
-    const _time = '1597078986720';
+    APEngineBuildInfo.version = '0.3.2';
+    const _time = '1597160322631';
     /**
      * The date that this version of the app was built.
      */

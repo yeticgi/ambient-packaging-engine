@@ -10,5 +10,6 @@ export declare function waitForCondition(condition: () => boolean, timeout?: num
 /**
  * Return a promise that waits the given number of seconds before resolving.
  * @param seconds Number of seconds to wait before resolving the promise.
+ * @deprecated Use APEngine.time.waitForSeconds instead. This allows the promise to be responsive to pause/timescale.
  */
 export declare function waitForSeconds(seconds: number): Promise<void>;

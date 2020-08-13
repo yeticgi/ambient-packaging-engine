@@ -58,3 +58,5 @@ export declare function worldToScreenPosition(object3d: Object3D, camera: Camera
  */
 export declare function objectWorldDirection(localDirection: Vector3, obj: Object3D): Vector3;
 export declare function getMaterials(mesh: Mesh): Material[];
+export declare function getWorldPosition(object3d: Object3D): Vector3;
+export declare function setWorldPosition(object3d: Object3D, target: Vector3 | Object3D): void;

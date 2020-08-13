@@ -14,7 +14,9 @@ import {
     Material,
     Camera,
     Vector3,
-    Quaternion
+    Quaternion,
+    Matrix,
+    SceneUtils
 } from 'three';
 
 /**
@@ -257,4 +259,33 @@ export function getMaterials(mesh: Mesh): Material[] {
     } else {
         return [mesh.material];
     }
+}
+
+export function getWorldPosition(object3d: Object3D): Vector3 {
+    const worldPos = new Vector3();
+    object3d.getWorldPosition(worldPos);
+    return worldPos;
+}
+
+export function setWorldPosition(object3d: Object3D, target: Vector3 | Object3D): void {
+    const scene = findParentScene(object3d);
+
+    if (!scene) {
+        console.error(`Cannot set world position of object3d ${object3d.name} because it is not attached to a scene.`);
+        return;
+    }
+
+    let matrixWorld: Matrix4;
+
+    if (target instanceof Vector3) {
+        matrixWorld = new Matrix4();
+        matrixWorld.setPosition(target);
+    } else {
+        matrixWorld = target.matrixWorld;
+    }
+
+    const prevParent = object3d.parent;
+    scene.attach(object3d);
+    object3d.position.setFromMatrixPosition(matrixWorld);
+    prevParent.attach(object3d);
 }

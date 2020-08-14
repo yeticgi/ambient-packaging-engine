@@ -9,6 +9,7 @@ export interface IResourceConfig {
 export declare abstract class Resource<O, K extends IResourceConfig> implements IDisposable {
     private _name;
     private _loaded;
+    private _loadPromise;
     private _object;
     protected _progress: number;
     get name(): string;

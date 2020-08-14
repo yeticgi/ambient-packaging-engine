@@ -11,6 +11,7 @@ export interface IResourceConfig {
 export abstract class Resource<O, K extends IResourceConfig> implements IDisposable {
     private _name: string = undefined;
     private _loaded: boolean = false;
+    private _loadPromise: Promise<Resource<O, K>> = null;
     private _object: O = null;
 
     protected _progress: number = 0;
@@ -38,11 +39,23 @@ export abstract class Resource<O, K extends IResourceConfig> implements IDisposa
     async load(): Promise<Resource<O, K>> {
         try {
             if (!this._loaded) {
-                this._object = await this._loadObject();
-                this._progress = 1;
-                this._loaded = true;
+                if (!this._loadPromise) {
+                    this._loadPromise = new Promise((resolve) => {
+                        this._loadObject().then((object) => {
+                            this._object = object;
+                            this._loaded = true;
+                            this._progress = 1;
+                            this._loadPromise = null;
+    
+                            resolve(this);
+                        });
+                    });
+                }
+
+                return this._loadPromise;
+            } else {
+                return this;
             }
-            return this;
         } catch(error) {
             this._loaded = false;
             this._progress = 0;

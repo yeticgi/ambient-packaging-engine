@@ -6192,7 +6192,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.3.2';
-    const _time = '1597349359027';
+    const _time = '1597431863089';
     /**
      * The date that this version of the app was built.
      */
@@ -18553,6 +18553,7 @@ class Resource {
     constructor(name, config) {
         this._name = undefined;
         this._loaded = false;
+        this._loadPromise = null;
         this._object = null;
         this._progress = 0;
         this._name = name;
@@ -18573,11 +18574,22 @@ class Resource {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 if (!this._loaded) {
-                    this._object = yield this._loadObject();
-                    this._progress = 1;
-                    this._loaded = true;
+                    if (!this._loadPromise) {
+                        this._loadPromise = new Promise((resolve) => {
+                            this._loadObject().then((object) => {
+                                this._object = object;
+                                this._loaded = true;
+                                this._progress = 1;
+                                this._loadPromise = null;
+                                resolve(this);
+                            });
+                        });
+                    }
+                    return this._loadPromise;
                 }
-                return this;
+                else {
+                    return this;
+                }
             }
             catch (error) {
                 this._loaded = false;
@@ -18778,9 +18790,7 @@ function findTrackables(asset, trackables) {
         return;
     }
     if ('dispose' in asset || asset instanceof Object3D) {
-        if (!trackables.has(asset.uuid)) {
-            trackables.set(asset.uuid, asset);
-        }
+        trackables.set(asset.uuid, asset);
     }
     if (asset instanceof Object3D) {
         if (asset instanceof Mesh) {

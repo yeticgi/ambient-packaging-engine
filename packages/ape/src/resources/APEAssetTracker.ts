@@ -1,4 +1,5 @@
 import { Geometry, Material, Texture, Object3D, Mesh, BufferGeometry } from "three";
+import { sortZA } from "../utils/MiscUtils";
 
 declare type Trackable = Object3D | Geometry | BufferGeometry | Material | Texture;
 
@@ -186,9 +187,7 @@ function findTrackables(asset: any, trackables: Map<string, Trackable>): void {
     }
 
     if ('dispose' in asset || asset instanceof Object3D) {
-        if (!trackables.has(asset.uuid)) {
-            trackables.set(asset.uuid, asset);
-        }
+        trackables.set(asset.uuid, asset);
     }
 
     if (asset instanceof Object3D) {

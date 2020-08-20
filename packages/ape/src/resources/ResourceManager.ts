@@ -1,7 +1,6 @@
 
 import { Resource, IResourceConfig } from './Resource';
 import { IDisposable } from "../misc/IDisposable";
-import { ResourceProgressMap } from './ResourceProgress';
 
 type ConfigType<T> = T extends Resource<any, infer P> ? P : never;
 
@@ -21,8 +20,6 @@ export class ResourceManager<T extends Resource<any, IResourceConfig>> implement
         if (!this._resources.has(name)) {
             const resource = new this._activator(name, config);
             this._resources.set(resource.name, resource);
-        } else {
-            console.warn(`Resource ${name} is already added. Ignoring this add call.`);
         }
     }
 

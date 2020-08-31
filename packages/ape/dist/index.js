@@ -6026,6 +6026,21 @@ function setWorldPosition(object3d, target) {
     object3d.position.setFromMatrixPosition(matrixWorld);
     prevParent.attach(object3d);
 }
+function rotationToFace(object3d, worldPos) {
+    const dummy = new Object3D();
+    if (object3d.parent) {
+        object3d.parent.add(dummy);
+    }
+    setWorldPosition(dummy, object3d);
+    dummy.rotation.copy(object3d.rotation);
+    dummy.scale.copy(object3d.scale);
+    dummy.lookAt(worldPos);
+    const faceRotation = dummy.quaternion.clone();
+    if (dummy.parent) {
+        dummy.parent.remove(dummy);
+    }
+    return faceRotation;
+}
 
 /**
  * A class that can be used to easily listen for some basic input events for Three JS Oojects.
@@ -6192,7 +6207,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.3.2';
-    const _time = '1597951670278';
+    const _time = '1598899129167';
     /**
      * The date that this version of the app was built.
      */
@@ -6999,6 +7014,9 @@ class AnimatorDecorator extends Decorator {
         else {
             console.error(`Animator already has a clip named ${clip.name} on GameObject ${this.gameObject.name}. All clips on an Animator must have a unique name.`);
         }
+    }
+    getClip(clipName) {
+        return this._clips.get(clipName);
     }
     onAttach(gameObject) {
         super.onAttach(gameObject);
@@ -19306,5 +19324,5 @@ class Stopwatch {
     }
 }
 
-export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, APEngineEvents, AnimatorDecorator, ArgEvent, AudioResource, CameraDecorator, CameraOrbitDecorator, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, Flags, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PromiseArgEvent, PromiseEvent, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TapCode, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, Vector3_Back, Vector3_Down, Vector3_Forward, Vector3_Left, Vector3_One, Vector3_Right, Vector3_Up, Vector3_Zero, XRInput, XRPhysics, appendLine, calculateFrustumPlanes, calculateRowOffsets, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, disposeObject3ds, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getMaterials, getOptionalValue, getWorldPosition, hasValue, inRange, interpolate, interpolateClamped, isEven, isObjectChildOf, isObjectVisible, isOdd, loadImage, normalize, normalizeClamped, objectWorldDirection, pointInPolygon2D, pointOnCircle, pointOnSphere, postJsonData, setLayer, setLayerMask, setParent, setWorldPosition, sortAZ, sortZA, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
+export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, APEngineEvents, AnimatorDecorator, ArgEvent, AudioResource, CameraDecorator, CameraOrbitDecorator, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, Flags, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PromiseArgEvent, PromiseEvent, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TapCode, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, Vector3_Back, Vector3_Down, Vector3_Forward, Vector3_Left, Vector3_One, Vector3_Right, Vector3_Up, Vector3_Zero, XRInput, XRPhysics, appendLine, calculateFrustumPlanes, calculateRowOffsets, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, disposeObject3ds, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getMaterials, getOptionalValue, getWorldPosition, hasValue, inRange, interpolate, interpolateClamped, isEven, isObjectChildOf, isObjectVisible, isOdd, loadImage, normalize, normalizeClamped, objectWorldDirection, pointInPolygon2D, pointOnCircle, pointOnSphere, postJsonData, rotationToFace, setLayer, setLayerMask, setParent, setWorldPosition, sortAZ, sortZA, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
 //# sourceMappingURL=index.js.map

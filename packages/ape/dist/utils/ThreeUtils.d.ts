@@ -1,4 +1,4 @@
-import { Object3D, Scene, Box2, Vector2, Box3, Mesh, Material, Camera, Vector3 } from 'three';
+import { Object3D, Scene, Box2, Vector2, Box3, Mesh, Material, Camera, Vector3, Quaternion } from 'three';
 /**
  * Set the parent of the object3d.
  * @param object3d the object to re-parent.
@@ -60,3 +60,4 @@ export declare function objectWorldDirection(localDirection: Vector3, obj: Objec
 export declare function getMaterials(mesh: Mesh): Material[];
 export declare function getWorldPosition(object3d: Object3D): Vector3;
 export declare function setWorldPosition(object3d: Object3D, target: Vector3 | Object3D): void;
+export declare function rotationToFace(object3d: Object3D, worldPos: Vector3): Quaternion;

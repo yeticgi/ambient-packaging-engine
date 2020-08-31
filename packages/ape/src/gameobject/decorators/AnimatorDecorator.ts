@@ -183,6 +183,10 @@ export class AnimatorDecorator extends Decorator {
         }
     }
 
+    getClip(clipName: string): AnimationClip {
+        return this._clips.get(clipName);
+    }
+
     onAttach(gameObject: GameObject): void {
         super.onAttach(gameObject);
 

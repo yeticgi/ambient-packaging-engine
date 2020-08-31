@@ -15,8 +15,7 @@ import {
     Camera,
     Vector3,
     Quaternion,
-    Matrix,
-    SceneUtils
+    Euler
 } from 'three';
 
 /**
@@ -288,4 +287,26 @@ export function setWorldPosition(object3d: Object3D, target: Vector3 | Object3D)
     scene.attach(object3d);
     object3d.position.setFromMatrixPosition(matrixWorld);
     prevParent.attach(object3d);
+}
+
+export function rotationToFace(object3d: Object3D, worldPos: Vector3): Quaternion {
+    const dummy = new Object3D();
+
+    if (object3d.parent) {
+        object3d.parent.add(dummy);
+    }
+
+    setWorldPosition(dummy, object3d);
+    dummy.rotation.copy(object3d.rotation);
+    dummy.scale.copy(object3d.scale);
+
+    dummy.lookAt(worldPos);
+
+    const faceRotation = dummy.quaternion.clone();
+
+    if (dummy.parent) {
+        dummy.parent.remove(dummy);
+    }
+
+    return faceRotation;
 }

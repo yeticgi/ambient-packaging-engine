@@ -40,6 +40,7 @@ export declare class AnimatorDecorator extends Decorator {
     set timeScale(value: number);
     configure(options: IAnimatorDecoratorOptions): void;
     addClip(clip: AnimationClip): void;
+    getClip(clipName: string): AnimationClip;
     onAttach(gameObject: GameObject): void;
     onVisible(): void;
     onInvisible(): void;

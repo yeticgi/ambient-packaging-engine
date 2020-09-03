@@ -89,7 +89,7 @@ export namespace APEngine {
         xrPhysics = new XRPhysics(webglRenderer, APEngineEvents.onXRSessionStarted, APEngineEvents.onXRSessionEnded, getXRFrame);
 
         // Create pointer event system.
-        pointerEventSystem = new PointerEventSystem();
+        pointerEventSystem = new PointerEventSystem('Default', 0);
 
         // Create device camera module.
         deviceCamera = new DeviceCamera({
@@ -133,7 +133,7 @@ export namespace APEngine {
         input.update();
 
         // Update pointer event system.
-        pointerEventSystem.update(input, CameraDecorator.PrimaryCamera);
+        PointerEventSystem.updateActiveSystems(input);
         
         // Update game objects in scenes.
         sceneManager.update();

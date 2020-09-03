@@ -6042,340 +6042,6 @@ function rotationToFace(object3d, worldPos) {
     return faceRotation;
 }
 
-/**
- * A class that can be used to easily listen for some basic input events for Three JS Oojects.
- */
-class PointerEventSystem {
-    constructor() {
-        this._listeners = new Set();
-        this._pointerDown = null;
-        this._pointerEnter = null;
-    }
-    addListener(listener) {
-        if (!this._listeners.has(listener)) {
-            this._listeners.add(listener);
-        }
-    }
-    removeListener(listener) {
-        if (this._pointerDown === listener) {
-            this._pointerDown = null;
-        }
-        if (this._pointerEnter === listener) {
-            this._pointerEnter = null;
-        }
-        this._listeners.delete(listener);
-    }
-    update(input, cameraDecorator) {
-        if (!input || !cameraDecorator || !cameraDecorator.camera) {
-            // Pointer event system needs both an input module and a camera.
-            return;
-        }
-        if (input.currentInputType !== InputType.Mouse &&
-            input.currentInputType !== InputType.Touch) {
-            // Pointer Event System only works with mouse and touch input types.
-            return;
-        }
-        // Retrieve the pointer's current screen position.
-        let pointerScreenPos = (input.currentInputType === InputType.Mouse) ? input.getMouseScreenPos() : input.getTouchScreenPos(0);
-        // Raycast against pointer event listeners using the pointer's screen position to find 
-        // the event listener that is currently the closest to the camera.
-        let closestIntersection;
-        let closestListener;
-        if (pointerScreenPos) {
-            // Collect all active listener target objects.
-            const allActiveListenerTargets = [];
-            this._listeners.forEach((listener) => {
-                const pointerTargets = listener.pointerTargets;
-                if (pointerTargets) {
-                    const activeTargets = pointerTargets.filter((target) => {
-                        return isObjectVisible(target);
-                    });
-                    allActiveListenerTargets.push(...activeTargets);
-                }
-            });
-            // Raycast againsts all pointer event listener target objects.
-            const hits = Physics.raycastAtScreenPos(pointerScreenPos, allActiveListenerTargets, cameraDecorator.camera, false);
-            closestIntersection = Physics.firstRaycastHit(hits);
-            closestListener = closestIntersection ? this._findEventListenerForObject(closestIntersection.object) : null;
-        }
-        else {
-            // No pointer screen position currently.
-            closestIntersection = null;
-            closestListener = null;
-        }
-        //
-        // Pointer enter/exit events.
-        //
-        if (closestListener) {
-            if (this._pointerEnter !== null && this._pointerEnter !== closestListener) {
-                // Let the last pointer enter object know that the pointer has exited it.
-                const pointerExit = this._pointerEnter;
-                this._pointerEnter = null;
-                pointerExit.onPointerExit({
-                    eventType: 'pointer exit',
-                    object: closestIntersection.object,
-                    pointerDown: this._pointerDown
-                });
-            }
-            if (this._pointerEnter === null) {
-                // Let the closest listener know that the pointer has entered it.
-                this._pointerEnter = closestListener;
-                this._pointerEnter.onPointerEnter({
-                    eventType: 'pointer enter',
-                    object: closestIntersection.object,
-                    pointerDown: this._pointerDown
-                });
-            }
-        }
-        else {
-            // Pointer is not over any listeners.
-            if (this._pointerEnter !== null) {
-                // Let the last pointer enter object know that the pointer has exited it.
-                this._pointerEnter.onPointerExit({
-                    eventType: 'pointer exit',
-                    object: null,
-                    pointerDown: this._pointerDown
-                });
-                this._pointerEnter = null;
-            }
-        }
-        //
-        // Pointer down/up/click events.
-        //
-        const isPrimaryDown = (input.currentInputType === InputType.Mouse) ? input.getMouseButtonDown(0) : input.getTouchDown(0);
-        if (isPrimaryDown) {
-            if (this._pointerEnter !== null && this._pointerEnter === closestListener && this._pointerDown === null) {
-                // Let the closest listener know that the pointer is down on it.
-                this._pointerDown = closestListener;
-                this._pointerDown.onPointerDown({
-                    eventType: 'pointer down',
-                    object: closestIntersection.object,
-                    pointerDown: this._pointerDown
-                });
-            }
-        }
-        const isPrimaryUp = (input.currentInputType === InputType.Mouse) ? input.getMouseButtonUp(0) : input.getTouchUp(0);
-        if (isPrimaryUp) {
-            if (this._pointerDown !== null) {
-                // Let the last pointer down object know that the pointer is up.
-                const pointerUp = this._pointerDown;
-                this._pointerDown = null;
-                pointerUp.onPointerUp({
-                    eventType: 'pointer up',
-                    object: closestIntersection ? closestIntersection.object : null,
-                    pointerDown: this._pointerDown
-                });
-                // Detect if pointer click occurs. 
-                // Click means that an event listener that received the down event is now receiving the up event while being hovered over.
-                const isClick = (closestListener !== null && pointerUp === closestListener);
-                if (isClick) {
-                    const pointerClick = pointerUp;
-                    pointerClick.onPointerClick({
-                        eventType: 'pointer click',
-                        object: closestIntersection.object,
-                        pointerDown: this._pointerDown
-                    });
-                }
-            }
-        }
-    }
-    dispose() {
-        this._listeners = new Set();
-    }
-    _findEventListenerForObject(obj3d) {
-        if (obj3d) {
-            const listenerValues = Array.from(this._listeners);
-            for (const listener of listenerValues) {
-                const pointerTargets = listener.pointerTargets;
-                if (pointerTargets && pointerTargets.length > 0) {
-                    const matchFound = pointerTargets.some((target) => {
-                        return target === obj3d;
-                    });
-                    if (matchFound) {
-                        return listener;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-}
-
-var APEngineBuildInfo;
-(function (APEngineBuildInfo) {
-    /**
-     * Version number of the app.
-     */
-    APEngineBuildInfo.version = '0.3.2';
-    const _time = '1598899129167';
-    /**
-     * The date that this version of the app was built.
-     */
-    function date() {
-        const timeNum = parseInt(_time);
-        return new Date(timeNum);
-    }
-    APEngineBuildInfo.date = date;
-})(APEngineBuildInfo || (APEngineBuildInfo = {}));
-
-class SceneRenderOperation {
-    constructor(scene, cameraDecorator) {
-        this.enabled = true;
-        this.clearColor = false;
-        this.clearDepth = false;
-        this.clearStencil = false;
-        this.scene = scene;
-        this.cameraDecorator = cameraDecorator;
-    }
-    render(webglRenderer) {
-        if (!this.scene) {
-            // No scene to render.
-            return;
-        }
-        if (!this.cameraDecorator || !this.cameraDecorator.camera) {
-            // No camera to render scene with.
-            return;
-        }
-        if (!this.enabled) {
-            // Dont render if render operatio is disabled.
-            return;
-        }
-        if (this.clearColor) {
-            webglRenderer.clearColor();
-        }
-        if (this.clearDepth) {
-            webglRenderer.clearDepth();
-        }
-        if (this.clearStencil) {
-            webglRenderer.clearStencil();
-        }
-        webglRenderer.render(this.scene, this.cameraDecorator.camera);
-    }
-}
-
-class SceneManager {
-    constructor() {
-        this._scenes = [];
-        this._primaryScene = null;
-        this._renderList = [];
-    }
-    /**
-     * Scenes that are updated by APEngine.
-     * GameObjects that are parented to scenes in this list will get their lifecycle functions invoked.
-     */
-    get scenes() {
-        return this._scenes;
-    }
-    get sceneRenderList() {
-        return this._renderList;
-    }
-    /**
-     * The scene that is marked as primary.
-     * If no scene is marked as primary, than the first scene is returned.
-     */
-    get primaryScene() {
-        if (this._primaryScene) {
-            return this._primaryScene;
-        }
-        else if (this._scenes.length > 0) {
-            return this._scenes[0];
-        }
-        else {
-            return null;
-        }
-    }
-    set primaryScene(scene) {
-        if (this._primaryScene !== scene) {
-            this._primaryScene = scene;
-        }
-    }
-    addScene(scene) {
-        if (!this._scenes.some(s => s === scene)) {
-            this._scenes.push(scene);
-        }
-    }
-    removeScene(scene) {
-        const index = this._scenes.findIndex(s => s === scene);
-        if (index >= 0) {
-            this._scenes.splice(index, 1);
-        }
-        this.removeRenderOperationsUsingScene(scene);
-    }
-    addRenderOperation(scene, cameraDecorator) {
-        const renderOp = new SceneRenderOperation(scene, cameraDecorator);
-        this._renderList.push(renderOp);
-        return renderOp;
-    }
-    reorderRenderOperation(renderOp, renderOrder) {
-        if (this._renderList.some(op => op === renderOp)) {
-            this._renderList.splice(renderOrder, 0, renderOp);
-        }
-    }
-    removeRenderOperation(scene, cameraDecorator) {
-        const index = this._renderList.findIndex(op => op.scene === scene && op.cameraDecorator === cameraDecorator);
-        if (index >= 0) {
-            this._renderList.splice(index, 1);
-        }
-    }
-    removeRenderOperationsUsingScene(scene) {
-        this._renderList = this._renderList.filter((op) => {
-            if (op.scene !== scene) {
-                return true;
-            }
-        });
-    }
-    removeRenderOperationsUsingCamera(cameraDecorator) {
-        this._renderList = this._renderList.filter((op) => {
-            if (op.cameraDecorator !== cameraDecorator) {
-                return true;
-            }
-        });
-    }
-    removeAllRenderOperations() {
-        this._renderList = [];
-    }
-    update() {
-        for (let scene of this._scenes) {
-            if (scene) {
-                scene.traverse((go) => {
-                    if (go instanceof GameObject) {
-                        go.onUpdate();
-                    }
-                });
-            }
-        }
-    }
-    lateUpdate() {
-        for (let scene of this._scenes) {
-            if (scene) {
-                scene.traverse((go) => {
-                    if (go instanceof GameObject) {
-                        go.onLateUpdate();
-                    }
-                });
-            }
-        }
-    }
-    render(webglRenderer) {
-        webglRenderer.clear();
-        for (let renderOp of this._renderList) {
-            if (renderOp) {
-                renderOp.render(webglRenderer);
-            }
-        }
-    }
-    dispose() {
-        for (let scene of this._scenes) {
-            if (scene) {
-                scene.dispose();
-            }
-        }
-        this._scenes = [];
-        this._renderList = [];
-        this._primaryScene = null;
-    }
-}
-
 var APEngineEvents;
 (function (APEngineEvents) {
     APEngineEvents.onUpdate = new Event();
@@ -6677,6 +6343,497 @@ let CameraDecorator = /** @class */ (() => {
     return CameraDecorator;
 })();
 
+/**
+ * A class that can be used to easily listen for some basic input events for Three JS Oojects.
+ */
+let PointerEventSystem = /** @class */ (() => {
+    class PointerEventSystem {
+        constructor(name, priority, cameraDecorator) {
+            /**
+             * The camera to use for hit testing pointer event listeners.
+             * If this is undefined, this pointer event system will use the primary camera (CameraDecorator.PrimaryCamera).
+             */
+            this.cameraDecorator = undefined;
+            /**
+             * The priority this pointer event system has over other pointer event systems.
+             * During an update frame, pointer event systems are sorted by priority (highest to lowest) and hit testing is done
+             * in that order. If a hit is detected in a pointer system above another, all lower pointer systems have their pointers released and are then ignored.
+             * Lower priority pointer systems are only reached if the higher priority systems dont detect any hits.
+             */
+            this.priority = 0;
+            this._enabled = true;
+            this._listeners = new Set();
+            this._pointerDown = null;
+            this._pointerEnter = null;
+            this._name = name;
+            this.priority = priority;
+            this.cameraDecorator = cameraDecorator;
+            PointerEventSystem._activeSystems.push(this);
+        }
+        /**
+         * List of all active pointer event systems.
+         */
+        static get activeSystem() {
+            return this._activeSystems;
+        }
+        /**
+         * Update all active pointer events systems.
+         * This function sorts the systems based on priority (highest to lowest priority).
+         */
+        static updateActiveSystems(input) {
+            if (!this._activeSystems || this._activeSystems.length === 0) {
+                return;
+            }
+            if (this._activeSystems.length === 1) {
+                // No need to sort, only one pointer event system is active.
+                this._activeSystems[0]._update(input);
+            }
+            else {
+                // If there is a focused system, update it first.
+                // If the focuses system becomes no longer focuses then move on to updating
+                // systems until one does.
+                if (this._focusedSystem) {
+                    const isFocused = this._focusedSystem._update(input);
+                    if (!isFocused) {
+                        // Focused system is no longer focused.
+                        if (this.debug) {
+                            console.log(`[PointerEventSystem] ${this._focusedSystem.name} has lost focus.`);
+                        }
+                        this._focusedSystem = null;
+                    }
+                    else {
+                        // Focused system is still focused. Dont update other pointer event systems.
+                        return;
+                    }
+                }
+                // Sort pointer event systems in descending priority order.
+                const systems = Array.from(this._activeSystems);
+                sortZA(systems, 'priority');
+                // Loop through and update systems until one becomes focused.
+                // If we find a new focused system, release any active pointers for remaining systems.
+                for (const system of systems) {
+                    if (!this._focusedSystem) {
+                        const isFocused = system._update(input);
+                        if (isFocused) {
+                            // Found a system that has gained focus.
+                            this._focusedSystem = system;
+                            if (this.debug) {
+                                console.log(`[PointerEventSystem] ${this._focusedSystem.name} has gained focus.`);
+                            }
+                        }
+                    }
+                    else {
+                        // A system already gained focus, release active pointers for this system.
+                        system.releaseActivePointers();
+                    }
+                }
+            }
+        }
+        get name() { return this._name; }
+        get enabled() { return this._enabled; }
+        set enabled(value) {
+            if (this._enabled === value) {
+                return;
+            }
+            this._enabled = value;
+            if (!this._enabled) {
+                this.releaseActivePointers();
+            }
+        }
+        addListener(listener) {
+            if (!this._listeners.has(listener)) {
+                this._listeners.add(listener);
+            }
+        }
+        removeListener(listener) {
+            if (this._pointerDown === listener) {
+                this._pointerDown = null;
+            }
+            if (this._pointerEnter === listener) {
+                this._pointerEnter = null;
+            }
+            this._listeners.delete(listener);
+        }
+        /**
+         * Update event system. Returns true if the update causes the pointer event system to become focused.
+         */
+        _update(input) {
+            if (!this._enabled) {
+                // Input must be enabled for the pointer event system.
+                return;
+            }
+            let cameraDecorator = this.cameraDecorator === undefined ? CameraDecorator.PrimaryCamera : this.cameraDecorator;
+            if (!input || !cameraDecorator || !cameraDecorator.camera) {
+                // Pointer event system needs both an input module and a camera.
+                return;
+            }
+            if (input.currentInputType !== InputType.Mouse &&
+                input.currentInputType !== InputType.Touch) {
+                // Pointer Event System only works with mouse and touch input types.
+                return;
+            }
+            // Retrieve the pointer's current screen position.
+            let pointerScreenPos = (input.currentInputType === InputType.Mouse) ? input.getMouseScreenPos() : input.getTouchScreenPos(0);
+            // Raycast against pointer event listeners using the pointer's screen position to find 
+            // the event listener that is currently the closest to the camera.
+            let closestIntersection;
+            let closestListener;
+            if (pointerScreenPos) {
+                // Collect all active listener target objects.
+                const allActiveListenerTargets = [];
+                this._listeners.forEach((listener) => {
+                    const pointerTargets = listener.pointerTargets;
+                    if (pointerTargets) {
+                        const activeTargets = pointerTargets.filter((target) => {
+                            return isObjectVisible(target);
+                        });
+                        allActiveListenerTargets.push(...activeTargets);
+                    }
+                });
+                // Raycast againsts all pointer event listener target objects.
+                const hits = Physics.raycastAtScreenPos(pointerScreenPos, allActiveListenerTargets, cameraDecorator.camera, false);
+                closestIntersection = Physics.firstRaycastHit(hits);
+                closestListener = closestIntersection ? this._findEventListenerForObject(closestIntersection.object) : null;
+            }
+            else {
+                // No pointer screen position currently.
+                closestIntersection = null;
+                closestListener = null;
+            }
+            //
+            // Pointer enter/exit events.
+            //
+            if (closestListener) {
+                if (this._pointerEnter !== null && this._pointerEnter !== closestListener) {
+                    // Let the last pointer enter object know that the pointer has exited it.
+                    const pointerExit = this._pointerEnter;
+                    this._pointerEnter = null;
+                    if (PointerEventSystem.debug) {
+                        console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer exit`, pointerExit);
+                    }
+                    pointerExit.onPointerExit({
+                        eventType: 'pointer exit',
+                        object: closestIntersection.object,
+                        pointerDown: this._pointerDown
+                    });
+                }
+                if (this._pointerEnter === null) {
+                    // Let the closest listener know that the pointer has entered it.
+                    this._pointerEnter = closestListener;
+                    if (PointerEventSystem.debug) {
+                        console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer enter`, this._pointerEnter);
+                    }
+                    this._pointerEnter.onPointerEnter({
+                        eventType: 'pointer enter',
+                        object: closestIntersection.object,
+                        pointerDown: this._pointerDown
+                    });
+                }
+            }
+            else {
+                // Pointer is not over any listeners.
+                if (this._pointerEnter !== null) {
+                    // Let the last pointer enter object know that the pointer has exited it.
+                    if (PointerEventSystem.debug) {
+                        console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer exit`, this._pointerEnter);
+                    }
+                    this._pointerEnter.onPointerExit({
+                        eventType: 'pointer exit',
+                        object: null,
+                        pointerDown: this._pointerDown
+                    });
+                    this._pointerEnter = null;
+                }
+            }
+            //
+            // Pointer down/up/click events.
+            //
+            const isPrimaryDown = (input.currentInputType === InputType.Mouse) ? input.getMouseButtonDown(0) : input.getTouchDown(0);
+            if (isPrimaryDown) {
+                if (this._pointerEnter !== null && this._pointerEnter === closestListener && this._pointerDown === null) {
+                    // Let the closest listener know that the pointer is down on it.
+                    this._pointerDown = closestListener;
+                    if (PointerEventSystem.debug) {
+                        console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer down`, this._pointerDown);
+                    }
+                    this._pointerDown.onPointerDown({
+                        eventType: 'pointer down',
+                        object: closestIntersection.object,
+                        pointerDown: this._pointerDown
+                    });
+                }
+            }
+            const isPrimaryUp = (input.currentInputType === InputType.Mouse) ? input.getMouseButtonUp(0) : input.getTouchUp(0);
+            if (isPrimaryUp) {
+                if (this._pointerDown !== null) {
+                    // Let the last pointer down object know that the pointer is up.
+                    const pointerUp = this._pointerDown;
+                    this._pointerDown = null;
+                    if (PointerEventSystem.debug) {
+                        console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer up`, pointerUp);
+                    }
+                    pointerUp.onPointerUp({
+                        eventType: 'pointer up',
+                        object: closestIntersection ? closestIntersection.object : null,
+                        pointerDown: this._pointerDown
+                    });
+                    // Detect if pointer click occurs. 
+                    // Click means that an event listener that received the down event is now receiving the up event while being hovered over.
+                    const isClick = (closestListener !== null && pointerUp === closestListener);
+                    if (isClick) {
+                        const pointerClick = pointerUp;
+                        if (PointerEventSystem.debug) {
+                            console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer click`, pointerClick);
+                        }
+                        pointerClick.onPointerClick({
+                            eventType: 'pointer click',
+                            object: closestIntersection.object,
+                            pointerDown: this._pointerDown
+                        });
+                    }
+                }
+            }
+            return !!this._pointerDown;
+        }
+        /**
+         * Release any held pointers. If active enter/down listener, then exit/up is invoked.
+         */
+        releaseActivePointers() {
+            if (this._pointerDown) {
+                const pointerUp = this._pointerDown;
+                this._pointerDown = null;
+                if (PointerEventSystem.debug) {
+                    console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer up`, pointerUp);
+                }
+                pointerUp.onPointerUp({
+                    eventType: 'pointer up',
+                    object: null,
+                    pointerDown: this._pointerDown
+                });
+            }
+            if (this._pointerEnter) {
+                const pointerExit = this._pointerEnter;
+                this._pointerEnter = null;
+                if (PointerEventSystem.debug) {
+                    console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer exit`, pointerExit);
+                }
+                pointerExit.onPointerExit({
+                    eventType: 'pointer exit',
+                    object: null,
+                    pointerDown: this._pointerDown
+                });
+            }
+        }
+        dispose() {
+            this.releaseActivePointers();
+            this._listeners = null;
+            this.cameraDecorator = null;
+            const index = PointerEventSystem._activeSystems.findIndex(pes => pes === this);
+            if (index >= 0) {
+                PointerEventSystem._activeSystems.splice(index, 1);
+            }
+            if (PointerEventSystem._focusedSystem === this) {
+                PointerEventSystem._focusedSystem = null;
+            }
+        }
+        _findEventListenerForObject(obj3d) {
+            if (obj3d) {
+                const listenerValues = Array.from(this._listeners);
+                for (const listener of listenerValues) {
+                    const pointerTargets = listener.pointerTargets;
+                    if (pointerTargets && pointerTargets.length > 0) {
+                        const matchFound = pointerTargets.some((target) => {
+                            return target === obj3d;
+                        });
+                        if (matchFound) {
+                            return listener;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+    }
+    PointerEventSystem.debug = true;
+    PointerEventSystem._activeSystems = [];
+    return PointerEventSystem;
+})();
+
+var APEngineBuildInfo;
+(function (APEngineBuildInfo) {
+    /**
+     * Version number of the app.
+     */
+    APEngineBuildInfo.version = '0.3.2';
+    const _time = '1599157003172';
+    /**
+     * The date that this version of the app was built.
+     */
+    function date() {
+        const timeNum = parseInt(_time);
+        return new Date(timeNum);
+    }
+    APEngineBuildInfo.date = date;
+})(APEngineBuildInfo || (APEngineBuildInfo = {}));
+
+class SceneRenderOperation {
+    constructor(scene, cameraDecorator) {
+        this.enabled = true;
+        this.clearColor = false;
+        this.clearDepth = false;
+        this.clearStencil = false;
+        this.scene = scene;
+        this.cameraDecorator = cameraDecorator;
+    }
+    render(webglRenderer) {
+        if (!this.scene) {
+            // No scene to render.
+            return;
+        }
+        if (!this.cameraDecorator || !this.cameraDecorator.camera) {
+            // No camera to render scene with.
+            return;
+        }
+        if (!this.enabled) {
+            // Dont render if render operatio is disabled.
+            return;
+        }
+        if (this.clearColor) {
+            webglRenderer.clearColor();
+        }
+        if (this.clearDepth) {
+            webglRenderer.clearDepth();
+        }
+        if (this.clearStencil) {
+            webglRenderer.clearStencil();
+        }
+        webglRenderer.render(this.scene, this.cameraDecorator.camera);
+    }
+}
+
+class SceneManager {
+    constructor() {
+        this._scenes = [];
+        this._primaryScene = null;
+        this._renderList = [];
+    }
+    /**
+     * Scenes that are updated by APEngine.
+     * GameObjects that are parented to scenes in this list will get their lifecycle functions invoked.
+     */
+    get scenes() {
+        return this._scenes;
+    }
+    get sceneRenderList() {
+        return this._renderList;
+    }
+    /**
+     * The scene that is marked as primary.
+     * If no scene is marked as primary, than the first scene is returned.
+     */
+    get primaryScene() {
+        if (this._primaryScene) {
+            return this._primaryScene;
+        }
+        else if (this._scenes.length > 0) {
+            return this._scenes[0];
+        }
+        else {
+            return null;
+        }
+    }
+    set primaryScene(scene) {
+        if (this._primaryScene !== scene) {
+            this._primaryScene = scene;
+        }
+    }
+    addScene(scene) {
+        if (!this._scenes.some(s => s === scene)) {
+            this._scenes.push(scene);
+        }
+    }
+    removeScene(scene) {
+        const index = this._scenes.findIndex(s => s === scene);
+        if (index >= 0) {
+            this._scenes.splice(index, 1);
+        }
+        this.removeRenderOperationsUsingScene(scene);
+    }
+    addRenderOperation(scene, cameraDecorator) {
+        const renderOp = new SceneRenderOperation(scene, cameraDecorator);
+        this._renderList.push(renderOp);
+        return renderOp;
+    }
+    reorderRenderOperation(renderOp, renderOrder) {
+        if (this._renderList.some(op => op === renderOp)) {
+            this._renderList.splice(renderOrder, 0, renderOp);
+        }
+    }
+    removeRenderOperation(scene, cameraDecorator) {
+        const index = this._renderList.findIndex(op => op.scene === scene && op.cameraDecorator === cameraDecorator);
+        if (index >= 0) {
+            this._renderList.splice(index, 1);
+        }
+    }
+    removeRenderOperationsUsingScene(scene) {
+        this._renderList = this._renderList.filter((op) => {
+            if (op.scene !== scene) {
+                return true;
+            }
+        });
+    }
+    removeRenderOperationsUsingCamera(cameraDecorator) {
+        this._renderList = this._renderList.filter((op) => {
+            if (op.cameraDecorator !== cameraDecorator) {
+                return true;
+            }
+        });
+    }
+    removeAllRenderOperations() {
+        this._renderList = [];
+    }
+    update() {
+        for (let scene of this._scenes) {
+            if (scene) {
+                scene.traverse((go) => {
+                    if (go instanceof GameObject) {
+                        go.onUpdate();
+                    }
+                });
+            }
+        }
+    }
+    lateUpdate() {
+        for (let scene of this._scenes) {
+            if (scene) {
+                scene.traverse((go) => {
+                    if (go instanceof GameObject) {
+                        go.onLateUpdate();
+                    }
+                });
+            }
+        }
+    }
+    render(webglRenderer) {
+        webglRenderer.clear();
+        for (let renderOp of this._renderList) {
+            if (renderOp) {
+                renderOp.render(webglRenderer);
+            }
+        }
+    }
+    dispose() {
+        for (let scene of this._scenes) {
+            if (scene) {
+                scene.dispose();
+            }
+        }
+        this._scenes = [];
+        this._renderList = [];
+        this._primaryScene = null;
+    }
+}
+
 // Reference 01: https://github.com/mrdoob/three.js/blob/dev/examples/webxr_ar_hittest.html
 // Refernece 02: https://web.dev/ar-hit-test/
 class XRPhysics {
@@ -6782,7 +6939,7 @@ var APEngine;
         // Create xr physics module.
         APEngine.xrPhysics = new XRPhysics(APEngine.webglRenderer, APEngineEvents.onXRSessionStarted, APEngineEvents.onXRSessionEnded, getXRFrame);
         // Create pointer event system.
-        APEngine.pointerEventSystem = new PointerEventSystem();
+        APEngine.pointerEventSystem = new PointerEventSystem('Default', 0);
         // Create device camera module.
         APEngine.deviceCamera = new DeviceCamera({
             video: {
@@ -6817,7 +6974,7 @@ var APEngine;
         }
         APEngine.input.update();
         // Update pointer event system.
-        APEngine.pointerEventSystem.update(APEngine.input, CameraDecorator.PrimaryCamera);
+        PointerEventSystem.updateActiveSystems(APEngine.input);
         // Update game objects in scenes.
         APEngine.sceneManager.update();
         APEngineEvents.onUpdate.invoke();

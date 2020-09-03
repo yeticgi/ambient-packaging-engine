@@ -58,12 +58,49 @@ export interface IPointerEventListener {
  * A class that can be used to easily listen for some basic input events for Three JS Oojects.
  */
 export declare class PointerEventSystem implements IDisposable {
+    static debug: boolean;
+    private static _activeSystems;
+    private static _focusedSystem;
+    /**
+     * List of all active pointer event systems.
+     */
+    static get activeSystem(): Readonly<PointerEventSystem[]>;
+    /**
+     * Update all active pointer events systems.
+     * This function sorts the systems based on priority (highest to lowest priority).
+     */
+    static updateActiveSystems(input: Input): void;
+    /**
+     * The camera to use for hit testing pointer event listeners.
+     * If this is undefined, this pointer event system will use the primary camera (CameraDecorator.PrimaryCamera).
+     */
+    cameraDecorator: CameraDecorator;
+    /**
+     * The priority this pointer event system has over other pointer event systems.
+     * During an update frame, pointer event systems are sorted by priority (highest to lowest) and hit testing is done
+     * in that order. If a hit is detected in a pointer system above another, all lower pointer systems have their pointers released and are then ignored.
+     * Lower priority pointer systems are only reached if the higher priority systems dont detect any hits.
+     */
+    priority: number;
+    private _name;
+    private _enabled;
     private _listeners;
     private _pointerDown;
     private _pointerEnter;
+    get name(): string;
+    get enabled(): boolean;
+    set enabled(value: boolean);
+    constructor(name: string, priority: number, cameraDecorator?: CameraDecorator);
     addListener(listener: IPointerEventListener): void;
     removeListener(listener: IPointerEventListener): void;
-    update(input: Input, cameraDecorator: CameraDecorator): void;
+    /**
+     * Update event system. Returns true if the update causes the pointer event system to become focused.
+     */
+    private _update;
+    /**
+     * Release any held pointers. If active enter/down listener, then exit/up is invoked.
+     */
+    releaseActivePointers(): void;
     dispose(): void;
     private _findEventListenerForObject;
 }

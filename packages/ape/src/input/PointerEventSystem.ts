@@ -78,7 +78,7 @@ export interface IPointerEventListener {
  */
 export class PointerEventSystem implements IDisposable {
     
-    static debug: boolean = true;
+    static debug: boolean = false;
 
     private static _activeSystems: PointerEventSystem[] = [];
     private static _focusedSystem: PointerEventSystem;

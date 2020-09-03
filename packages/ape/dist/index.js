@@ -6654,7 +6654,7 @@ let PointerEventSystem = /** @class */ (() => {
             return null;
         }
     }
-    PointerEventSystem.debug = true;
+    PointerEventSystem.debug = false;
     PointerEventSystem._activeSystems = [];
     return PointerEventSystem;
 })();
@@ -6665,7 +6665,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.3.2';
-    const _time = '1599157003172';
+    const _time = '1599176607687';
     /**
      * The date that this version of the app was built.
      */

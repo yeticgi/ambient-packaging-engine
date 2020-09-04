@@ -5175,6 +5175,24 @@ let GameObject = /** @class */ (() => {
                 return null;
             }
         }
+        getDecoratorInParent(type, includeInvisible) {
+            // Check this gameObject for matching decorator.
+            if (includeInvisible || this.visible) {
+                const decorator = this.getDecorator(type);
+                if (decorator) {
+                    return decorator;
+                }
+            }
+            // Recursively search through parent gameObjects for matching decorator.
+            if (this.parent && this.parent instanceof GameObject) {
+                const decorator = this.parent.getDecoratorInParent(type, includeInvisible);
+                if (decorator) {
+                    return decorator;
+                }
+            }
+            // No matching decorator found in this gameObject or its parents.
+            return null;
+        }
         /**
          * Called for each three js frame.
          */
@@ -6686,8 +6704,8 @@ var APEngineBuildInfo;
     /**
      * Version number of the app.
      */
-    APEngineBuildInfo.version = '0.3.2';
-    const _time = '1599231811820';
+    APEngineBuildInfo.version = '0.4.0';
+    const _time = '1599241284983';
     /**
      * The date that this version of the app was built.
      */

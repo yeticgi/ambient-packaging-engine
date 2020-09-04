@@ -47,6 +47,9 @@ export declare class GameObject extends Object3D {
     getDecoratorsInChildren<T extends Decorator>(type: {
         new (): T;
     }, includeInvisible?: boolean): T[];
+    getDecoratorInParent<T extends Decorator>(type: {
+        new (): T;
+    }, includeInvisible?: boolean): T;
     /**
      * Called for each three js frame.
      */

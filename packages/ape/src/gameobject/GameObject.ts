@@ -222,6 +222,27 @@ export class GameObject extends Object3D {
             return null;
         }
     }
+    
+    getDecoratorInParent<T extends Decorator>(type: { new(): T }, includeInvisible?: boolean): T {
+        // Check this gameObject for matching decorator.
+        if (includeInvisible || this.visible) {
+            const decorator = this.getDecorator(type);
+            if (decorator) {
+                return decorator;
+            }
+        }
+
+        // Recursively search through parent gameObjects for matching decorator.
+        if (this.parent && this.parent instanceof GameObject) {
+            const decorator = this.parent.getDecoratorInParent(type, includeInvisible);
+            if (decorator) {
+                return decorator;
+            }
+        }
+
+        // No matching decorator found in this gameObject or its parents.
+        return null;
+    }
 
     /**
      * Called for each three js frame.

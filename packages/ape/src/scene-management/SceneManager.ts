@@ -3,6 +3,7 @@ import { Scene, Camera, WebGLRenderer, PerspectiveCamera } from "three";
 import { SceneRenderOperation as RenderOperation } from "./SceneRenderOperation";
 import { GameObject } from "../gameobject/GameObject";
 import { CameraDecorator } from "../gameobject/decorators/CameraDecorator";
+import { traverseSafe } from "../utils/ThreeUtils";
 
 export class SceneManager implements IDisposable {
 
@@ -102,7 +103,7 @@ export class SceneManager implements IDisposable {
     update(): void {
         for (let scene of this._scenes) {
             if (scene) {
-                scene.traverse((go) => {
+                traverseSafe(scene, (go) => {
                     if (go instanceof GameObject) {
                         go.onUpdate();
                     }
@@ -114,7 +115,7 @@ export class SceneManager implements IDisposable {
     lateUpdate(): void {
         for (let scene of this._scenes) {
             if (scene) {
-                scene.traverse((go) => {
+                traverseSafe(scene, (go) => {
                     if (go instanceof GameObject) {
                         go.onLateUpdate();
                     }

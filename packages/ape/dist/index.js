@@ -1,4 +1,4 @@
-import { Clock, Vector2, Vector3, Object3D, Quaternion, MathUtils, Plane, Raycaster, Matrix4, Scene, Box2, Layers, Mesh, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, BoxBufferGeometry, PerspectiveCamera, OrthographicCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Material, Texture, Geometry, BufferGeometry, LoadingManager, TextureLoader } from 'three';
+import { Clock, Vector2, Vector3, Matrix4, Scene, Box2, Layers, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, Mesh, BoxBufferGeometry, Quaternion, Object3D, MathUtils, Plane, Raycaster, PerspectiveCamera, OrthographicCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Material, Texture, Geometry, BufferGeometry, LoadingManager, TextureLoader } from 'three';
 import { __awaiter } from 'tslib';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import { Howl } from 'howler';
@@ -4712,6 +4712,277 @@ class Decorator {
     }
 }
 
+/**
+ * Set the parent of the object3d.
+ * @param object3d the object to re-parent.
+ * @param parent the object to parent to.
+ * @param scene the scene that these objects exist in.
+ */
+function setParent(object3d, parent, scene) {
+    if (!object3d)
+        return;
+    if (!scene)
+        throw new Error('utils.setParent needs a valid scene parameter.');
+    // Detach
+    if (object3d.parent && object3d.parent !== scene) {
+        object3d.applyMatrix4(object3d.parent.matrixWorld);
+        object3d.parent.remove(object3d);
+        scene.add(object3d);
+    }
+    // Attach
+    if (parent) {
+        object3d.applyMatrix4(new Matrix4().getInverse(parent.matrixWorld));
+        scene.remove(object3d);
+        parent.add(object3d);
+    }
+    object3d.updateMatrixWorld(true);
+}
+/**
+ * Find the scene object that the given object is parented to.
+ * Will return null if no parent scene is found.
+ * @param object3d The object to find the parent scene for.
+ */
+function findParentScene(object3d) {
+    if (!object3d) {
+        return null;
+    }
+    if (object3d instanceof Scene) {
+        return object3d;
+    }
+    else {
+        return findParentScene(object3d.parent);
+    }
+}
+/**
+ * Is the object a child of the given parent object.
+ * @param parent The parent object that we want to know if the other object is a child of.
+ * @param object The object that we want to know if is a child of the parent object.
+ */
+function isObjectChildOf(object, parent) {
+    if (!parent || !object.parent) {
+        return false;
+    }
+    if (object.parent === parent) {
+        return true;
+    }
+    else {
+        return isObjectChildOf(object.parent, parent);
+    }
+}
+/**
+ * Convert the Box3 object to a box2 object. Basically discards the z components of the Box3's min and max.
+ * @param box3 The Box3 to convert to a Box2.
+ */
+function convertToBox2(box3) {
+    return new Box2(new Vector2(box3.min.x, box3.min.y), new Vector2(box3.max.x, box3.max.y));
+}
+/**
+ * Set the layer number that the given object 3d is on (and optionally all of its children too).
+ * @param obj The root object 3d to change the layer.
+ * @param layer The layer to set the object 3d to.
+ * @param children Should change all children of given object 3d as well?
+ */
+function setLayer(obj, layer, children) {
+    obj.layers.set(layer);
+    if (children) {
+        traverseSafe(obj, (child) => child.layers.set(layer));
+    }
+}
+/**
+ * Set the layer mask of the given object 3d (and optionally all of its children too).
+ * @param obj The root object 3d to change the layer.
+ * @param layerMask The layer mask to set the object 3d to.
+ * @param children Should change all children of given object 3d as well?
+ */
+function setLayerMask(obj, layerMask, children) {
+    obj.layers.mask = layerMask;
+    if (children) {
+        traverseSafe(obj, (child) => child.layers.mask = layerMask);
+    }
+}
+/**
+ * Debug print out all 32 layers for this object and wether or not it belongs to them.
+ * @param obj The object to print out layers for.
+ */
+function debugLayersToString(obj) {
+    if (!obj)
+        return;
+    let output = '\n';
+    for (let i = 0; i < 32; i++) {
+        let l = new Layers();
+        l.set(i);
+        output += '[' + i + ']  ' + obj.layers.test(l) + '\n';
+    }
+    return output;
+}
+function isObjectVisible(obj) {
+    if (!obj) {
+        return false;
+    }
+    while (obj) {
+        if (!obj.visible) {
+            return false;
+        }
+        obj = obj.parent;
+    }
+    return true;
+}
+function disposeObject3d(obj) {
+    if (obj) {
+        traverseSafe(obj, (o) => {
+            if (o instanceof Mesh) {
+                if (o.geometry) {
+                    o.geometry.dispose();
+                }
+                if (Array.isArray(o.material)) {
+                    o.material.forEach((m) => m.dispose());
+                }
+                else {
+                    o.material.dispose();
+                }
+            }
+            if (o.parent) {
+                o.parent.remove(o);
+            }
+        });
+    }
+}
+/**
+ * Dispose of each object 3d in the array and then clear the array.
+ */
+function disposeObject3ds(objs) {
+    if (objs && objs.length > 0) {
+        for (let i = 0; i < objs.length; i++) {
+            disposeObject3d(objs[i]);
+        }
+        objs = [];
+    }
+}
+function createDebugSphere(radius, color, lit) {
+    const geometry = new SphereBufferGeometry(radius, 24, 24);
+    let material;
+    if (lit) {
+        material = new MeshStandardMaterial({
+            color,
+        });
+    }
+    else {
+        material = new MeshBasicMaterial({
+            color,
+        });
+    }
+    return new Mesh(geometry, material);
+}
+function createDebugCube(size, color, lit) {
+    const geometry = new BoxBufferGeometry(size, size, size);
+    let material;
+    if (lit) {
+        material = new MeshStandardMaterial({
+            color,
+        });
+    }
+    else {
+        material = new MeshBasicMaterial({
+            color,
+        });
+    }
+    return new Mesh(geometry, material);
+}
+function worldToScreenPosition(object3d, camera) {
+    const pos = new Vector3().setFromMatrixPosition(object3d.matrixWorld);
+    pos.project(camera);
+    const halfWidth = window.innerWidth * 0.5;
+    const halfHeight = window.innerHeight * 0.5;
+    pos.x = (pos.x * halfWidth) + halfWidth;
+    pos.y = -(pos.y * halfHeight) + halfHeight;
+    pos.z = 0;
+    return new Vector2(pos.x, pos.y);
+}
+/**
+ * Return the world direction for the given local direction from the object's perspective.
+ * @param localDirection The local direction.
+ * @param obj The object to return the world direction for.
+ */
+function objectWorldDirection(localDirection, obj) {
+    const worldRotation = new Quaternion();
+    worldRotation.setFromRotationMatrix(obj.matrixWorld);
+    const forward = localDirection.clone().applyQuaternion(worldRotation);
+    return forward;
+}
+function getMaterials(mesh) {
+    if (Array.isArray(mesh.material)) {
+        return mesh.material;
+    }
+    else {
+        return [mesh.material];
+    }
+}
+function getWorldPosition(object3d) {
+    const worldPos = new Vector3();
+    object3d.getWorldPosition(worldPos);
+    return worldPos;
+}
+function setWorldPosition(object3d, target) {
+    const scene = findParentScene(object3d);
+    if (!scene) {
+        console.error(`Cannot set world position of object3d ${object3d.name} because it is not attached to a scene.`);
+        return;
+    }
+    let matrixWorld;
+    if (target instanceof Vector3) {
+        matrixWorld = new Matrix4();
+        matrixWorld.setPosition(target);
+    }
+    else {
+        matrixWorld = target.matrixWorld;
+    }
+    const prevParent = object3d.parent;
+    scene.attach(object3d);
+    object3d.position.setFromMatrixPosition(matrixWorld);
+    prevParent.attach(object3d);
+}
+function rotationToFace(object3d, worldPos) {
+    const dummy = new Object3D();
+    if (object3d.parent) {
+        object3d.parent.add(dummy);
+    }
+    setWorldPosition(dummy, object3d);
+    dummy.rotation.copy(object3d.rotation);
+    dummy.scale.copy(object3d.scale);
+    dummy.lookAt(worldPos);
+    const faceRotation = dummy.quaternion.clone();
+    if (dummy.parent) {
+        dummy.parent.remove(dummy);
+    }
+    return faceRotation;
+}
+/**
+ * Same function as Object3D.traverse except that it does not execute on children that have become undefined like the built-in function does.
+ */
+function traverseSafe(object3d, callback) {
+    callback(object3d);
+    const children = object3d.children;
+    for (let i = 0, l = children.length; i < l; i++) {
+        if (children[i]) {
+            traverseSafe(children[i], callback);
+        }
+    }
+}
+/**
+ * Same function as Object3D.traverseVisible except that it does not execute on children that have become undefined like the built-in function does.
+ */
+function traverseVisibleSafe(object3d, callback) {
+    if (object3d.visible === false)
+        return;
+    callback(object3d);
+    const children = object3d.children;
+    for (let i = 0, l = children.length; i < l; i++) {
+        if (children[i]) {
+            traverseVisibleSafe(children[i], callback);
+        }
+    }
+}
+
 var DestroyState;
 (function (DestroyState) {
     DestroyState[DestroyState["None"] = -1] = "None";
@@ -4738,7 +5009,7 @@ let GameObject = /** @class */ (() => {
         static destroy(gameObject) {
             // Get array of all child gameObjects in ascending order,
             // including the given gameObject.
-            gameObject.traverse((go) => {
+            traverseSafe(gameObject, (go) => {
                 if (go instanceof GameObject) {
                     if (go._destroyState === DestroyState.None) {
                         GameObject.__APEngine_destroyQueue.push(go);
@@ -4878,7 +5149,7 @@ let GameObject = /** @class */ (() => {
         getDecoratorsInChildren(type, includeInvisible) {
             const decorators = [];
             if (!includeInvisible) {
-                this.traverseVisible((o) => {
+                traverseVisibleSafe(this, (o) => {
                     if (o instanceof GameObject) {
                         const decs = o.getDecorators(type);
                         if (decs) {
@@ -4888,7 +5159,7 @@ let GameObject = /** @class */ (() => {
                 });
             }
             else {
-                this.traverse((o) => {
+                traverseSafe(this, (o) => {
                     if (o instanceof GameObject) {
                         const decs = o.getDecorators(type);
                         if (decs) {
@@ -5793,255 +6064,6 @@ var Physics;
     Physics.firstRaycastHit = firstRaycastHit;
 })(Physics || (Physics = {}));
 
-/**
- * Set the parent of the object3d.
- * @param object3d the object to re-parent.
- * @param parent the object to parent to.
- * @param scene the scene that these objects exist in.
- */
-function setParent(object3d, parent, scene) {
-    if (!object3d)
-        return;
-    if (!scene)
-        throw new Error('utils.setParent needs a valid scene parameter.');
-    // Detach
-    if (object3d.parent && object3d.parent !== scene) {
-        object3d.applyMatrix4(object3d.parent.matrixWorld);
-        object3d.parent.remove(object3d);
-        scene.add(object3d);
-    }
-    // Attach
-    if (parent) {
-        object3d.applyMatrix4(new Matrix4().getInverse(parent.matrixWorld));
-        scene.remove(object3d);
-        parent.add(object3d);
-    }
-    object3d.updateMatrixWorld(true);
-}
-/**
- * Find the scene object that the given object is parented to.
- * Will return null if no parent scene is found.
- * @param object3d The object to find the parent scene for.
- */
-function findParentScene(object3d) {
-    if (!object3d) {
-        return null;
-    }
-    if (object3d instanceof Scene) {
-        return object3d;
-    }
-    else {
-        return findParentScene(object3d.parent);
-    }
-}
-/**
- * Is the object a child of the given parent object.
- * @param parent The parent object that we want to know if the other object is a child of.
- * @param object The object that we want to know if is a child of the parent object.
- */
-function isObjectChildOf(object, parent) {
-    if (!parent || !object.parent) {
-        return false;
-    }
-    if (object.parent === parent) {
-        return true;
-    }
-    else {
-        return isObjectChildOf(object.parent, parent);
-    }
-}
-/**
- * Convert the Box3 object to a box2 object. Basically discards the z components of the Box3's min and max.
- * @param box3 The Box3 to convert to a Box2.
- */
-function convertToBox2(box3) {
-    return new Box2(new Vector2(box3.min.x, box3.min.y), new Vector2(box3.max.x, box3.max.y));
-}
-/**
- * Set the layer number that the given object 3d is on (and optionally all of its children too).
- * @param obj The root object 3d to change the layer.
- * @param layer The layer to set the object 3d to.
- * @param children Should change all children of given object 3d as well?
- */
-function setLayer(obj, layer, children) {
-    obj.layers.set(layer);
-    if (children) {
-        obj.traverse(child => {
-            child.layers.set(layer);
-        });
-    }
-}
-/**
- * Set the layer mask of the given object 3d (and optionally all of its children too).
- * @param obj The root object 3d to change the layer.
- * @param layerMask The layer mask to set the object 3d to.
- * @param children Should change all children of given object 3d as well?
- */
-function setLayerMask(obj, layerMask, children) {
-    obj.layers.mask = layerMask;
-    if (children) {
-        obj.traverse(child => {
-            child.layers.mask = layerMask;
-        });
-    }
-}
-/**
- * Debug print out all 32 layers for this object and wether or not it belongs to them.
- * @param obj The object to print out layers for.
- */
-function debugLayersToString(obj) {
-    if (!obj)
-        return;
-    let output = '\n';
-    for (let i = 0; i < 32; i++) {
-        let l = new Layers();
-        l.set(i);
-        output += '[' + i + ']  ' + obj.layers.test(l) + '\n';
-    }
-    return output;
-}
-function isObjectVisible(obj) {
-    if (!obj) {
-        return false;
-    }
-    while (obj) {
-        if (!obj.visible) {
-            return false;
-        }
-        obj = obj.parent;
-    }
-    return true;
-}
-function disposeObject3d(obj) {
-    if (obj) {
-        obj.traverse((o) => {
-            if (o instanceof Mesh) {
-                if (o.geometry) {
-                    o.geometry.dispose();
-                }
-                if (Array.isArray(o.material)) {
-                    o.material.forEach((m) => m.dispose());
-                }
-                else {
-                    o.material.dispose();
-                }
-            }
-            if (o.parent) {
-                o.parent.remove(o);
-            }
-        });
-    }
-}
-/**
- * Dispose of each object 3d in the array and then clear the array.
- */
-function disposeObject3ds(objs) {
-    if (objs && objs.length > 0) {
-        for (let i = 0; i < objs.length; i++) {
-            disposeObject3d(objs[i]);
-        }
-        objs = [];
-    }
-}
-function createDebugSphere(radius, color, lit) {
-    const geometry = new SphereBufferGeometry(radius, 24, 24);
-    let material;
-    if (lit) {
-        material = new MeshStandardMaterial({
-            color,
-        });
-    }
-    else {
-        material = new MeshBasicMaterial({
-            color,
-        });
-    }
-    return new Mesh(geometry, material);
-}
-function createDebugCube(size, color, lit) {
-    const geometry = new BoxBufferGeometry(size, size, size);
-    let material;
-    if (lit) {
-        material = new MeshStandardMaterial({
-            color,
-        });
-    }
-    else {
-        material = new MeshBasicMaterial({
-            color,
-        });
-    }
-    return new Mesh(geometry, material);
-}
-function worldToScreenPosition(object3d, camera) {
-    const pos = new Vector3().setFromMatrixPosition(object3d.matrixWorld);
-    pos.project(camera);
-    const halfWidth = window.innerWidth * 0.5;
-    const halfHeight = window.innerHeight * 0.5;
-    pos.x = (pos.x * halfWidth) + halfWidth;
-    pos.y = -(pos.y * halfHeight) + halfHeight;
-    pos.z = 0;
-    return new Vector2(pos.x, pos.y);
-}
-/**
- * Return the world direction for the given local direction from the object's perspective.
- * @param localDirection The local direction.
- * @param obj The object to return the world direction for.
- */
-function objectWorldDirection(localDirection, obj) {
-    const worldRotation = new Quaternion();
-    worldRotation.setFromRotationMatrix(obj.matrixWorld);
-    const forward = localDirection.clone().applyQuaternion(worldRotation);
-    return forward;
-}
-function getMaterials(mesh) {
-    if (Array.isArray(mesh.material)) {
-        return mesh.material;
-    }
-    else {
-        return [mesh.material];
-    }
-}
-function getWorldPosition(object3d) {
-    const worldPos = new Vector3();
-    object3d.getWorldPosition(worldPos);
-    return worldPos;
-}
-function setWorldPosition(object3d, target) {
-    const scene = findParentScene(object3d);
-    if (!scene) {
-        console.error(`Cannot set world position of object3d ${object3d.name} because it is not attached to a scene.`);
-        return;
-    }
-    let matrixWorld;
-    if (target instanceof Vector3) {
-        matrixWorld = new Matrix4();
-        matrixWorld.setPosition(target);
-    }
-    else {
-        matrixWorld = target.matrixWorld;
-    }
-    const prevParent = object3d.parent;
-    scene.attach(object3d);
-    object3d.position.setFromMatrixPosition(matrixWorld);
-    prevParent.attach(object3d);
-}
-function rotationToFace(object3d, worldPos) {
-    const dummy = new Object3D();
-    if (object3d.parent) {
-        object3d.parent.add(dummy);
-    }
-    setWorldPosition(dummy, object3d);
-    dummy.rotation.copy(object3d.rotation);
-    dummy.scale.copy(object3d.scale);
-    dummy.lookAt(worldPos);
-    const faceRotation = dummy.quaternion.clone();
-    if (dummy.parent) {
-        dummy.parent.remove(dummy);
-    }
-    return faceRotation;
-}
-
 var APEngineEvents;
 (function (APEngineEvents) {
     APEngineEvents.onUpdate = new Event();
@@ -6665,7 +6687,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.3.2';
-    const _time = '1599176607687';
+    const _time = '1599231811820';
     /**
      * The date that this version of the app was built.
      */
@@ -6795,7 +6817,7 @@ class SceneManager {
     update() {
         for (let scene of this._scenes) {
             if (scene) {
-                scene.traverse((go) => {
+                traverseSafe(scene, (go) => {
                     if (go instanceof GameObject) {
                         go.onUpdate();
                     }
@@ -6806,7 +6828,7 @@ class SceneManager {
     lateUpdate() {
         for (let scene of this._scenes) {
             if (scene) {
-                scene.traverse((go) => {
+                traverseSafe(scene, (go) => {
                     if (go instanceof GameObject) {
                         go.onLateUpdate();
                     }
@@ -7655,7 +7677,7 @@ var TransformTool;
 class TransformPickerDecorator extends Decorator {
     get pointerTargets() {
         const children = [];
-        this.gameObject.traverse(obj => children.push(obj));
+        traverseSafe(this.gameObject, (obj) => children.push(obj));
         return children;
     }
     configure(options) {
@@ -19481,5 +19503,5 @@ class Stopwatch {
     }
 }
 
-export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, APEngineEvents, AnimatorDecorator, ArgEvent, AudioResource, CameraDecorator, CameraOrbitDecorator, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, Flags, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PromiseArgEvent, PromiseEvent, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TapCode, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, Vector3_Back, Vector3_Down, Vector3_Forward, Vector3_Left, Vector3_One, Vector3_Right, Vector3_Up, Vector3_Zero, XRInput, XRPhysics, appendLine, calculateFrustumPlanes, calculateRowOffsets, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, disposeObject3ds, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getMaterials, getOptionalValue, getWorldPosition, hasValue, inRange, interpolate, interpolateClamped, isEven, isObjectChildOf, isObjectVisible, isOdd, loadImage, normalize, normalizeClamped, objectWorldDirection, pointInPolygon2D, pointOnCircle, pointOnSphere, postJsonData, rotationToFace, setLayer, setLayerMask, setParent, setWorldPosition, sortAZ, sortZA, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
+export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, APEngineEvents, AnimatorDecorator, ArgEvent, AudioResource, CameraDecorator, CameraOrbitDecorator, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, Flags, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PromiseArgEvent, PromiseEvent, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TapCode, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, Vector3_Back, Vector3_Down, Vector3_Forward, Vector3_Left, Vector3_One, Vector3_Right, Vector3_Up, Vector3_Zero, XRInput, XRPhysics, appendLine, calculateFrustumPlanes, calculateRowOffsets, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, disposeObject3ds, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getMaterials, getOptionalValue, getWorldPosition, hasValue, inRange, interpolate, interpolateClamped, isEven, isObjectChildOf, isObjectVisible, isOdd, loadImage, normalize, normalizeClamped, objectWorldDirection, pointInPolygon2D, pointOnCircle, pointOnSphere, postJsonData, rotationToFace, setLayer, setLayerMask, setParent, setWorldPosition, sortAZ, sortZA, traverseSafe, traverseVisibleSafe, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
 //# sourceMappingURL=index.js.map

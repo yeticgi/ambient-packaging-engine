@@ -100,9 +100,7 @@ export function convertToBox2(box3: Box3): Box2 {
 export function setLayer(obj: Object3D, layer: number, children?: boolean) {
     obj.layers.set(layer);
     if (children) {
-        obj.traverse(child => {
-            child.layers.set(layer);
-        });
+        traverseSafe(obj, (child) => child.layers.set(layer));
     }
 }
 
@@ -119,9 +117,7 @@ export function setLayerMask(
 ) {
     obj.layers.mask = layerMask;
     if (children) {
-        obj.traverse(child => {
-            child.layers.mask = layerMask;
-        });
+        traverseSafe(obj, (child) => child.layers.mask = layerMask);
     }
 }
 
@@ -157,7 +153,7 @@ export function isObjectVisible(obj: Object3D) {
 
 export function disposeObject3d<T extends Object3D>(obj: T) {
     if (obj) {
-        obj.traverse((o) => {
+        traverseSafe(obj, (o) => {
             if (o instanceof Mesh) {
                 if (o.geometry) {
                     o.geometry.dispose();
@@ -309,4 +305,35 @@ export function rotationToFace(object3d: Object3D, worldPos: Vector3): Quaternio
     }
 
     return faceRotation;
+}
+
+/**
+ * Same function as Object3D.traverse except that it does not execute on children that have become undefined like the built-in function does.
+ */
+export function traverseSafe(object3d: Object3D, callback: (object3d: Object3D) => void) {
+    callback(object3d);
+
+    const children = object3d.children;
+    for (let i = 0, l = children.length; i < l; i++) {
+        if (children[i]) {
+            traverseSafe(children[i], callback);
+        }
+    }
+}
+
+/**
+ * Same function as Object3D.traverseVisible except that it does not execute on children that have become undefined like the built-in function does.
+ */
+export function traverseVisibleSafe(object3d: Object3D, callback: (object3d: Object3D) => void) {
+
+    if (object3d.visible === false) return;
+
+    callback(object3d);
+
+    const children = object3d.children;
+    for (let i = 0, l = children.length; i < l; i++) {
+        if (children[i]) {
+            traverseVisibleSafe(children[i], callback);
+        }
+    }
 }

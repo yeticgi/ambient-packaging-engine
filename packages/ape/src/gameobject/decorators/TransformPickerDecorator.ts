@@ -11,6 +11,7 @@ import {
 } from "../../input/PointerEventSystem";
 import { Object3D } from "three";
 import { TransformTool } from "../../misc/TransformTool";
+import { traverseSafe } from "../../utils/ThreeUtils";
 
 export interface ITransformPickerDecoratorOptions extends IDecoratorOptions {
 }
@@ -19,7 +20,7 @@ export class TransformPickerDecorator extends Decorator implements IPointerEvent
 
     get pointerTargets(): Object3D[] {
         const children: Object3D[] = [];
-        this.gameObject.traverse(obj => children.push(obj));
+        traverseSafe(this.gameObject, (obj) => children.push(obj));
         return children;
     }
 

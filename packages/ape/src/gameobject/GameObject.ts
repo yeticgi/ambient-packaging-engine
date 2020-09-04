@@ -1,5 +1,6 @@
 import { Object3D, Scene } from "three";
 import { Decorator } from "./decorators/Decorator";
+import { traverseSafe, traverseVisibleSafe } from "../utils/ThreeUtils";
 
 
 enum DestroyState {
@@ -21,7 +22,7 @@ export class GameObject extends Object3D {
     static destroy(gameObject: GameObject): void {
         // Get array of all child gameObjects in ascending order,
         // including the given gameObject.
-        gameObject.traverse((go) => {
+        traverseSafe(gameObject, (go) => {
             if (go instanceof GameObject) {
                 if (go._destroyState === DestroyState.None) {
                     GameObject.__APEngine_destroyQueue.push(go);
@@ -196,7 +197,7 @@ export class GameObject extends Object3D {
         const decorators: T[] = [];
 
         if (!includeInvisible) {
-            this.traverseVisible((o) => {
+            traverseVisibleSafe(this, (o) => {
                 if (o instanceof GameObject) {
                     const decs = o.getDecorators(type);
                     if (decs) {
@@ -205,7 +206,7 @@ export class GameObject extends Object3D {
                 }
             });
         } else {
-            this.traverse((o) => {
+            traverseSafe(this, (o) => {
                 if (o instanceof GameObject) {
                     const decs = o.getDecorators(type);
                     if (decs) {

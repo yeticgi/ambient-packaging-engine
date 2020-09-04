@@ -61,3 +61,11 @@ export declare function getMaterials(mesh: Mesh): Material[];
 export declare function getWorldPosition(object3d: Object3D): Vector3;
 export declare function setWorldPosition(object3d: Object3D, target: Vector3 | Object3D): void;
 export declare function rotationToFace(object3d: Object3D, worldPos: Vector3): Quaternion;
+/**
+ * Same function as Object3D.traverse except that it does not execute on children that have become undefined like the built-in function does.
+ */
+export declare function traverseSafe(object3d: Object3D, callback: (object3d: Object3D) => void): void;
+/**
+ * Same function as Object3D.traverseVisible except that it does not execute on children that have become undefined like the built-in function does.
+ */
+export declare function traverseVisibleSafe(object3d: Object3D, callback: (object3d: Object3D) => void): void;

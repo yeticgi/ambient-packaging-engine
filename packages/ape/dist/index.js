@@ -1,4 +1,4 @@
-import { Clock, Vector2, Vector3, Matrix4, Scene, Box2, Layers, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, Mesh, BoxBufferGeometry, Quaternion, Object3D, MathUtils, Plane, Raycaster, PerspectiveCamera, OrthographicCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Material, Texture, Geometry, BufferGeometry, LoadingManager, TextureLoader } from 'three';
+import { Clock, Vector2, Vector3, Matrix4, Scene, Box2, Layers, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, Mesh, BoxBufferGeometry, Quaternion, Object3D, MathUtils, Plane, Raycaster, Frustum, PerspectiveCamera, OrthographicCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Material, Texture, Geometry, BufferGeometry, LoadingManager, TextureLoader } from 'three';
 import { __awaiter } from 'tslib';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import { Howl } from 'howler';
@@ -6164,6 +6164,11 @@ var APEngineEvents;
  */
 let CameraDecorator = /** @class */ (() => {
     class CameraDecorator extends Decorator {
+        constructor() {
+            super(...arguments);
+            this._frustum = new Frustum();
+            this._projScreenMatrix = new Matrix4();
+        }
         /**
          * The camera that is marked as primary.
          * If no camera is marked as primary, than the first camera is returned.
@@ -6316,6 +6321,10 @@ let CameraDecorator = /** @class */ (() => {
          * ThreeJS camera that is managed by this camera decorator.
          */
         get camera() { return this._camera; }
+        /**
+         * The frustum for the camera. Useful for doing intersection tests with the area visible to the camera.
+         */
+        get frustum() { return this._frustum; }
         configure(options) {
             super.configure(options);
             this._cameraType = getOptionalValue(options.cameraType, 'perspective');
@@ -6331,6 +6340,7 @@ let CameraDecorator = /** @class */ (() => {
         onAttach(gameObject) {
             super.onAttach(gameObject);
             this._createCamera();
+            this._updateFrustum();
             // Add camera decorator to global list of camera decorators.
             CameraDecorator._Cameras.push(this);
             this._onXRSessionStarted = this._onXRSessionStarted.bind(this);
@@ -6350,6 +6360,7 @@ let CameraDecorator = /** @class */ (() => {
         }
         onUpdate() {
             super.onUpdate();
+            this._updateFrustum();
         }
         onLateUpdate() {
             super.onLateUpdate();
@@ -6429,6 +6440,14 @@ let CameraDecorator = /** @class */ (() => {
                 this._camera.parent.remove(this._camera);
             }
             this._camera = null;
+        }
+        _updateFrustum() {
+            if (!this._camera) {
+                // Need camera to update frustum.
+                return;
+            }
+            this._projScreenMatrix.multiplyMatrices(this._camera.projectionMatrix, this._camera.matrixWorldInverse);
+            this._frustum.setFromProjectionMatrix(this._projScreenMatrix);
         }
         onDestroy() {
             super.onDestroy();
@@ -6771,7 +6790,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.4.2';
-    const _time = '1599760637329';
+    const _time = '1599762348298';
     /**
      * The date that this version of the app was built.
      */

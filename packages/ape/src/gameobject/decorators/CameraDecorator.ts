@@ -1,6 +1,6 @@
 import { IDecoratorOptions, Decorator } from "./Decorator";
 import { GameObject } from "../GameObject";
-import { PerspectiveCamera, OrthographicCamera, MathUtils, WebGLRenderer, Scene, Camera, Geometry, BufferGeometry, Material, Group, Matrix4, Vector3, Euler } from "three";
+import { PerspectiveCamera, OrthographicCamera, MathUtils, WebGLRenderer, Scene, Camera, Geometry, BufferGeometry, Material, Group, Matrix4, Vector3, Euler, Frustum } from "three";
 import { getOptionalValue } from "../../utils/MiscUtils";
 import { calculateFrustumPlanes } from "../../utils/MathUtils";
 import { APEngineEvents } from "../../APEngineEvents";
@@ -71,6 +71,8 @@ export class CameraDecorator extends Decorator {
     private _nonXrPositon: Vector3;
     private _nonXrRotation: Euler;
     private _nonXrScale: Vector3;
+    private _frustum = new Frustum();
+    private _projScreenMatrix = new Matrix4();
 
     /**
      * Is the camera orthographic or perspective.
@@ -215,6 +217,11 @@ export class CameraDecorator extends Decorator {
      */
     get camera(): Readonly<PerspectiveCamera> | Readonly<OrthographicCamera> { return this._camera; }
 
+    /**
+     * The frustum for the camera. Useful for doing intersection tests with the area visible to the camera.
+     */
+    get frustum(): Frustum { return this._frustum }
+
     configure(options: ICameraDecoratorOptions): void {
         super.configure(options);
 
@@ -233,6 +240,7 @@ export class CameraDecorator extends Decorator {
         super.onAttach(gameObject);
 
         this._createCamera();
+        this._updateFrustum();
 
         // Add camera decorator to global list of camera decorators.
         CameraDecorator._Cameras.push(this);
@@ -260,6 +268,8 @@ export class CameraDecorator extends Decorator {
 
     onUpdate(): void {
         super.onUpdate();
+
+        this._updateFrustum();
     }
 
     onLateUpdate(): void {
@@ -349,6 +359,16 @@ export class CameraDecorator extends Decorator {
             this._camera.parent.remove(this._camera);
         }
         this._camera = null;
+    }
+
+    private _updateFrustum(): void {
+        if (!this._camera) {
+            // Need camera to update frustum.
+            return;
+        }
+
+        this._projScreenMatrix.multiplyMatrices(this._camera.projectionMatrix, this._camera.matrixWorldInverse);
+        this._frustum.setFromProjectionMatrix(this._projScreenMatrix);
     }
 
     onDestroy(): void {

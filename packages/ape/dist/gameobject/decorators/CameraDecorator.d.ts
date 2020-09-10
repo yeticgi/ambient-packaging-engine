@@ -1,6 +1,6 @@
 import { IDecoratorOptions, Decorator } from "./Decorator";
 import { GameObject } from "../GameObject";
-import { PerspectiveCamera, OrthographicCamera } from "three";
+import { PerspectiveCamera, OrthographicCamera, Frustum } from "three";
 export declare type CameraType = 'perspective' | 'orthographic';
 export declare type FieldOfViewType = 'vertical' | 'horizontal';
 export interface ICameraDecoratorOptions extends IDecoratorOptions {
@@ -45,6 +45,8 @@ export declare class CameraDecorator extends Decorator {
     private _nonXrPositon;
     private _nonXrRotation;
     private _nonXrScale;
+    private _frustum;
+    private _projScreenMatrix;
     /**
      * Is the camera orthographic or perspective.
      */
@@ -98,6 +100,10 @@ export declare class CameraDecorator extends Decorator {
      * ThreeJS camera that is managed by this camera decorator.
      */
     get camera(): Readonly<PerspectiveCamera> | Readonly<OrthographicCamera>;
+    /**
+     * The frustum for the camera. Useful for doing intersection tests with the area visible to the camera.
+     */
+    get frustum(): Frustum;
     configure(options: ICameraDecoratorOptions): void;
     onAttach(gameObject: GameObject): void;
     onVisible(): void;
@@ -110,5 +116,6 @@ export declare class CameraDecorator extends Decorator {
     private _onXRSessionEnded;
     private _createCamera;
     private _removeCamera;
+    private _updateFrustum;
     onDestroy(): void;
 }

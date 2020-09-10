@@ -220,6 +220,12 @@ export declare class Input implements IDisposable {
      */
     private _getMouseButtonState;
     /**
+     * Returns the matching MouseButtonData objects for the given mouse buttons number.
+     * See https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/buttons
+     * @param buttons The number that represents the buttons that are held down.
+     */
+    private _getMouseButtonStates;
+    /**
      * Calculates the Three.js screen position of the pointer from the given pointer event.
      * Unlike viewport positions, Three.js screen positions go from -1 to +1.
      * @param pageX
@@ -228,6 +234,7 @@ export declare class Input implements IDisposable {
     private _calculateScreenPos;
     private _handleMouseDown;
     private _handleMouseUp;
+    private _handleMouseLeave;
     private _handleMouseMove;
     private _getKeyState;
     private _handleKeyUp;

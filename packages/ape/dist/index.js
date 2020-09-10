@@ -3660,6 +3660,7 @@ class Input {
         this._handleMouseDown = this._handleMouseDown.bind(this);
         this._handleMouseMove = this._handleMouseMove.bind(this);
         this._handleMouseUp = this._handleMouseUp.bind(this);
+        this._handleMouseLeave = this._handleMouseLeave.bind(this);
         this._handleWheel = this._handleWheel.bind(this);
         this._handleTouchStart = this._handleTouchStart.bind(this);
         this._handleTouchMove = this._handleTouchMove.bind(this);
@@ -3734,6 +3735,7 @@ class Input {
             this._options.inputElement.removeEventListener('mousedown', this._handleMouseDown);
             this._options.inputElement.removeEventListener('mousemove', this._handleMouseMove);
             this._options.inputElement.removeEventListener('mouseup', this._handleMouseUp);
+            this._options.inputElement.removeEventListener('mouseleave', this._handleMouseLeave);
             this._options.inputElement.removeEventListener('wheel', this._handleWheel);
             this._options.inputElement.removeEventListener('touchstart', this._handleTouchStart);
         }
@@ -3742,6 +3744,7 @@ class Input {
             this._options.inputElement.addEventListener('mousedown', this._handleMouseDown);
             this._options.inputElement.addEventListener('mousemove', this._handleMouseMove);
             this._options.inputElement.addEventListener('mouseup', this._handleMouseUp);
+            this._options.inputElement.addEventListener('mouseleave', this._handleMouseLeave);
             this._options.inputElement.addEventListener('wheel', this._handleWheel);
             this._options.inputElement.addEventListener('touchstart', this._handleTouchStart);
         }
@@ -4170,6 +4173,24 @@ class Input {
         return null;
     }
     /**
+     * Returns the matching MouseButtonData objects for the given mouse buttons number.
+     * See https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/buttons
+     * @param buttons The number that represents the buttons that are held down.
+     */
+    _getMouseButtonStates(buttons) {
+        let states = [];
+        if ((buttons & 1) === 1) {
+            states.push(this._getMouseButtonState(MouseButtonId.Left));
+        }
+        if ((buttons & 2) === 2) {
+            states.push(this._getMouseButtonState(MouseButtonId.Right));
+        }
+        if ((buttons & 4) === 4) {
+            states.push(this._getMouseButtonState(MouseButtonId.Middle));
+        }
+        return states;
+    }
+    /**
      * Calculates the Three.js screen position of the pointer from the given pointer event.
      * Unlike viewport positions, Three.js screen positions go from -1 to +1.
      * @param pageX
@@ -4230,6 +4251,34 @@ class Input {
             this._mouseData.screenPos = this._calculateScreenPos(event.pageX, event.pageY);
         }
     }
+    _handleMouseLeave(event) {
+        if (this._inputType == InputType.Undefined)
+            this._inputType = InputType.Mouse;
+        if (this._inputType != InputType.Mouse)
+            return;
+        if (this.isEventForAnyElement(event, [
+            this._options.canvasElement,
+            ...this._options.getUIHtmlElements(),
+        ])) {
+            event.preventDefault();
+        }
+        // Clear all the button states when the mouse leaves the window
+        let buttonStates = [
+            this._mouseData.leftButtonState,
+            this._mouseData.rightButtonState,
+            this._mouseData.middleButtonState,
+        ];
+        for (let buttonState of buttonStates) {
+            buttonState.setUpFrame(this._options.time.frameCount);
+        }
+        if (this.debugLevel >= 1) {
+            console.log('mouse button ' + event.button + ' leave. fireInputOnFrame: ' + this._options.time.frameCount);
+        }
+        this._targetData.inputUp = event.target;
+        this._mouseData.clientPos = new Vector2(event.clientX, event.pageY);
+        this._mouseData.pagePos = new Vector2(event.pageX, event.pageY);
+        this._mouseData.screenPos = this._calculateScreenPos(event.pageX, event.pageY);
+    }
     _handleMouseMove(event) {
         if (this._inputType == InputType.Undefined)
             this._inputType = InputType.Mouse;
@@ -4240,6 +4289,23 @@ class Input {
             ...this._options.getUIHtmlElements(),
         ])) {
             event.preventDefault();
+        }
+        // Resend the mouse down events if the button is actually down
+        // but is not recorded as such.
+        const buttonStates = this._getMouseButtonStates(event.buttons);
+        let hadButtonDown = false;
+        for (let state of buttonStates) {
+            let down = state.getDownFrame();
+            let up = state.getUpFrame();
+            if (up > down || down === -1) {
+                state.setDownFrame(this._options.time.frameCount);
+                hadButtonDown = true;
+            }
+        }
+        if (hadButtonDown) {
+            if (this.debugLevel >= 1) {
+                console.log('mouse buttons ' + event.buttons + ' already down. fireInputOnFrame: ' + this._options.time.frameCount);
+            }
         }
         this._mouseData.clientPos = new Vector2(event.clientX, event.clientY);
         this._mouseData.pagePos = new Vector2(event.pageX, event.pageY);
@@ -6704,8 +6770,8 @@ var APEngineBuildInfo;
     /**
      * Version number of the app.
      */
-    APEngineBuildInfo.version = '0.4.0';
-    const _time = '1599241284983';
+    APEngineBuildInfo.version = '0.4.2';
+    const _time = '1599760637329';
     /**
      * The date that this version of the app was built.
      */

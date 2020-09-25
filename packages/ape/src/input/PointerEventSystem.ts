@@ -86,7 +86,7 @@ export class PointerEventSystem implements IDisposable {
     /**
      * List of all active pointer event systems.
      */
-    static get activeSystem(): Readonly<PointerEventSystem[]> {
+    static get activeSystems(): Readonly<PointerEventSystem[]> {
         return this._activeSystems;
     }
 
@@ -167,6 +167,8 @@ export class PointerEventSystem implements IDisposable {
     private _pointerEnter: IPointerEventListener = null;
 
     get name(): string { return this._name }
+    get pointerDown(): IPointerEventListener { return this._pointerDown }
+    get pointerEnter(): IPointerEventListener { return this._pointerEnter }
 
     get enabled(): boolean { return this._enabled }
     set enabled(value: boolean) {

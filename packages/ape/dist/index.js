@@ -6498,7 +6498,7 @@ let PointerEventSystem = /** @class */ (() => {
         /**
          * List of all active pointer event systems.
          */
-        static get activeSystem() {
+        static get activeSystems() {
             return this._activeSystems;
         }
         /**
@@ -6555,6 +6555,8 @@ let PointerEventSystem = /** @class */ (() => {
             }
         }
         get name() { return this._name; }
+        get pointerDown() { return this._pointerDown; }
+        get pointerEnter() { return this._pointerEnter; }
         get enabled() { return this._enabled; }
         set enabled(value) {
             if (this._enabled === value) {
@@ -6789,8 +6791,8 @@ var APEngineBuildInfo;
     /**
      * Version number of the app.
      */
-    APEngineBuildInfo.version = '0.4.2';
-    const _time = '1599762348298';
+    APEngineBuildInfo.version = '0.4.3';
+    const _time = '1601064940884';
     /**
      * The date that this version of the app was built.
      */

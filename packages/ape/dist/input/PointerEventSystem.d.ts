@@ -64,7 +64,7 @@ export declare class PointerEventSystem implements IDisposable {
     /**
      * List of all active pointer event systems.
      */
-    static get activeSystem(): Readonly<PointerEventSystem[]>;
+    static get activeSystems(): Readonly<PointerEventSystem[]>;
     /**
      * Update all active pointer events systems.
      * This function sorts the systems based on priority (highest to lowest priority).
@@ -88,6 +88,8 @@ export declare class PointerEventSystem implements IDisposable {
     private _pointerDown;
     private _pointerEnter;
     get name(): string;
+    get pointerDown(): IPointerEventListener;
+    get pointerEnter(): IPointerEventListener;
     get enabled(): boolean;
     set enabled(value: boolean);
     constructor(name: string, priority: number, cameraDecorator?: CameraDecorator);

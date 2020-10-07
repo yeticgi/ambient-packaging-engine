@@ -280,6 +280,19 @@ class Time {
             });
         });
     }
+    /**
+     * Return a promise that resolves once the the given number of frames has passed.
+     */
+    waitForFrames(frameCount) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve) => {
+                this._frameWaitPromises.push({
+                    frame: this._frameCount + frameCount,
+                    resolve
+                });
+            });
+        });
+    }
     dispose() {
     }
 }
@@ -6792,7 +6805,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.4.3';
-    const _time = '1601064940884';
+    const _time = '1602073324030';
     /**
      * The date that this version of the app was built.
      */
@@ -7277,11 +7290,26 @@ class AnimatorDecorator extends Decorator {
     get timeScale() {
         return this._timeScale;
     }
+    /**
+     * The global time scale of the animator.
+     */
     set timeScale(value) {
         this._timeScale = value;
         if (this._mixer) {
             this._mixer.timeScale = value;
         }
+    }
+    /**
+     * The global time of the animator in seconds.
+     */
+    get time() {
+        return this._mixer.time;
+    }
+    /**
+     * The global time of the animator in seconds.
+     */
+    set time(value) {
+        this._mixer.setTime(value);
     }
     configure(options) {
         super.configure(options);

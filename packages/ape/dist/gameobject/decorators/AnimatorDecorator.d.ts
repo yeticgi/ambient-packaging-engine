@@ -37,7 +37,18 @@ export declare class AnimatorDecorator extends Decorator {
      * The global time scale of the animator.
      */
     get timeScale(): number;
+    /**
+     * The global time scale of the animator.
+     */
     set timeScale(value: number);
+    /**
+     * The global time of the animator in seconds.
+     */
+    get time(): number;
+    /**
+     * The global time of the animator in seconds.
+     */
+    set time(value: number);
     configure(options: IAnimatorDecoratorOptions): void;
     addClip(clip: AnimationClip): void;
     getClip(clipName: string): AnimationClip;

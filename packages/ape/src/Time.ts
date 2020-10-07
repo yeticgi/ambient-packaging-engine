@@ -121,6 +121,18 @@ export class Time implements IDisposable {
         });
     }
 
+    /**
+     * Return a promise that resolves once the the given number of frames has passed.
+     */
+    async waitForFrames(frameCount: number): Promise<void> {
+        return new Promise((resolve) => {
+            this._frameWaitPromises.push({
+                frame: this._frameCount + frameCount,
+                resolve
+            });
+        });
+    }
+
     dispose(): void {
     }
 }

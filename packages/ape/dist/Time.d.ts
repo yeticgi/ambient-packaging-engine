@@ -35,5 +35,9 @@ export declare class Time implements IDisposable {
      * Return a promise that resolves once the next frame has started.
      */
     waitForNextFrame(): Promise<void>;
+    /**
+     * Return a promise that resolves once the the given number of frames has passed.
+     */
+    waitForFrames(frameCount: number): Promise<void>;
     dispose(): void;
 }

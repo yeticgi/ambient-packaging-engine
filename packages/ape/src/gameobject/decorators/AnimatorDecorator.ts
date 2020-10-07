@@ -157,12 +157,28 @@ export class AnimatorDecorator extends Decorator {
     get timeScale(): number {
         return this._timeScale;
     }
+    /**
+     * The global time scale of the animator.
+     */
     set timeScale(value: number) {
         this._timeScale = value;
 
         if (this._mixer) {
             this._mixer.timeScale = value;
         }
+    }
+
+    /**
+     * The global time of the animator in seconds.
+     */
+    get time(): number {
+        return this._mixer.time;
+    }
+    /**
+     * The global time of the animator in seconds.
+     */
+    set time(value: number) {
+        this._mixer.setTime(value);
     }
     
     configure(options: IAnimatorDecoratorOptions): void {

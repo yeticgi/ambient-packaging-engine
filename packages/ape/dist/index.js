@@ -1,6 +1,7 @@
 import { Clock, Vector2, Vector3, Matrix4, Scene, Box2, Layers, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, Mesh, BoxBufferGeometry, Quaternion, Object3D, MathUtils, Plane, Raycaster, Frustum, PerspectiveCamera, OrthographicCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Material, Texture, Geometry, BufferGeometry, LoadingManager, TextureLoader } from 'three';
 import { __awaiter } from 'tslib';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
+import { remove } from 'lodash';
 import { Howl } from 'howler';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
@@ -6805,7 +6806,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.4.3';
-    const _time = '1602073324030';
+    const _time = '1602168482269';
     /**
      * The date that this version of the app was built.
      */
@@ -18769,6 +18770,121 @@ class PropertySpectator {
 }
 
 /**
+ * This is a generic object pool class that can be extended from to implement a pool for
+ * theoretically any type of object you would want.
+ */
+class ObjectPool {
+    constructor(name, poolEmptyWarn) {
+        this.name = getOptionalValue(name, `ObjectPool_${MathUtils.generateUUID()}`);
+        this.poolEmptyWarn = getOptionalValue(poolEmptyWarn, true);
+        this._objectIds = new Map();
+    }
+    get poolSize() {
+        return this._pool.length;
+    }
+    /**
+     * Initialize the pool of objects.
+     * @param startSize [Optional] How starting size of the object pool (Default is 5).
+     */
+    initializePool(startSize) {
+        if (this._pool)
+            return;
+        startSize = startSize || 5;
+        this._pool = [];
+        for (let i = 0; i < startSize; i++) {
+            const obj = this.createPoolObject();
+            const id = this.getPoolObjectId(obj);
+            this._objectIds.set(id, true);
+            this._pool.push(obj);
+        }
+        return this;
+    }
+    /**
+     * Retrieve an object from the pool.
+     */
+    retrieve() {
+        if (!this._pool) {
+            this.initializePool();
+        }
+        let obj = null;
+        if (this._pool.length > 0) {
+            obj = this._pool[0];
+            remove(this._pool, o => o === obj);
+        }
+        else {
+            if (this.poolEmptyWarn) {
+                console.warn('[ObjectPool]', this.name, 'ran out of objects in its pool, so it is generating another one.');
+            }
+            obj = this.createPoolObject();
+            const id = this.getPoolObjectId(obj);
+            this._objectIds.set(id, true);
+        }
+        this.onRetrieved(obj);
+        return obj;
+    }
+    /**
+     * Restore the object to the pool.
+     * @param obj
+     */
+    restore(obj) {
+        if (!this._pool) {
+            console.warn("[ObjectPool] Can't place object", obj, 'in pool', this.name, 'because the pool was never initialized.');
+            return false;
+        }
+        const id = this.getPoolObjectId(obj);
+        if (!this._objectIds.has(id)) {
+            console.warn("[ObjectPool] Can't place object", obj, 'in pool', this.name, 'because it does not originate from it.');
+            return false;
+        }
+        this._pool.push(obj);
+        this.onRestored(obj);
+        return true;
+    }
+    /**
+     * Dispose of the pool and any objects it is holding on to.
+     */
+    dispose() {
+        if (this._pool) {
+            for (let i = this._pool.length - 1; i >= 0; i--) {
+                let obj = this._pool[i];
+                if (obj) {
+                    this.disposePoolObject(obj);
+                }
+                this._pool.splice(i, 1);
+            }
+        }
+        this._objectIds.clear();
+    }
+}
+
+class Object3DPool extends ObjectPool {
+    constructor(sourceObject, name, poolEmptyWarn) {
+        super(name, poolEmptyWarn);
+        this._sourceObject = sourceObject.clone(true);
+        this._sourceObject.parent = null;
+    }
+    onRetrieved(obj) {
+        // Do nothing.
+    }
+    onRestored(obj) {
+        if (obj.parent) {
+            // Remove from its current parent.
+            obj.parent.remove(obj);
+            obj.parent = null;
+        }
+    }
+    createPoolObject() {
+        return this._sourceObject.clone(true);
+    }
+    getPoolObjectId(obj) {
+        return obj.uuid;
+    }
+    disposePoolObject(obj) {
+        disposeObject3d(obj);
+    }
+}
+
+/**
  * A Resource Manager is a generic class that manages any type of Resouce that it is created for.
  * Resource Managers load, track, retrieve, and dipose of any Resources assigned to it.
  */
@@ -19636,5 +19752,5 @@ class Stopwatch {
     }
 }
 
-export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, APEngineEvents, AnimatorDecorator, ArgEvent, AudioResource, CameraDecorator, CameraOrbitDecorator, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, Flags, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Physics, PointerEventSystem, PromiseArgEvent, PromiseEvent, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TapCode, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, Vector3_Back, Vector3_Down, Vector3_Forward, Vector3_Left, Vector3_One, Vector3_Right, Vector3_Up, Vector3_Zero, XRInput, XRPhysics, appendLine, calculateFrustumPlanes, calculateRowOffsets, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, disposeObject3ds, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getMaterials, getOptionalValue, getWorldPosition, hasValue, inRange, interpolate, interpolateClamped, isEven, isObjectChildOf, isObjectVisible, isOdd, loadImage, normalize, normalizeClamped, objectWorldDirection, pointInPolygon2D, pointOnCircle, pointOnSphere, postJsonData, rotationToFace, setLayer, setLayerMask, setParent, setWorldPosition, sortAZ, sortZA, traverseSafe, traverseVisibleSafe, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
+export { APEAssetTracker, APEResources, APEngine, APEngineBuildInfo, APEngineEvents, AnimatorDecorator, ArgEvent, AudioResource, CameraDecorator, CameraOrbitDecorator, Decorator, DeviceCamera, DeviceCameraQRReader, DeviceCameraReader, Event, Flags, GLTFPrefab, GLTFResource, GameObject, ImageResource, Input, InputState, InputType, MeshDecorator, MouseButtonId, Object3DPool, ObjectPool, Physics, PointerEventSystem, PromiseArgEvent, PromiseEvent, PropertySpectator, Resource, ResourceManager, Shout, State, StateMachine, Stopwatch, TapCode, TextureResource, ThreeDevTools, Time, TransformPickerDecorator, TransformTool, Vector3_Back, Vector3_Down, Vector3_Forward, Vector3_Left, Vector3_One, Vector3_Right, Vector3_Up, Vector3_Zero, XRInput, XRPhysics, appendLine, calculateFrustumPlanes, calculateRowOffsets, clamp, clampDegAngle, convertToBox2, copyToClipboard, createDebugCube, createDebugSphere, debugLayersToString, disposeObject3d, disposeObject3ds, easeInBack, easeInBounce, easeInCirc, easeInCubic, easeInElastic, easeInExpo, easeInOutBack, easeInOutBounce, easeInOutCirc, easeInOutCubic, easeInOutElastic, easeInOutExpo, easeInOutQuad, easeInOutQuart, easeInOutQuint, easeInOutSine, easeInQuad, easeInQuart, easeInQuint, easeInSine, easeOutBack, easeOutBounce, easeOutCirc, easeOutCubic, easeOutElastic, easeOutExpo, easeOutQuad, easeOutQuart, easeOutQuint, easeOutSine, findParentScene, getElementByClassName, getExtension, getFilename, getMaterials, getOptionalValue, getWorldPosition, hasValue, inRange, interpolate, interpolateClamped, isEven, isObjectChildOf, isObjectVisible, isOdd, loadImage, normalize, normalizeClamped, objectWorldDirection, pointInPolygon2D, pointOnCircle, pointOnSphere, postJsonData, rotationToFace, setLayer, setLayerMask, setParent, setWorldPosition, sortAZ, sortZA, traverseSafe, traverseVisibleSafe, unnormalize, unnormalizeClamped, waitForCondition, waitForSeconds, worldToScreenPosition };
 //# sourceMappingURL=index.js.map

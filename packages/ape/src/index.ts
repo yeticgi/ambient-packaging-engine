@@ -25,6 +25,8 @@ export * from './misc/PropertySpectator';
 export * from './misc/TransformTool';
 export * from './physics/Physics';
 export * from './physics/XRPhysics';
+export * from './object-pools/ObjectPool';
+export * from './object-pools/Object3DPool';
 export * from './resources/APEResources';
 export * from './resources/APEAssetTracker';
 export * from './resources/AudioResource';

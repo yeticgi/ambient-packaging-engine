@@ -1,4 +1,4 @@
-import { remove } from 'lodash';
+import remove from 'lodash/remove';
 import { MathUtils } from 'three';
 import { getOptionalValue } from '../utils/MiscUtils';
 

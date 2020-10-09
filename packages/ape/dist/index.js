@@ -6805,7 +6805,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.4.8';
-    const _time = '1602258793168';
+    const _time = '1602273645177';
     /**
      * The date that this version of the app was built.
      */
@@ -19024,228 +19024,6 @@ class ObjectPool {
     }
 }
 
-class Object3DPool extends ObjectPool {
-    constructor(sourceObject, name, poolEmptyWarn) {
-        super(name, poolEmptyWarn);
-        this._sourceObject = sourceObject.clone(true);
-        this._sourceObject.parent = null;
-    }
-    onRetrieved(obj) {
-        // Do nothing.
-    }
-    onRestored(obj) {
-        if (obj.parent) {
-            // Remove from its current parent.
-            obj.parent.remove(obj);
-            obj.parent = null;
-        }
-    }
-    createPoolObject() {
-        return this._sourceObject.clone(true);
-    }
-    getPoolObjectId(obj) {
-        return obj.uuid;
-    }
-    disposePoolObject(obj) {
-        disposeObject3d(obj);
-    }
-}
-
-/**
- * A Resource Manager is a generic class that manages any type of Resouce that it is created for.
- * Resource Managers load, track, retrieve, and dipose of any Resources assigned to it.
- */
-class ResourceManager {
-    constructor(resourceActivator) {
-        this._resources = new Map();
-        this._activator = resourceActivator;
-    }
-    add(name, config) {
-        if (!this._resources.has(name)) {
-            const resource = new this._activator(name, config);
-            this._resources.set(resource.name, resource);
-        }
-    }
-    unload(name) {
-        if (this._resources.has(name)) {
-            const resource = this._resources.get(name);
-            resource.unload();
-            this._resources.delete(name);
-        }
-    }
-    has(name) {
-        return this._resources.has(name);
-    }
-    count() {
-        return this._resources.size;
-    }
-    get(name) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (this._resources.has(name)) {
-                const resource = this._resources.get(name);
-                if (!resource.loaded) {
-                    yield resource.load();
-                }
-                return resource;
-            }
-            else {
-                throw new Error(`Could not get resource: ${name}`);
-            }
-        });
-    }
-    lookup(name) {
-        return this._resources.get(name);
-    }
-    /**
-     * Returns the combined loading progress of all resources that are currently in this Resource Manager.
-     */
-    getLoadProgress() {
-        if (this._resources.size > 0) {
-            let pTotal = 0;
-            for (const [resourceName, resource] of this._resources) {
-                pTotal += resource.progress;
-            }
-            return pTotal / this._resources.size;
-        }
-        else {
-            return 1;
-        }
-    }
-    preload() {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (this._resources.size > 0) {
-                const resources = Array.from(this._resources.values());
-                yield Promise.all(resources.map(r => r.load()));
-            }
-        });
-    }
-    /**
-     * Returns wether all Resources that are currently in this Resource Manager are loaded or not.
-     */
-    allLoaded() {
-        if (this._resources.size > 0) {
-            const resources = Array.from(this._resources.values());
-            for (let resource of resources) {
-                if (!resource.loaded) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        else {
-            return true;
-        }
-    }
-    /**
-     * Returns a map of all resource names currenty in the resource manager and wether or not they are currently loaded.
-     */
-    loadState() {
-        const map = new Map();
-        for (const [resourceName, resource] of this._resources) {
-            map.set(resourceName, resource.loaded);
-        }
-        return map;
-    }
-    dispose() {
-        this._resources.forEach((resource) => {
-            resource.dispose();
-        });
-        this._resources = new Map();
-    }
-}
-
-/**
- * Base class of all resource objects that are loaded by ResourceManagers.
- * Resource is a generic class that returns an internally loaded object/asset.
- * Classed that derive from Resource should specifify what the object being loaded is.
- */
-class Resource {
-    constructor(name, config) {
-        this._name = undefined;
-        this._loaded = false;
-        this._loadPromise = null;
-        this._object = null;
-        this._progress = 0;
-        this._name = name;
-    }
-    get name() {
-        return this._name;
-    }
-    get loaded() {
-        return this._loaded;
-    }
-    get progress() {
-        return this._progress;
-    }
-    get object() {
-        return this._object;
-    }
-    load() {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                if (!this._loaded) {
-                    if (!this._loadPromise) {
-                        this._loadPromise = new Promise((resolve) => {
-                            this._loadObject().then((object) => {
-                                this._object = object;
-                                this._loaded = true;
-                                this._progress = 1;
-                                this._loadPromise = null;
-                                resolve(this);
-                            });
-                        });
-                    }
-                    return this._loadPromise;
-                }
-                else {
-                    return this;
-                }
-            }
-            catch (error) {
-                this._loaded = false;
-                this._progress = 0;
-                console.error(`Could not load resource ${this.name}.`);
-                console.error(error);
-            }
-        });
-    }
-    unload() {
-        if (this._object) {
-            this._unloadObject();
-        }
-        this._object = null;
-        this._progress = 0;
-    }
-    dispose() {
-        this.unload();
-    }
-}
-
-class AudioResource extends Resource {
-    constructor(name, config) {
-        super(name, config);
-        this._url = config.url;
-        this._loop = getOptionalValue(config.loop, false);
-    }
-    _loadObject() {
-        return new Promise(((resolve, reject) => {
-            const howl = new Howl({
-                src: this._url,
-                loop: this._loop,
-                onload: () => {
-                    resolve(howl);
-                },
-                onloaderror: (soundId, error) => {
-                    reject(error);
-                }
-            });
-        }));
-    }
-    _unloadObject() {
-        this.object.unload();
-    }
-}
-
 /**
  * APE Asset Tracker is a class that tracks objects that must be manually cleaned up that are created by Three JS.
  * These include geometries, materials, and textures.
@@ -19501,6 +19279,231 @@ function findTrackables(asset, trackables) {
                 }
             }
         }
+    }
+}
+
+class Object3DPool extends ObjectPool {
+    constructor(sourceObject, name, poolEmptyWarn) {
+        super(name, poolEmptyWarn);
+        this._sourceObject = sourceObject.clone(true);
+        this._sourceObject.parent = null;
+        APEAssetTracker.track(this._sourceObject);
+    }
+    onRetrieved(obj) {
+        // Do nothing.
+    }
+    onRestored(obj) {
+        if (obj.parent) {
+            // Remove from its current parent.
+            obj.parent.remove(obj);
+            obj.parent = null;
+        }
+    }
+    createPoolObject() {
+        const obj = this._sourceObject.clone(true);
+        APEAssetTracker.track(obj);
+        return obj;
+    }
+    getPoolObjectId(obj) {
+        return obj.uuid;
+    }
+    disposePoolObject(obj) {
+        APEAssetTracker.untrack(obj);
+    }
+}
+
+/**
+ * A Resource Manager is a generic class that manages any type of Resouce that it is created for.
+ * Resource Managers load, track, retrieve, and dipose of any Resources assigned to it.
+ */
+class ResourceManager {
+    constructor(resourceActivator) {
+        this._resources = new Map();
+        this._activator = resourceActivator;
+    }
+    add(name, config) {
+        if (!this._resources.has(name)) {
+            const resource = new this._activator(name, config);
+            this._resources.set(resource.name, resource);
+        }
+    }
+    unload(name) {
+        if (this._resources.has(name)) {
+            const resource = this._resources.get(name);
+            resource.unload();
+            this._resources.delete(name);
+        }
+    }
+    has(name) {
+        return this._resources.has(name);
+    }
+    count() {
+        return this._resources.size;
+    }
+    get(name) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this._resources.has(name)) {
+                const resource = this._resources.get(name);
+                if (!resource.loaded) {
+                    yield resource.load();
+                }
+                return resource;
+            }
+            else {
+                throw new Error(`Could not get resource: ${name}`);
+            }
+        });
+    }
+    lookup(name) {
+        return this._resources.get(name);
+    }
+    /**
+     * Returns the combined loading progress of all resources that are currently in this Resource Manager.
+     */
+    getLoadProgress() {
+        if (this._resources.size > 0) {
+            let pTotal = 0;
+            for (const [resourceName, resource] of this._resources) {
+                pTotal += resource.progress;
+            }
+            return pTotal / this._resources.size;
+        }
+        else {
+            return 1;
+        }
+    }
+    preload() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this._resources.size > 0) {
+                const resources = Array.from(this._resources.values());
+                yield Promise.all(resources.map(r => r.load()));
+            }
+        });
+    }
+    /**
+     * Returns wether all Resources that are currently in this Resource Manager are loaded or not.
+     */
+    allLoaded() {
+        if (this._resources.size > 0) {
+            const resources = Array.from(this._resources.values());
+            for (let resource of resources) {
+                if (!resource.loaded) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        else {
+            return true;
+        }
+    }
+    /**
+     * Returns a map of all resource names currenty in the resource manager and wether or not they are currently loaded.
+     */
+    loadState() {
+        const map = new Map();
+        for (const [resourceName, resource] of this._resources) {
+            map.set(resourceName, resource.loaded);
+        }
+        return map;
+    }
+    dispose() {
+        this._resources.forEach((resource) => {
+            resource.dispose();
+        });
+        this._resources = new Map();
+    }
+}
+
+/**
+ * Base class of all resource objects that are loaded by ResourceManagers.
+ * Resource is a generic class that returns an internally loaded object/asset.
+ * Classed that derive from Resource should specifify what the object being loaded is.
+ */
+class Resource {
+    constructor(name, config) {
+        this._name = undefined;
+        this._loaded = false;
+        this._loadPromise = null;
+        this._object = null;
+        this._progress = 0;
+        this._name = name;
+    }
+    get name() {
+        return this._name;
+    }
+    get loaded() {
+        return this._loaded;
+    }
+    get progress() {
+        return this._progress;
+    }
+    get object() {
+        return this._object;
+    }
+    load() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                if (!this._loaded) {
+                    if (!this._loadPromise) {
+                        this._loadPromise = new Promise((resolve) => {
+                            this._loadObject().then((object) => {
+                                this._object = object;
+                                this._loaded = true;
+                                this._progress = 1;
+                                this._loadPromise = null;
+                                resolve(this);
+                            });
+                        });
+                    }
+                    return this._loadPromise;
+                }
+                else {
+                    return this;
+                }
+            }
+            catch (error) {
+                this._loaded = false;
+                this._progress = 0;
+                console.error(`Could not load resource ${this.name}.`);
+                console.error(error);
+            }
+        });
+    }
+    unload() {
+        if (this._object) {
+            this._unloadObject();
+        }
+        this._object = null;
+        this._progress = 0;
+    }
+    dispose() {
+        this.unload();
+    }
+}
+
+class AudioResource extends Resource {
+    constructor(name, config) {
+        super(name, config);
+        this._url = config.url;
+        this._loop = getOptionalValue(config.loop, false);
+    }
+    _loadObject() {
+        return new Promise(((resolve, reject) => {
+            const howl = new Howl({
+                src: this._url,
+                loop: this._loop,
+                onload: () => {
+                    resolve(howl);
+                },
+                onloaderror: (soundId, error) => {
+                    reject(error);
+                }
+            });
+        }));
+    }
+    _unloadObject() {
+        this.object.unload();
     }
 }
 

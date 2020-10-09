@@ -1,5 +1,5 @@
 import { Object3D } from 'three';
-import { disposeObject3d } from '../utils/ThreeUtils';
+import { APEAssetTracker } from '../resources/APEAssetTracker';
 import { ObjectPool } from './ObjectPool';
 
 export class Object3DPool extends ObjectPool<Object3D> {
@@ -14,13 +14,15 @@ export class Object3DPool extends ObjectPool<Object3D> {
 
         this._sourceObject = sourceObject.clone(true);
         this._sourceObject.parent = null;
+
+        APEAssetTracker.track(this._sourceObject);
     }
 
-    onRetrieved(obj: Object3D): void {
+    protected onRetrieved(obj: Object3D): void {
         // Do nothing.
     }
 
-    onRestored(obj: Object3D): void {
+    protected onRestored(obj: Object3D): void {
         if (obj.parent) {
             // Remove from its current parent.
             obj.parent.remove(obj);
@@ -28,15 +30,18 @@ export class Object3DPool extends ObjectPool<Object3D> {
         }
     }
 
-    createPoolObject(): Object3D {
-        return this._sourceObject.clone(true);
+    protected createPoolObject(): Object3D {
+        const obj = this._sourceObject.clone(true);
+        APEAssetTracker.track(obj);
+
+        return obj;
     }
 
-    getPoolObjectId(obj: Object3D): string {
+    protected getPoolObjectId(obj: Object3D): string {
         return obj.uuid;
     }
 
-    disposePoolObject(obj: Object3D): void {
-        disposeObject3d(obj);
+    protected disposePoolObject(obj: Object3D): void {
+        APEAssetTracker.untrack(obj);
     }
 }

@@ -38,24 +38,24 @@ export declare abstract class ObjectPool<T> {
      * Called when an object is retrieved from the pool.
      * @param obj The object that was retrieved.
      */
-    abstract onRetrieved(obj: T): void;
+    protected abstract onRetrieved(obj: T): void;
     /**
      * Called when an object is restored to the pool.
      * @param obj The object that was restored.
      */
-    abstract onRestored(obj: T): void;
+    protected abstract onRestored(obj: T): void;
     /**
      * Called to create a new object for the pool.
      */
-    abstract createPoolObject(): T;
+    protected abstract createPoolObject(): T;
     /**
      * Called to retireve an unique id for the given object.
      * @param obj The object to get an id for.
      */
-    abstract getPoolObjectId(obj: T): string;
+    protected abstract getPoolObjectId(obj: T): string;
     /**
      * Called when the object is being disposed of.
      * @param obj The object being disposed.
      */
-    abstract disposePoolObject(obj: T): void;
+    protected abstract disposePoolObject(obj: T): void;
 }

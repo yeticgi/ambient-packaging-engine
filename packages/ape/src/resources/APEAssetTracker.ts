@@ -1,5 +1,5 @@
-import { Geometry, Material, Texture, Object3D, Mesh, BufferGeometry } from "three";
-import { sortZA } from "../utils/MiscUtils";
+import { Geometry, Material, Texture, Object3D, Mesh, BufferGeometry, TextureDataType } from "three";
+import { inRange } from "../utils/MathUtils";
 
 declare type Trackable = Object3D | Geometry | BufferGeometry | Material | Texture;
 
@@ -14,6 +14,17 @@ export interface IAssetCount {
 export interface IAssetReference { 
     asset: Trackable,
     referenceCount: number
+}
+
+export interface IAssetSnapshot {
+    uuid: string,
+    name: string,
+    type: string | TextureDataType,
+    referenceCount: number
+}
+
+export interface ISnapshot {
+    assetSnapshots: IAssetSnapshot[]
 }
 
 /**
@@ -38,6 +49,8 @@ export namespace APEAssetTracker {
      * 0: Disabled, 1: Track/Release events, 2: Total counts
      */
     export let debugLevel: number = 0;
+
+    export let snapshots: ISnapshot[] = [];
 
     export function getAssetCounts(): IAssetCount {
         const assetCounts: IAssetCount = {
@@ -65,6 +78,82 @@ export namespace APEAssetTracker {
         });
 
         return assetCounts;
+    }
+
+    /**
+     * Take a snapshot of the current state of asset references.
+     * This is useful for comparing snapshots during debugging to figure out which assets are not 
+     * being untracked and cleaned up properly.
+     */
+    export function takeSnapshot(): ISnapshot {
+        const snapshot: ISnapshot = {
+            assetSnapshots: []
+        };
+
+        assetRefs.forEach((assetRef) => {
+            snapshot.assetSnapshots.push({
+                uuid: assetRef.asset.uuid,
+                name: assetRef.asset.name,
+                type: assetRef.asset.type,
+                referenceCount: assetRef.referenceCount,
+            });
+        });
+
+        snapshots.push(snapshot);
+
+        return snapshot;
+    }
+    
+    export function clearSnapshots(): void {
+        snapshots = [];
+    }
+
+    export function diffOfLastTwoSnapshots(): IAssetSnapshot[] {
+        if (snapshots.length >= 2) {
+            return diffOfSnapshots(snapshots[snapshots.length - 2], snapshots[snapshots.length - 1]);
+        } else {
+            console.warn(`Need at least two snapshots in order to diff the last two.`);
+        }
+    }
+
+    export function diffOfSnapshots(snapshotA: ISnapshot, snapshotB: ISnapshot): IAssetSnapshot[] {
+        const setA = Array.from(new Set(snapshotA.assetSnapshots));
+        const setB = Array.from(new Set(snapshotB.assetSnapshots));
+
+        // Create a diff set that has the elements from setA that are not in setB.
+        const diff = [];
+        for (const entry of setA) {
+            const inSetB = setB.some(snap => snap.uuid === entry.uuid);
+            if (!inSetB) {
+                diff.push(entry);
+            }
+        }
+        
+        return diff;
+    }
+
+    export function intersectOfLastTwoSnapshots(): IAssetSnapshot[] {
+        if (snapshots.length >= 2) {
+            return intersectOfSnapshots(snapshots[snapshots.length - 2], snapshots[snapshots.length - 1]);
+        } else {
+            console.warn(`Need at least two snapshots in order to intersect the last two.`);
+        }
+    }
+
+    export function intersectOfSnapshots(snapshotA: ISnapshot, snapshotB: ISnapshot): IAssetSnapshot[] {
+        const setA = Array.from(new Set(snapshotA.assetSnapshots));
+        const setB = Array.from(new Set(snapshotB.assetSnapshots));
+
+        // Create a intersection set that has the elements that are in both setA and setB.
+        const intersect = [];
+        for (const entry of setA) {
+            const inSetB = setB.some(snap => snap.uuid === entry.uuid);
+            if (inSetB) {
+                intersect.push(entry);
+            }
+        }
+
+        return intersect;
     }
 
     /**
@@ -168,6 +257,7 @@ export namespace APEAssetTracker {
         });
 
         assetRefs = new Map();
+        snapshots = [];
     }
 }
 

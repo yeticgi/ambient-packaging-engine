@@ -4,12 +4,14 @@ import { SceneRenderOperation as RenderOperation } from "./SceneRenderOperation"
 import { GameObject } from "../gameobject/GameObject";
 import { CameraDecorator } from "../gameobject/decorators/CameraDecorator";
 import { traverseSafe } from "../utils/ThreeUtils";
+import { Stopwatch } from "../utils/Stopwatch";
 
 export class SceneManager implements IDisposable {
 
     private _scenes: Scene[] = [];
     private _primaryScene: Scene = null;
     private _renderList: RenderOperation[] = [];
+    private _updatedGameObjects: GameObject[];
     
     /**
      * Scenes that are updated by APEngine. 
@@ -101,11 +103,14 @@ export class SceneManager implements IDisposable {
     }
 
     update(): void {
+        this._updatedGameObjects = [];
+
         for (let scene of this._scenes) {
             if (scene) {
                 traverseSafe(scene, (go) => {
                     if (go instanceof GameObject) {
                         go.onUpdate();
+                        this._updatedGameObjects.push(go);
                     }
                 });
             }
@@ -113,13 +118,9 @@ export class SceneManager implements IDisposable {
     }
 
     lateUpdate(): void {
-        for (let scene of this._scenes) {
-            if (scene) {
-                traverseSafe(scene, (go) => {
-                    if (go instanceof GameObject) {
-                        go.onLateUpdate();
-                    }
-                });
+        for (let i = 0; i < this._updatedGameObjects.length; i++) {
+            if (this._updatedGameObjects[i]) {
+                this._updatedGameObjects[i].onLateUpdate();
             }
         }
     }
@@ -144,5 +145,6 @@ export class SceneManager implements IDisposable {
         this._scenes = [];
         this._renderList = [];
         this._primaryScene = null;
+        this._updatedGameObjects = [];
     }
 }

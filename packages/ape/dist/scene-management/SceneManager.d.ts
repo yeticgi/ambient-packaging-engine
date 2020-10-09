@@ -6,6 +6,7 @@ export declare class SceneManager implements IDisposable {
     private _scenes;
     private _primaryScene;
     private _renderList;
+    private _updatedGameObjects;
     /**
      * Scenes that are updated by APEngine.
      * GameObjects that are parented to scenes in this list will get their lifecycle functions invoked.

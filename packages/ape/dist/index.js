@@ -6804,8 +6804,8 @@ var APEngineBuildInfo;
     /**
      * Version number of the app.
      */
-    APEngineBuildInfo.version = '0.4.5';
-    const _time = '1602169746824';
+    APEngineBuildInfo.version = '0.4.8';
+    const _time = '1602258793168';
     /**
      * The date that this version of the app was built.
      */
@@ -6933,24 +6933,22 @@ class SceneManager {
         this._renderList = [];
     }
     update() {
+        this._updatedGameObjects = [];
         for (let scene of this._scenes) {
             if (scene) {
                 traverseSafe(scene, (go) => {
                     if (go instanceof GameObject) {
                         go.onUpdate();
+                        this._updatedGameObjects.push(go);
                     }
                 });
             }
         }
     }
     lateUpdate() {
-        for (let scene of this._scenes) {
-            if (scene) {
-                traverseSafe(scene, (go) => {
-                    if (go instanceof GameObject) {
-                        go.onLateUpdate();
-                    }
-                });
+        for (let i = 0; i < this._updatedGameObjects.length; i++) {
+            if (this._updatedGameObjects[i]) {
+                this._updatedGameObjects[i].onLateUpdate();
             }
         }
     }
@@ -6971,6 +6969,7 @@ class SceneManager {
         this._scenes = [];
         this._renderList = [];
         this._primaryScene = null;
+        this._updatedGameObjects = [];
     }
 }
 
@@ -19268,6 +19267,7 @@ var APEAssetTracker;
      * 0: Disabled, 1: Track/Release events, 2: Total counts
      */
     APEAssetTracker.debugLevel = 0;
+    APEAssetTracker.snapshots = [];
     function getAssetCounts() {
         const assetCounts = {
             geometry: 0,
@@ -19297,6 +19297,77 @@ var APEAssetTracker;
         return assetCounts;
     }
     APEAssetTracker.getAssetCounts = getAssetCounts;
+    /**
+     * Take a snapshot of the current state of asset references.
+     * This is useful for comparing snapshots during debugging to figure out which assets are not
+     * being untracked and cleaned up properly.
+     */
+    function takeSnapshot() {
+        const snapshot = {
+            assetSnapshots: []
+        };
+        APEAssetTracker.assetRefs.forEach((assetRef) => {
+            snapshot.assetSnapshots.push({
+                uuid: assetRef.asset.uuid,
+                name: assetRef.asset.name,
+                type: assetRef.asset.type,
+                referenceCount: assetRef.referenceCount,
+            });
+        });
+        APEAssetTracker.snapshots.push(snapshot);
+        return snapshot;
+    }
+    APEAssetTracker.takeSnapshot = takeSnapshot;
+    function clearSnapshots() {
+        APEAssetTracker.snapshots = [];
+    }
+    APEAssetTracker.clearSnapshots = clearSnapshots;
+    function diffOfLastTwoSnapshots() {
+        if (APEAssetTracker.snapshots.length >= 2) {
+            return diffOfSnapshots(APEAssetTracker.snapshots[APEAssetTracker.snapshots.length - 2], APEAssetTracker.snapshots[APEAssetTracker.snapshots.length - 1]);
+        }
+        else {
+            console.warn(`Need at least two snapshots in order to diff the last two.`);
+        }
+    }
+    APEAssetTracker.diffOfLastTwoSnapshots = diffOfLastTwoSnapshots;
+    function diffOfSnapshots(snapshotA, snapshotB) {
+        const setA = Array.from(new Set(snapshotA.assetSnapshots));
+        const setB = Array.from(new Set(snapshotB.assetSnapshots));
+        // Create a diff set that has the elements from setA that are not in setB.
+        const diff = [];
+        for (const entry of setA) {
+            const inSetB = setB.some(snap => snap.uuid === entry.uuid);
+            if (!inSetB) {
+                diff.push(entry);
+            }
+        }
+        return diff;
+    }
+    APEAssetTracker.diffOfSnapshots = diffOfSnapshots;
+    function intersectOfLastTwoSnapshots() {
+        if (APEAssetTracker.snapshots.length >= 2) {
+            return intersectOfSnapshots(APEAssetTracker.snapshots[APEAssetTracker.snapshots.length - 2], APEAssetTracker.snapshots[APEAssetTracker.snapshots.length - 1]);
+        }
+        else {
+            console.warn(`Need at least two snapshots in order to intersect the last two.`);
+        }
+    }
+    APEAssetTracker.intersectOfLastTwoSnapshots = intersectOfLastTwoSnapshots;
+    function intersectOfSnapshots(snapshotA, snapshotB) {
+        const setA = Array.from(new Set(snapshotA.assetSnapshots));
+        const setB = Array.from(new Set(snapshotB.assetSnapshots));
+        // Create a intersection set that has the elements that are in both setA and setB.
+        const intersect = [];
+        for (const entry of setA) {
+            const inSetB = setB.some(snap => snap.uuid === entry.uuid);
+            if (inSetB) {
+                intersect.push(entry);
+            }
+        }
+        return intersect;
+    }
+    APEAssetTracker.intersectOfSnapshots = intersectOfSnapshots;
     /**
      * Track the given asset by incrementing the reference counter for it.
      */
@@ -19384,6 +19455,7 @@ var APEAssetTracker;
             }
         });
         APEAssetTracker.assetRefs = new Map();
+        APEAssetTracker.snapshots = [];
     }
     APEAssetTracker.dispose = dispose;
 })(APEAssetTracker || (APEAssetTracker = {}));

@@ -1,4 +1,4 @@
-import { Geometry, Material, Texture, Object3D, BufferGeometry } from "three";
+import { Geometry, Material, Texture, Object3D, BufferGeometry, TextureDataType } from "three";
 declare type Trackable = Object3D | Geometry | BufferGeometry | Material | Texture;
 export interface IAssetCount {
     object3d: number;
@@ -10,6 +10,15 @@ export interface IAssetCount {
 export interface IAssetReference {
     asset: Trackable;
     referenceCount: number;
+}
+export interface IAssetSnapshot {
+    uuid: string;
+    name: string;
+    type: string | TextureDataType;
+    referenceCount: number;
+}
+export interface ISnapshot {
+    assetSnapshots: IAssetSnapshot[];
 }
 /**
  * APE Asset Tracker is a class that tracks objects that must be manually cleaned up that are created by Three JS.
@@ -31,7 +40,19 @@ export declare namespace APEAssetTracker {
      * 0: Disabled, 1: Track/Release events, 2: Total counts
      */
     let debugLevel: number;
+    let snapshots: ISnapshot[];
     function getAssetCounts(): IAssetCount;
+    /**
+     * Take a snapshot of the current state of asset references.
+     * This is useful for comparing snapshots during debugging to figure out which assets are not
+     * being untracked and cleaned up properly.
+     */
+    function takeSnapshot(): ISnapshot;
+    function clearSnapshots(): void;
+    function diffOfLastTwoSnapshots(): IAssetSnapshot[];
+    function diffOfSnapshots(snapshotA: ISnapshot, snapshotB: ISnapshot): IAssetSnapshot[];
+    function intersectOfLastTwoSnapshots(): IAssetSnapshot[];
+    function intersectOfSnapshots(snapshotA: ISnapshot, snapshotB: ISnapshot): IAssetSnapshot[];
     /**
      * Track the given asset by incrementing the reference counter for it.
      */

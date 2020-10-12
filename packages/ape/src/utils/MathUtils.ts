@@ -166,3 +166,41 @@ export function calculateFrustumPlanes(size: number, aspect: number): { left: nu
         bottom: - size / 2,
     }
 }
+
+/**
+ * Split integer number into an array of mostly equal parts.
+ * @example 
+ * splitInteger(10, 3) // [4, 3, 3]
+ * splitInteger(142, 5) // [29, 29, 28, 28, 28]
+ */
+export function splitInteger(num: number, parts: number): number[] {
+    if (!Number.isInteger(num)) {
+        return null;
+    }
+    if (num < parts) {
+        return null;
+    } 
+
+    const mod = num % parts;
+    const splitArray: number[] = [];
+    
+    if (mod === 0) {
+        const value = num / parts;
+        for (let i = 0; i < parts; i++) {
+            splitArray.push(value);
+        }
+
+        return splitArray;
+    } else {
+        const value = (num - mod) / parts;
+        for (let i = 0; i < parts; i++) {
+            splitArray.push(value);
+        }
+
+        for(let i =0; i < mod; i++) {
+            splitArray[i] = splitArray[i] + 1;
+        }
+
+        return splitArray;
+    }
+}

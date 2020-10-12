@@ -32,3 +32,10 @@ export declare function calculateFrustumPlanes(size: number, aspect: number): {
     top: number;
     bottom: number;
 };
+/**
+ * Split integer number into an array of mostly equal parts.
+ * @example
+ * splitInteger(10, 3) // [4, 3, 3]
+ * splitInteger(142, 5) // [29, 29, 28, 28, 28]
+ */
+export declare function splitInteger(num: number, parts: number): number[];

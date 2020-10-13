@@ -219,8 +219,15 @@ export function createDebugCube(size: number, color: string, lit?: boolean): Mes
     return new Mesh(geometry, material);
 }
 
-export function worldToScreenPosition(object3d: Object3D, camera: Camera): Vector2 {
-    const pos = new Vector3().setFromMatrixPosition(object3d.matrixWorld);
+export function worldToScreenPosition(target: Object3D | Vector3, camera: Camera): Vector2 {
+    const pos = new Vector3();
+    
+    if (target instanceof Object3D) {
+        pos.setFromMatrixPosition(target.matrixWorld);
+    } else {
+        pos.copy(target);
+    }
+
     pos.project(camera);
 
     const halfWidth = window.innerWidth * 0.5;

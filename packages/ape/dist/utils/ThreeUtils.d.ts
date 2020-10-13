@@ -50,7 +50,7 @@ export declare function disposeObject3d<T extends Object3D>(obj: T): void;
 export declare function disposeObject3ds(objs: Object3D[]): void;
 export declare function createDebugSphere(radius: number, color: string, lit?: boolean): Mesh;
 export declare function createDebugCube(size: number, color: string, lit?: boolean): Mesh;
-export declare function worldToScreenPosition(object3d: Object3D, camera: Camera): Vector2;
+export declare function worldToScreenPosition(target: Object3D | Vector3, camera: Camera): Vector2;
 /**
  * Return the world direction for the given local direction from the object's perspective.
  * @param localDirection The local direction.

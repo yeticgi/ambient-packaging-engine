@@ -1,4 +1,4 @@
-import { Clock, Vector2, Vector3, Matrix4, Scene, Box2, Layers, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, Mesh, BoxBufferGeometry, Quaternion, Object3D, MathUtils, Plane, Raycaster, Frustum, PerspectiveCamera, OrthographicCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Material, Texture, Geometry, BufferGeometry, LoadingManager, TextureLoader } from 'three';
+import { Clock, Vector2, Vector3, Matrix4, Scene, Box2, Layers, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, Mesh, BoxBufferGeometry, Object3D, Quaternion, MathUtils, Plane, Raycaster, Frustum, PerspectiveCamera, OrthographicCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Material, Texture, Geometry, BufferGeometry, LoadingManager, TextureLoader } from 'three';
 import { __awaiter } from 'tslib';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import { Howl } from 'howler';
@@ -4967,8 +4967,14 @@ function createDebugCube(size, color, lit) {
     }
     return new Mesh(geometry, material);
 }
-function worldToScreenPosition(object3d, camera) {
-    const pos = new Vector3().setFromMatrixPosition(object3d.matrixWorld);
+function worldToScreenPosition(target, camera) {
+    const pos = new Vector3();
+    if (target instanceof Object3D) {
+        pos.setFromMatrixPosition(target.matrixWorld);
+    }
+    else {
+        pos.copy(target);
+    }
     pos.project(camera);
     const halfWidth = window.innerWidth * 0.5;
     const halfHeight = window.innerHeight * 0.5;
@@ -6838,7 +6844,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.4.8';
-    const _time = '1602518663905';
+    const _time = '1602598031537';
     /**
      * The date that this version of the app was built.
      */

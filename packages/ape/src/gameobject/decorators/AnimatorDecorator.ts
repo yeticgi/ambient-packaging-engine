@@ -134,6 +134,11 @@ export interface PlayClipOptions {
      * Time to start playing the clip at in normalized range (0.0 - 1.0).
      */
     normalizedStartTime?: number;
+
+    /**
+     * Duration of the clip in seconds.
+     */
+    durationOverride?: number;
 }
 
 export class AnimatorDecorator extends Decorator {
@@ -309,8 +314,14 @@ export class AnimatorDecorator extends Decorator {
         // Always clamp on the last frame when finished.
         action.clampWhenFinished = true;
 
+        if (options.durationOverride >= 0) {
+            action.setDuration(options.durationOverride);
+        } else {
+            action.setEffectiveTimeScale(1);
+        }
+
         // Change start time if one is provided.
-        if (options.normalizedStartTime) {
+        if (options.normalizedStartTime >= 0) {
             options.normalizedStartTime = clamp(options.normalizedStartTime, 0, 1);
             action.time = unnormalize(options.normalizedStartTime, 0, action.getClip().duration);
         }

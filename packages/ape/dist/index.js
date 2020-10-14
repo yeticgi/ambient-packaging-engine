@@ -6844,7 +6844,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.4.8';
-    const _time = '1602598031537';
+    const _time = '1602681442134';
     /**
      * The date that this version of the app was built.
      */
@@ -7458,8 +7458,14 @@ class AnimatorDecorator extends Decorator {
         }
         // Always clamp on the last frame when finished.
         action.clampWhenFinished = true;
+        if (options.durationOverride >= 0) {
+            action.setDuration(options.durationOverride);
+        }
+        else {
+            action.setEffectiveTimeScale(1);
+        }
         // Change start time if one is provided.
-        if (options.normalizedStartTime) {
+        if (options.normalizedStartTime >= 0) {
             options.normalizedStartTime = clamp(options.normalizedStartTime, 0, 1);
             action.time = unnormalize(options.normalizedStartTime, 0, action.getClip().duration);
         }

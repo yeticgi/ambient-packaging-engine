@@ -22,6 +22,10 @@ export interface PlayClipOptions {
      * Time to start playing the clip at in normalized range (0.0 - 1.0).
      */
     normalizedStartTime?: number;
+    /**
+     * Duration of the clip in seconds.
+     */
+    durationOverride?: number;
 }
 export declare class AnimatorDecorator extends Decorator {
     debug: boolean;

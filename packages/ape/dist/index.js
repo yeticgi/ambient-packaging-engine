@@ -6844,7 +6844,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.4.8';
-    const _time = '1602681442134';
+    const _time = '1602880911423';
     /**
      * The date that this version of the app was built.
      */
@@ -6993,6 +6993,8 @@ class SceneManager {
     }
     render(webglRenderer) {
         webglRenderer.clear();
+        webglRenderer.info.autoReset = false;
+        webglRenderer.info.reset();
         for (let renderOp of this._renderList) {
             if (renderOp) {
                 renderOp.render(webglRenderer);

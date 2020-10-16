@@ -1,10 +1,9 @@
 import { IDisposable } from "../misc/IDisposable";
-import { Scene, Camera, WebGLRenderer, PerspectiveCamera } from "three";
+import { Scene, WebGLRenderer } from "three";
 import { SceneRenderOperation as RenderOperation } from "./SceneRenderOperation";
 import { GameObject } from "../gameobject/GameObject";
 import { CameraDecorator } from "../gameobject/decorators/CameraDecorator";
 import { traverseSafe } from "../utils/ThreeUtils";
-import { Stopwatch } from "../utils/Stopwatch";
 
 export class SceneManager implements IDisposable {
 
@@ -127,6 +126,8 @@ export class SceneManager implements IDisposable {
 
     render(webglRenderer: WebGLRenderer): void {
         webglRenderer.clear();
+        webglRenderer.info.autoReset = false;
+        webglRenderer.info.reset();
         
         for (let renderOp of this._renderList) {
             if (renderOp) {

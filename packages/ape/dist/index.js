@@ -1,4 +1,4 @@
-import { Clock, Vector2, Vector3, Matrix4, Scene, Box2, Layers, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, Mesh, BoxBufferGeometry, Object3D, Quaternion, MathUtils, Plane, Raycaster, Frustum, PerspectiveCamera, OrthographicCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Material, Texture, Geometry, BufferGeometry, LoadingManager, TextureLoader } from 'three';
+import { Clock, Vector2, Vector3, Matrix4, Scene, Box2, Layers, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, Mesh, BoxBufferGeometry, Object3D, Quaternion, MathUtils, Plane, Raycaster, Frustum, PerspectiveCamera, OrthographicCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Skeleton, SkinnedMesh, Material, Texture, Geometry, BufferGeometry, LoadingManager, TextureLoader } from 'three';
 import { __awaiter } from 'tslib';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import { Howl } from 'howler';
@@ -6843,8 +6843,8 @@ var APEngineBuildInfo;
     /**
      * Version number of the app.
      */
-    APEngineBuildInfo.version = '0.4.8';
-    const _time = '1602880911423';
+    APEngineBuildInfo.version = '0.5.0';
+    const _time = '1603152003943';
     /**
      * The date that this version of the app was built.
      */
@@ -19093,12 +19093,99 @@ var APEAssetTracker;
      */
     APEAssetTracker.debugLevel = 0;
     APEAssetTracker.snapshots = [];
+    /**
+     * Map of uuids for objects that do not define a uuid within themselves.
+     */
+    let internalUUIDs = new Map();
+    function getUUID(trackable) {
+        if ('uuid' in trackable) {
+            return trackable.uuid;
+        }
+        else {
+            let uuid = internalUUIDs.get(trackable);
+            if (!uuid) {
+                uuid = MathUtils.generateUUID();
+                internalUUIDs.set(trackable, uuid);
+            }
+            return uuid;
+        }
+    }
+    function getName(trackable) {
+        if ('name' in trackable) {
+            return trackable.name;
+        }
+        else if (trackable instanceof Skeleton) {
+            return 'Skeleton';
+        }
+        else {
+            return 'Unnamed';
+        }
+    }
+    function getType(trackable) {
+        if ('type' in trackable) {
+            return trackable.type;
+        }
+        else if (trackable instanceof Skeleton) {
+            return 'Skeleton';
+        }
+        else {
+            return 'Unknown Type';
+        }
+    }
+    /**
+     * Recursive search function that will collect all objects underneath the given asset that can be considered a Trackable.
+     * Each item's key in the Map is the trackable's uuid.
+     */
+    function findTrackables(asset, trackables) {
+        if (!asset) {
+            return;
+        }
+        // Handle arrays of objects, materials, and textures.
+        if (Array.isArray(asset)) {
+            asset.forEach(resource => findTrackables(resource, trackables));
+            return;
+        }
+        if ('dispose' in asset || asset instanceof Object3D) {
+            trackables.set(getUUID(asset), asset);
+        }
+        if (asset instanceof Object3D) {
+            if (asset instanceof Mesh) {
+                findTrackables(asset.geometry, trackables);
+                findTrackables(asset.material, trackables);
+                if (asset instanceof SkinnedMesh) {
+                    findTrackables(asset.skeleton, trackables);
+                }
+            }
+            findTrackables(asset.children, trackables);
+        }
+        else if (asset instanceof Material) {
+            // We have to check if there are any textures on the material
+            for (const value of Object.values(asset)) {
+                if (value instanceof Texture) {
+                    findTrackables(value, trackables);
+                }
+            }
+            // We also have to check if any uniforms reference textures or arrays of textures
+            if ('uniforms' in asset) {
+                const uniforms = asset.uniforms;
+                for (const uniform of Object.values(uniforms)) {
+                    if (uniform) {
+                        const uniformValue = uniform.value;
+                        if (uniformValue instanceof Texture || Array.isArray(uniformValue)) {
+                            findTrackables(uniformValue, trackables);
+                        }
+                    }
+                }
+            }
+        }
+    }
     function getAssetCounts() {
         const assetCounts = {
             geometry: 0,
             material: 0,
             object3d: 0,
             texture: 0,
+            skeleton: 0,
             unknown: 0
         };
         APEAssetTracker.assetRefs.forEach((assetRef) => {
@@ -19114,6 +19201,9 @@ var APEAssetTracker;
             }
             else if (asset instanceof Texture) {
                 assetCounts.texture++;
+            }
+            else if (asset instanceof Skeleton) {
+                assetCounts.skeleton++;
             }
             else {
                 assetCounts.unknown++;
@@ -19133,9 +19223,9 @@ var APEAssetTracker;
         };
         APEAssetTracker.assetRefs.forEach((assetRef) => {
             snapshot.assetSnapshots.push({
-                uuid: assetRef.asset.uuid,
-                name: assetRef.asset.name,
-                type: assetRef.asset.type,
+                uuid: getUUID(assetRef.asset),
+                name: getName(assetRef.asset),
+                type: getType(assetRef.asset),
                 referenceCount: assetRef.referenceCount,
             });
         });
@@ -19210,10 +19300,10 @@ var APEAssetTracker;
                         asset: asset,
                         referenceCount: 1
                     };
-                    APEAssetTracker.assetRefs.set(asset.uuid, assetRef);
+                    APEAssetTracker.assetRefs.set(getUUID(asset), assetRef);
                 }
                 if (APEAssetTracker.debugLevel >= 1) {
-                    console.log(`[APEAssetTracker] track asset type: ${asset.constructor.name}, uuid: ${asset.uuid}, refCount: ${assetRef.referenceCount}`);
+                    console.log(`[APEAssetTracker] track asset type: ${asset.constructor.name}, uuid: ${getUUID(asset)}, refCount: ${assetRef.referenceCount}`);
                 }
                 if (APEAssetTracker.debugLevel >= 2) {
                     console.log(`[APEAssetTracker] tracked assets -> ${JSON.stringify(getAssetCounts())}`);
@@ -19237,12 +19327,12 @@ var APEAssetTracker;
                     if (assetRef.referenceCount > 0) {
                         assetRef.referenceCount--;
                         if (APEAssetTracker.debugLevel >= 1) {
-                            console.log(`[APEAssetTracker] decrement reference count for asset type: ${asset.constructor.name}, uuid: ${asset.uuid}, refCount: ${assetRef.referenceCount}`);
+                            console.log(`[APEAssetTracker] decrement reference count for asset type: ${asset.constructor.name}, uuid: ${getUUID(asset)}, refCount: ${assetRef.referenceCount}`);
                         }
                     }
                     if (assetRef.referenceCount <= 0) {
                         if (APEAssetTracker.debugLevel >= 1) {
-                            console.log(`[APEAssetTracker] release asset type: ${asset.constructor.name}, uuid: ${asset.uuid}`);
+                            console.log(`[APEAssetTracker] release asset type: ${asset.constructor.name}, uuid: ${getUUID(asset)}`);
                         }
                         if (asset instanceof Object3D) {
                             if (asset.parent) {
@@ -19254,6 +19344,8 @@ var APEAssetTracker;
                         }
                         // Remove the tracked asset from the map.
                         APEAssetTracker.assetRefs.delete(uuid);
+                        // Remove the asset from the internal uuid map (if it is even in it).
+                        internalUUIDs.delete(asset);
                         if (APEAssetTracker.debugLevel >= 2) {
                             console.log(`[APEAssetTracker] tracked assets -> ${JSON.stringify(getAssetCounts())}`);
                         }
@@ -19281,53 +19373,10 @@ var APEAssetTracker;
         });
         APEAssetTracker.assetRefs = new Map();
         APEAssetTracker.snapshots = [];
+        internalUUIDs = new Map();
     }
     APEAssetTracker.dispose = dispose;
 })(APEAssetTracker || (APEAssetTracker = {}));
-/**
- * Recursive search function that will collect all objects underneath the given asset that can be considered a Trackable.
- * Each item's key in the Map is the trackable's uuid.
- */
-function findTrackables(asset, trackables) {
-    if (!asset) {
-        return;
-    }
-    // Handle arrays of objects, materials, and textures.
-    if (Array.isArray(asset)) {
-        asset.forEach(resource => findTrackables(resource, trackables));
-        return;
-    }
-    if ('dispose' in asset || asset instanceof Object3D) {
-        trackables.set(asset.uuid, asset);
-    }
-    if (asset instanceof Object3D) {
-        if (asset instanceof Mesh) {
-            findTrackables(asset.geometry, trackables);
-            findTrackables(asset.material, trackables);
-        }
-        findTrackables(asset.children, trackables);
-    }
-    else if (asset instanceof Material) {
-        // We have to check if there are any textures on the material
-        for (const value of Object.values(asset)) {
-            if (value instanceof Texture) {
-                findTrackables(value, trackables);
-            }
-        }
-        // We also have to check if any uniforms reference textures or arrays of textures
-        if ('uniforms' in asset) {
-            const uniforms = asset.uniforms;
-            for (const uniform of Object.values(uniforms)) {
-                if (uniform) {
-                    const uniformValue = uniform.value;
-                    if (uniformValue instanceof Texture || Array.isArray(uniformValue)) {
-                        findTrackables(uniformValue, trackables);
-                    }
-                }
-            }
-        }
-    }
-}
 
 class Object3DPool extends ObjectPool {
     constructor(sourceObject, name, poolEmptyWarn) {

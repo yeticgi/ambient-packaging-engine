@@ -1,10 +1,11 @@
-import { Geometry, Material, Texture, Object3D, BufferGeometry, TextureDataType } from "three";
-declare type Trackable = Object3D | Geometry | BufferGeometry | Material | Texture;
+import { Geometry, Material, Texture, Object3D, BufferGeometry, TextureDataType, Skeleton } from "three";
+declare type Trackable = Object3D | Geometry | BufferGeometry | Material | Texture | Skeleton;
 export interface IAssetCount {
     object3d: number;
     geometry: number;
     material: number;
     texture: number;
+    skeleton: number;
     unknown: number;
 }
 export interface IAssetReference {

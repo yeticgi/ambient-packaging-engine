@@ -6843,8 +6843,8 @@ var APEngineBuildInfo;
     /**
      * Version number of the app.
      */
-    APEngineBuildInfo.version = '0.5.0';
-    const _time = '1603152003943';
+    APEngineBuildInfo.version = '0.5.1';
+    const _time = '1603217138209';
     /**
      * The date that this version of the app was built.
      */
@@ -6944,7 +6944,9 @@ class SceneManager {
         return renderOp;
     }
     reorderRenderOperation(renderOp, renderOrder) {
-        if (this._renderList.some(op => op === renderOp)) {
+        const oldIndex = this._renderList.indexOf(renderOp);
+        if (oldIndex >= 0) {
+            this._renderList.splice(oldIndex, 1);
             this._renderList.splice(renderOrder, 0, renderOp);
         }
     }

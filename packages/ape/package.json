@@ -1,5 +1,4 @@
 {
-    "private": true,
     "name": "@yeticgi/ape",
     "version": "0.5.1",
     "scripts": {
@@ -32,5 +31,8 @@
         "tslib": "^2.0.0"
     },
     "main": "dist/index.js",
-    "types": "dist/index.d.ts"
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist"
+    ]
 }

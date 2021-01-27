@@ -1,9 +1,5 @@
-import external from 'rollup-plugin-peer-deps-external';
-import noderesolve from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
 import typescript from 'rollup-plugin-typescript2';
 import replace from '@rollup/plugin-replace';
-import postcss from 'rollup-plugin-postcss';
 import copy from 'rollup-plugin-copy';
 import url from '@rollup/plugin-url';
 import del from 'rollup-plugin-delete';
@@ -21,17 +17,11 @@ export default {
       del({
         targets: ['dist']
       }),
-      external(),
-      noderesolve({
-        browser: true
-      }),
-      commonjs(),
       typescript({
         check: true,
         clean: true,
         verbosity: 2
       }),
-      postcss(),
       url({
         limit: 0,
         publicPath: 'public/',
@@ -57,5 +47,12 @@ export default {
       'three/examples/js/libs/draco',
       'howler',
       'lodash',
-      'tslib']
+      'lodash/find',
+      'lodash/some',
+      'lodash/isEqual',
+      'lodash/remove',
+      'tslib',
+      'jsqr',
+      'stats.js',
+    ]
   };

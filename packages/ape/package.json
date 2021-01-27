@@ -4,7 +4,7 @@
     "scripts": {
         "build": "rollup -c"
     },
-    "description": "Three JS manager for the Ambient Packaging Engine.",
+    "description": "A web engine for creating 3d web experiences. Built on top of three.js, APE includes: time tracking, gameobject and decorator system, scene and rendering management, resource management, input polling, audio playback, webxr integration, and more.",
     "repository": {
         "type": "git",
         "url": "git+ssh://git@github.com/yeticgi/ambient-packaging-engine.git"

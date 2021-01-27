@@ -5077,290 +5077,287 @@ var DestroyState;
 /**
  * GameObject is an APEngine specific implemention of Three's Object3D class that supports decorators.
  */
-let GameObject = /** @class */ (() => {
-    class GameObject extends Object3D {
-        constructor(name) {
-            super();
-            this._decorators = [];
-            this._destroyState = DestroyState.None;
-            this._prevVisible = false;
-            if (name) {
-                this.name = name;
-            }
-        }
-        /**
-         * Destroy the given GameObject and all of its children.
-         */
-        static destroy(gameObject) {
-            // Get array of all child gameObjects in ascending order,
-            // including the given gameObject.
-            traverseSafe(gameObject, (go) => {
-                if (go instanceof GameObject) {
-                    if (go._destroyState === DestroyState.None) {
-                        GameObject.__APEngine_destroyQueue.push(go);
-                        go._destroyState = DestroyState.WillDestroy;
-                        // Inform all gameObject decorators that it will be destroyed.
-                        go._decorators.forEach(d => d.onWillDestroy());
-                    }
-                }
-            });
-        }
-        /**
-         * Process the GameObject destroy queue.
-         * This should ONLY be called by APEngine.
-         */
-        static __APEngine_ProcessGameObjectDestroyQueue() {
-            if (this.__APEngine_destroyQueue.length > 0) {
-                // Use a copy of the destroy queue in its current state so that 
-                // any modifications to the destroy queue during processing are not affected.
-                const count = this.__APEngine_destroyQueue.length;
-                for (let i = 0; i < count; i++) {
-                    const gameObject = this.__APEngine_destroyQueue.pop();
-                    if (gameObject && gameObject._destroyState === DestroyState.WillDestroy) {
-                        // Infrom the gameobject that it is being destroyed.
-                        gameObject.onDestroy();
-                        gameObject._destroyState = DestroyState.Destroyed;
-                    }
-                }
-            }
-        }
-        /**
-         * Is the given GameObject visible to rendering?
-         * This function taked into account the visibility of the gameObject's parents.
-         */
-        static isGameObjectVisible(gameObject) {
-            let obj = gameObject;
-            if (!obj) {
-                return false;
-            }
-            while (obj) {
-                if (!obj.visible) {
-                    return false;
-                }
-                obj = obj.parent;
-            }
-            return true;
-        }
-        /**
-         * Find the GameObject that is a parent of the given object.
-         * If the object is a GameObject, then the object itself is returned.
-         * If the object has no GameObject parents, then null is returned.
-         */
-        static findParentGameObject(obj) {
-            if (obj instanceof GameObject) {
-                return obj;
-            }
-            if (obj.parent) {
-                return GameObject.findParentGameObject(obj.parent);
-            }
-            return null;
-        }
-        /**
-         * Find a GameObject that has the given name at or underneath the given root/scene.
-         */
-        static findGameObjectByName(root, name) {
-            if (root instanceof GameObject && root.name === name) {
-                return root;
-            }
-            for (let child of root.children) {
-                const go = GameObject.findGameObjectByName(child, name);
-                if (go) {
-                    return go;
-                }
-            }
-            return null;
-        }
-        get destroyed() {
-            return this._destroyState !== DestroyState.None;
-        }
-        addDecorator(decorator) {
-            if (this._decorators.some((d) => d === decorator)) {
-                // Decorator is already added.
-                return;
-            }
-            // Add decorator to the array.
-            this._decorators.push(decorator);
-            decorator.onAttach(this);
-            return decorator;
-        }
-        getDecorator(type) {
-            if (!this.destroyed) {
-                for (let i = 0; i < this._decorators.length; i++) {
-                    const decorator = this._decorators[i];
-                    if (decorator instanceof type && !decorator.destroyed) {
-                        return decorator;
-                    }
-                }
-            }
-            return null;
-        }
-        getDecorators(type) {
-            let decorators = [];
-            if (!this.destroyed) {
-                for (let i = 0; i < this._decorators.length; i++) {
-                    const decorator = this._decorators[i];
-                    if (decorator instanceof type && !decorator.destroyed) {
-                        decorators.push(decorator);
-                    }
-                }
-            }
-            if (decorators.length > 0) {
-                return decorators;
-            }
-            else {
-                return null;
-            }
-        }
-        getDecoratorInChildren(type, includeInvisible) {
-            // Check this gameObject for matching decorator.
-            if (includeInvisible || this.visible) {
-                const decorator = this.getDecorator(type);
-                if (decorator) {
-                    return decorator;
-                }
-            }
-            // Recursively search through child gameObjects for matching decorator.
-            for (const child of this.children) {
-                if (child instanceof GameObject) {
-                    const decorator = child.getDecoratorInChildren(type, includeInvisible);
-                    if (decorator) {
-                        return decorator;
-                    }
-                }
-            }
-            // No matching decorator found in this gameObject or its children.
-            return null;
-        }
-        getDecoratorsInChildren(type, includeInvisible) {
-            const decorators = [];
-            if (!includeInvisible) {
-                traverseVisibleSafe(this, (o) => {
-                    if (o instanceof GameObject) {
-                        const decs = o.getDecorators(type);
-                        if (decs) {
-                            decorators.push(...decs);
-                        }
-                    }
-                });
-            }
-            else {
-                traverseSafe(this, (o) => {
-                    if (o instanceof GameObject) {
-                        const decs = o.getDecorators(type);
-                        if (decs) {
-                            decorators.push(...decs);
-                        }
-                    }
-                });
-            }
-            if (decorators.length > 0) {
-                return decorators;
-            }
-            else {
-                return null;
-            }
-        }
-        getDecoratorInParent(type, includeInvisible) {
-            // Check this gameObject for matching decorator.
-            if (includeInvisible || this.visible) {
-                const decorator = this.getDecorator(type);
-                if (decorator) {
-                    return decorator;
-                }
-            }
-            // Recursively search through parent gameObjects for matching decorator.
-            if (this.parent && this.parent instanceof GameObject) {
-                const decorator = this.parent.getDecoratorInParent(type, includeInvisible);
-                if (decorator) {
-                    return decorator;
-                }
-            }
-            // No matching decorator found in this gameObject or its parents.
-            return null;
-        }
-        /**
-         * Called for each three js frame.
-         */
-        onUpdate() {
-            if (this.destroyed) {
-                return;
-            }
-            let isVisible = GameObject.isGameObjectVisible(this);
-            this._decorators.forEach((d) => {
-                if (!d.destroyed && isVisible) {
-                    if (!d.started) {
-                        this._prevVisible = true;
-                        d.onVisible();
-                        d.onStart();
-                        if (!d.started) {
-                            console.error(`Decorator ${d.constructor.name} does not have super.onStart() called.`);
-                        }
-                    }
-                    else {
-                        isVisible = this.visibleChangeCheck();
-                    }
-                    if (isVisible) {
-                        d.onUpdate();
-                    }
-                }
-            });
-            this.cleanupDestroyedDecorators();
-        }
-        /**
-         * Called for each three js frame but after all onUpdate calls have been made.
-         */
-        onLateUpdate() {
-            if (this.destroyed) {
-                return;
-            }
-            const isVisible = this.visibleChangeCheck();
-            this._decorators.forEach((d) => {
-                if (!d.destroyed && isVisible) {
-                    d.onLateUpdate();
-                }
-            });
-            this.cleanupDestroyedDecorators();
-        }
-        /**
-         * Run a visibility change check. Returns the current state of gameobject visibility.
-         */
-        visibleChangeCheck() {
-            const isVisible = GameObject.isGameObjectVisible(this);
-            if (this._prevVisible !== isVisible) {
-                this._decorators.forEach((d) => {
-                    if (!d.destroyed) {
-                        if (isVisible) {
-                            d.onVisible();
-                        }
-                        else {
-                            d.onInvisible();
-                        }
-                    }
-                });
-                this._prevVisible = isVisible;
-            }
-            return isVisible;
-        }
-        onDestroy() {
-            // Destroy our decorators.
-            this._decorators.forEach((c) => {
-                Decorator.destroy(c);
-            });
-            this._decorators = [];
-            if (this.parent) {
-                // Remove ourself from parent object (and thus the scene).
-                this.parent.remove(this);
-            }
-        }
-        cleanupDestroyedDecorators() {
-            this._decorators = this._decorators.filter((c) => {
-                return !c.destroyed;
-            });
+class GameObject extends Object3D {
+    constructor(name) {
+        super();
+        this._decorators = [];
+        this._destroyState = DestroyState.None;
+        this._prevVisible = false;
+        if (name) {
+            this.name = name;
         }
     }
-    GameObject.__APEngine_destroyQueue = [];
-    return GameObject;
-})();
+    /**
+     * Destroy the given GameObject and all of its children.
+     */
+    static destroy(gameObject) {
+        // Get array of all child gameObjects in ascending order,
+        // including the given gameObject.
+        traverseSafe(gameObject, (go) => {
+            if (go instanceof GameObject) {
+                if (go._destroyState === DestroyState.None) {
+                    GameObject.__APEngine_destroyQueue.push(go);
+                    go._destroyState = DestroyState.WillDestroy;
+                    // Inform all gameObject decorators that it will be destroyed.
+                    go._decorators.forEach(d => d.onWillDestroy());
+                }
+            }
+        });
+    }
+    /**
+     * Process the GameObject destroy queue.
+     * This should ONLY be called by APEngine.
+     */
+    static __APEngine_ProcessGameObjectDestroyQueue() {
+        if (this.__APEngine_destroyQueue.length > 0) {
+            // Use a copy of the destroy queue in its current state so that 
+            // any modifications to the destroy queue during processing are not affected.
+            const count = this.__APEngine_destroyQueue.length;
+            for (let i = 0; i < count; i++) {
+                const gameObject = this.__APEngine_destroyQueue.pop();
+                if (gameObject && gameObject._destroyState === DestroyState.WillDestroy) {
+                    // Infrom the gameobject that it is being destroyed.
+                    gameObject.onDestroy();
+                    gameObject._destroyState = DestroyState.Destroyed;
+                }
+            }
+        }
+    }
+    /**
+     * Is the given GameObject visible to rendering?
+     * This function taked into account the visibility of the gameObject's parents.
+     */
+    static isGameObjectVisible(gameObject) {
+        let obj = gameObject;
+        if (!obj) {
+            return false;
+        }
+        while (obj) {
+            if (!obj.visible) {
+                return false;
+            }
+            obj = obj.parent;
+        }
+        return true;
+    }
+    /**
+     * Find the GameObject that is a parent of the given object.
+     * If the object is a GameObject, then the object itself is returned.
+     * If the object has no GameObject parents, then null is returned.
+     */
+    static findParentGameObject(obj) {
+        if (obj instanceof GameObject) {
+            return obj;
+        }
+        if (obj.parent) {
+            return GameObject.findParentGameObject(obj.parent);
+        }
+        return null;
+    }
+    /**
+     * Find a GameObject that has the given name at or underneath the given root/scene.
+     */
+    static findGameObjectByName(root, name) {
+        if (root instanceof GameObject && root.name === name) {
+            return root;
+        }
+        for (let child of root.children) {
+            const go = GameObject.findGameObjectByName(child, name);
+            if (go) {
+                return go;
+            }
+        }
+        return null;
+    }
+    get destroyed() {
+        return this._destroyState !== DestroyState.None;
+    }
+    addDecorator(decorator) {
+        if (this._decorators.some((d) => d === decorator)) {
+            // Decorator is already added.
+            return;
+        }
+        // Add decorator to the array.
+        this._decorators.push(decorator);
+        decorator.onAttach(this);
+        return decorator;
+    }
+    getDecorator(type) {
+        if (!this.destroyed) {
+            for (let i = 0; i < this._decorators.length; i++) {
+                const decorator = this._decorators[i];
+                if (decorator instanceof type && !decorator.destroyed) {
+                    return decorator;
+                }
+            }
+        }
+        return null;
+    }
+    getDecorators(type) {
+        let decorators = [];
+        if (!this.destroyed) {
+            for (let i = 0; i < this._decorators.length; i++) {
+                const decorator = this._decorators[i];
+                if (decorator instanceof type && !decorator.destroyed) {
+                    decorators.push(decorator);
+                }
+            }
+        }
+        if (decorators.length > 0) {
+            return decorators;
+        }
+        else {
+            return null;
+        }
+    }
+    getDecoratorInChildren(type, includeInvisible) {
+        // Check this gameObject for matching decorator.
+        if (includeInvisible || this.visible) {
+            const decorator = this.getDecorator(type);
+            if (decorator) {
+                return decorator;
+            }
+        }
+        // Recursively search through child gameObjects for matching decorator.
+        for (const child of this.children) {
+            if (child instanceof GameObject) {
+                const decorator = child.getDecoratorInChildren(type, includeInvisible);
+                if (decorator) {
+                    return decorator;
+                }
+            }
+        }
+        // No matching decorator found in this gameObject or its children.
+        return null;
+    }
+    getDecoratorsInChildren(type, includeInvisible) {
+        const decorators = [];
+        if (!includeInvisible) {
+            traverseVisibleSafe(this, (o) => {
+                if (o instanceof GameObject) {
+                    const decs = o.getDecorators(type);
+                    if (decs) {
+                        decorators.push(...decs);
+                    }
+                }
+            });
+        }
+        else {
+            traverseSafe(this, (o) => {
+                if (o instanceof GameObject) {
+                    const decs = o.getDecorators(type);
+                    if (decs) {
+                        decorators.push(...decs);
+                    }
+                }
+            });
+        }
+        if (decorators.length > 0) {
+            return decorators;
+        }
+        else {
+            return null;
+        }
+    }
+    getDecoratorInParent(type, includeInvisible) {
+        // Check this gameObject for matching decorator.
+        if (includeInvisible || this.visible) {
+            const decorator = this.getDecorator(type);
+            if (decorator) {
+                return decorator;
+            }
+        }
+        // Recursively search through parent gameObjects for matching decorator.
+        if (this.parent && this.parent instanceof GameObject) {
+            const decorator = this.parent.getDecoratorInParent(type, includeInvisible);
+            if (decorator) {
+                return decorator;
+            }
+        }
+        // No matching decorator found in this gameObject or its parents.
+        return null;
+    }
+    /**
+     * Called for each three js frame.
+     */
+    onUpdate() {
+        if (this.destroyed) {
+            return;
+        }
+        let isVisible = GameObject.isGameObjectVisible(this);
+        this._decorators.forEach((d) => {
+            if (!d.destroyed && isVisible) {
+                if (!d.started) {
+                    this._prevVisible = true;
+                    d.onVisible();
+                    d.onStart();
+                    if (!d.started) {
+                        console.error(`Decorator ${d.constructor.name} does not have super.onStart() called.`);
+                    }
+                }
+                else {
+                    isVisible = this.visibleChangeCheck();
+                }
+                if (isVisible) {
+                    d.onUpdate();
+                }
+            }
+        });
+        this.cleanupDestroyedDecorators();
+    }
+    /**
+     * Called for each three js frame but after all onUpdate calls have been made.
+     */
+    onLateUpdate() {
+        if (this.destroyed) {
+            return;
+        }
+        const isVisible = this.visibleChangeCheck();
+        this._decorators.forEach((d) => {
+            if (!d.destroyed && isVisible) {
+                d.onLateUpdate();
+            }
+        });
+        this.cleanupDestroyedDecorators();
+    }
+    /**
+     * Run a visibility change check. Returns the current state of gameobject visibility.
+     */
+    visibleChangeCheck() {
+        const isVisible = GameObject.isGameObjectVisible(this);
+        if (this._prevVisible !== isVisible) {
+            this._decorators.forEach((d) => {
+                if (!d.destroyed) {
+                    if (isVisible) {
+                        d.onVisible();
+                    }
+                    else {
+                        d.onInvisible();
+                    }
+                }
+            });
+            this._prevVisible = isVisible;
+        }
+        return isVisible;
+    }
+    onDestroy() {
+        // Destroy our decorators.
+        this._decorators.forEach((c) => {
+            Decorator.destroy(c);
+        });
+        this._decorators = [];
+        if (this.parent) {
+            // Remove ourself from parent object (and thus the scene).
+            this.parent.remove(this);
+        }
+    }
+    cleanupDestroyedDecorators() {
+        this._decorators = this._decorators.filter((c) => {
+            return !c.destroyed;
+        });
+    }
+}
+GameObject.__APEngine_destroyQueue = [];
 
 class XRInput {
     constructor(renderer) {
@@ -6214,583 +6211,473 @@ var APEngineEvents;
  * Camera decorator creates and manages ThreeJS cameras.
  * You can change the camera type on the fly by setting the cameraType property.
  */
-let CameraDecorator = /** @class */ (() => {
-    class CameraDecorator extends Decorator {
-        constructor() {
-            super(...arguments);
-            this._frustum = new Frustum();
-            this._projScreenMatrix = new Matrix4();
+class CameraDecorator extends Decorator {
+    constructor() {
+        super(...arguments);
+        this._frustum = new Frustum();
+        this._projScreenMatrix = new Matrix4();
+    }
+    /**
+     * The camera that is marked as primary.
+     * If no camera is marked as primary, than the first camera is returned.
+     */
+    static get PrimaryCamera() {
+        if (this._PrimaryCamera) {
+            return this._PrimaryCamera;
         }
-        /**
-         * The camera that is marked as primary.
-         * If no camera is marked as primary, than the first camera is returned.
-         */
-        static get PrimaryCamera() {
-            if (this._PrimaryCamera) {
-                return this._PrimaryCamera;
-            }
-            else if (this._Cameras.length > 0) {
-                return this._Cameras[0];
-            }
-            else {
-                return null;
-            }
+        else if (this._Cameras.length > 0) {
+            return this._Cameras[0];
         }
-        static set PrimaryCamera(cam) {
-            if (this._PrimaryCamera !== cam) {
-                this._PrimaryCamera = cam;
-            }
+        else {
+            return null;
         }
-        /**
-         * Cameras that are updated by APEngine.
-         * These camera will automatically get resized when APEngine window resize is triggered.
-         */
-        static get Cameras() {
-            return this._Cameras;
+    }
+    static set PrimaryCamera(cam) {
+        if (this._PrimaryCamera !== cam) {
+            this._PrimaryCamera = cam;
         }
-        /**
-         * Is the camera orthographic or perspective.
-         */
-        get cameraType() { return this._cameraType; }
-        set cameraType(value) {
-            if (this._cameraType !== value) {
-                this._cameraType = value;
-                this._removeCamera();
-                this._createCamera();
-            }
-        }
-        /**
-         * Field of View type for perspective camera. The field of view type dictates
-         * how vertical fov is calculated based on the aspect ratio. No affect on orthographic cameras.
-         */
-        get fovType() { return this._fovType; }
-        set fovType(value) {
-            if (this._fovType !== value) {
-                this._fovType = value;
-                if (this._camera && this._camera instanceof PerspectiveCamera) {
-                    this.resize();
-                }
-            }
-        }
-        /**
-         * Vertical field of view for perspective camera. No affect on orthographic cameras.
-         * If field of view type is set to horizontal, the vertical field of view will be dynamic.
-         * This is the default FOV that Three JS cameras use.
-         */
-        get vFov() { return this._vFov; }
-        set vFov(value) {
-            if (this._vFov !== value) {
-                this._vFov = value;
-                if (this._camera && this._camera instanceof PerspectiveCamera) {
-                    this._camera.fov = this._vFov;
-                    this._camera.updateProjectionMatrix();
-                }
-            }
-        }
-        /**
-         * Horizontal field of view for perspective camera. No affect on orthographic cameras.
-         * Only has an affect if the field of view type is set to horizontal.
-         */
-        get hFov() { return this._hFov; }
-        set hFov(value) {
-            if (this._hFov !== value) {
-                this._hFov = value;
-                if (this._camera && this._camera instanceof PerspectiveCamera) {
-                    this.resize();
-                }
-            }
-        }
-        /**
-         * Zoom level of the camera.
-         */
-        get zoom() { return this._zoom; }
-        set zoom(value) {
-            if (this._zoom !== value) {
-                this._zoom = value;
-                if (this._camera) {
-                    this._camera.zoom = this._zoom;
-                    this._camera.updateProjectionMatrix();
-                }
-            }
-        }
-        /**
-         * Aspect ratio of perspective camera. Has no effect on orthographic camera.
-         */
-        get aspect() { return this._aspect; }
-        set aspect(value) {
-            if (this._aspect !== value) {
-                this._aspect = value;
-                if (this._camera && this._camera instanceof PerspectiveCamera) {
-                    this._camera.aspect = this._aspect;
-                    this._camera.updateProjectionMatrix();
-                }
-            }
-        }
-        /**
-         * Far clipping plane
-         */
-        get far() { return this._far; }
-        set far(value) {
-            if (this._far !== value) {
-                this._far = value;
-                if (this._camera) {
-                    this._camera.far = this._far;
-                    this._camera.updateProjectionMatrix();
-                }
-            }
-        }
-        /**
-         * Near clipping plane
-         */
-        get near() { return this._near; }
-        set near(value) {
-            if (this._near !== value) {
-                this._near = value;
-                if (this._camera) {
-                    this._camera.near = this._near;
-                    this._camera.updateProjectionMatrix();
-                }
-            }
-        }
-        /**
-         * The frustum size of orthographic camera. This has no affect on perspective camera.
-         */
-        get size() { return this._size; }
-        set size(value) {
-            if (this._size !== value) {
-                this._size = value;
-                if (this._camera && this._camera instanceof OrthographicCamera) {
-                    const planes = calculateFrustumPlanes(this._size, this._aspect);
-                    this._camera.left = planes.left;
-                    this._camera.right = planes.right;
-                    this._camera.top = planes.top;
-                    this._camera.bottom = planes.bottom;
-                    this._camera.updateProjectionMatrix();
-                }
-            }
-        }
-        /**
-         * ThreeJS camera that is managed by this camera decorator.
-         */
-        get camera() { return this._camera; }
-        /**
-         * The frustum for the camera. Useful for doing intersection tests with the area visible to the camera.
-         */
-        get frustum() { return this._frustum; }
-        configure(options) {
-            super.configure(options);
-            this._cameraType = getOptionalValue(options.cameraType, 'perspective');
-            this._fovType = getOptionalValue(options.fovType, 'vertical');
-            this._vFov = getOptionalValue(options.vFov, 50);
-            this._hFov = getOptionalValue(options.hFov, 50);
-            this._zoom = getOptionalValue(options.zoom, 1);
-            this._aspect = getOptionalValue(options.aspect, window.innerWidth / window.innerHeight);
-            this._far = getOptionalValue(options.far, 2000);
-            this._near = getOptionalValue(options.near, 0.1);
-            this._size = getOptionalValue(options.size, 25);
-        }
-        onAttach(gameObject) {
-            super.onAttach(gameObject);
-            this._createCamera();
-            this._updateFrustum();
-            // Add camera decorator to global list of camera decorators.
-            CameraDecorator._Cameras.push(this);
-            this._onXRSessionStarted = this._onXRSessionStarted.bind(this);
-            APEngineEvents.onXRSessionStarted.addListener(this._onXRSessionStarted);
-            this._onXRSessionEnded = this._onXRSessionEnded.bind(this);
-            APEngineEvents.onXRSessionEnded.addListener(this._onXRSessionEnded);
-            this.resize();
-        }
-        onVisible() {
-            super.onVisible();
-        }
-        onInvisible() {
-            super.onInvisible();
-        }
-        onStart() {
-            super.onStart();
-        }
-        onUpdate() {
-            super.onUpdate();
-            this._updateFrustum();
-        }
-        onLateUpdate() {
-            super.onLateUpdate();
-        }
-        resize() {
-            if (this._camera) {
-                this.aspect = window.innerWidth / window.innerHeight;
-                if (this._camera instanceof PerspectiveCamera) {
-                    if (this._fovType === 'horizontal') {
-                        // Reference: https://github.com/mrdoob/three.js/issues/15968#issuecomment-475986352
-                        this.vFov = Math.atan(Math.tan(this._hFov * Math.PI / 360) / this.aspect) * 360 / Math.PI;
-                    }
-                    else {
-                        this._hFov = 2 * Math.atan(Math.tan(this.vFov * Math.PI / 180 / 2) * this.aspect) * 180 / Math.PI;
-                    }
-                }
-                else {
-                    // Update frustum planes for othrogtraphic camera using new aspect ratio.
-                    const planes = calculateFrustumPlanes(this._size, this._aspect);
-                    this._camera.left = planes.left;
-                    this._camera.right = planes.right;
-                    this._camera.top = planes.top;
-                    this._camera.bottom = planes.bottom;
-                    this._camera.updateProjectionMatrix();
-                }
-            }
-        }
-        _onXRSessionStarted() {
-            // Store this camera decorator's game object matrix before the WebXRManager starts overtwriting camera positioning.
-            this._nonXrPositon = this.gameObject.position.clone();
-            this._nonXrRotation = this.gameObject.rotation.clone();
-            this._nonXrScale = this.gameObject.scale.clone();
-            // Reset the camera decorator game object to default position, rotation, and scale.
-            // WebXRManager doesnt like if the xr camera to be parented to an object with an offset.
-            this.gameObject.position.set(0, 0, 0);
-            this.gameObject.rotation.set(0, 0, 0);
-            this.gameObject.scale.set(1, 1, 1);
-        }
-        _onXRSessionEnded() {
-            // Restore the camera decorator's game object to the position, rotation, and scale it was at before entering XR mode.
-            this.gameObject.position.copy(this._nonXrPositon);
-            this.gameObject.rotation.copy(this._nonXrRotation);
-            this.gameObject.scale.copy(this._nonXrScale);
-            this._nonXrPositon = null;
-            this._nonXrRotation = null;
-            this._nonXrScale = null;
-        }
-        _createCamera() {
-            if (!this.gameObject) {
-                // Dont create camera until this decorator is attached to a GameObject.
-                return;
-            }
-            if (this._cameraType === 'perspective') {
-                this._camera = new PerspectiveCamera(this._vFov, this._aspect, this._near, this._far);
-            }
-            else if (this._cameraType === 'orthographic') {
-                const planes = calculateFrustumPlanes(this._size, this._aspect);
-                this._camera = new OrthographicCamera(planes.left, planes.right, planes.top, planes.bottom, this._near, this._far);
-            }
-            else {
-                console.error(`[CameraDecorator] Can't create camera. Unknown camera type: ${this._cameraType}`);
-            }
-            if (this._camera) {
-                // Rotate camera 180 degrees on the y-axis so that it faces forward.
-                this._camera.rotateY(180 * MathUtils.DEG2RAD);
-                // Add camera to this gameObject.
-                this.gameObject.add(this._camera);
-            }
-            this.resize();
-        }
-        _removeCamera() {
-            if (!this._camera) {
-                // No camera to remove.
-                return;
-            }
-            if (this._camera.parent) {
-                this._camera.parent.remove(this._camera);
-            }
-            this._camera = null;
-        }
-        _updateFrustum() {
-            if (!this._camera) {
-                // Need camera to update frustum.
-                return;
-            }
-            this._projScreenMatrix.multiplyMatrices(this._camera.projectionMatrix, this._camera.matrixWorldInverse);
-            this._frustum.setFromProjectionMatrix(this._projScreenMatrix);
-        }
-        onDestroy() {
-            super.onDestroy();
+    }
+    /**
+     * Cameras that are updated by APEngine.
+     * These camera will automatically get resized when APEngine window resize is triggered.
+     */
+    static get Cameras() {
+        return this._Cameras;
+    }
+    /**
+     * Is the camera orthographic or perspective.
+     */
+    get cameraType() { return this._cameraType; }
+    set cameraType(value) {
+        if (this._cameraType !== value) {
+            this._cameraType = value;
             this._removeCamera();
-            // Remove camera decorator from global list of camera decorators.
-            const index = CameraDecorator._Cameras.findIndex(cameraDecorator => cameraDecorator === this);
-            if (index >= 0) {
-                CameraDecorator._Cameras.splice(index, 1);
-            }
-            // If this camera is the primary camera, set primary camera back to null.
-            if (CameraDecorator._PrimaryCamera === this) {
-                CameraDecorator._PrimaryCamera = null;
+            this._createCamera();
+        }
+    }
+    /**
+     * Field of View type for perspective camera. The field of view type dictates
+     * how vertical fov is calculated based on the aspect ratio. No affect on orthographic cameras.
+     */
+    get fovType() { return this._fovType; }
+    set fovType(value) {
+        if (this._fovType !== value) {
+            this._fovType = value;
+            if (this._camera && this._camera instanceof PerspectiveCamera) {
+                this.resize();
             }
         }
     }
-    CameraDecorator._PrimaryCamera = null;
-    CameraDecorator._Cameras = [];
-    return CameraDecorator;
-})();
+    /**
+     * Vertical field of view for perspective camera. No affect on orthographic cameras.
+     * If field of view type is set to horizontal, the vertical field of view will be dynamic.
+     * This is the default FOV that Three JS cameras use.
+     */
+    get vFov() { return this._vFov; }
+    set vFov(value) {
+        if (this._vFov !== value) {
+            this._vFov = value;
+            if (this._camera && this._camera instanceof PerspectiveCamera) {
+                this._camera.fov = this._vFov;
+                this._camera.updateProjectionMatrix();
+            }
+        }
+    }
+    /**
+     * Horizontal field of view for perspective camera. No affect on orthographic cameras.
+     * Only has an affect if the field of view type is set to horizontal.
+     */
+    get hFov() { return this._hFov; }
+    set hFov(value) {
+        if (this._hFov !== value) {
+            this._hFov = value;
+            if (this._camera && this._camera instanceof PerspectiveCamera) {
+                this.resize();
+            }
+        }
+    }
+    /**
+     * Zoom level of the camera.
+     */
+    get zoom() { return this._zoom; }
+    set zoom(value) {
+        if (this._zoom !== value) {
+            this._zoom = value;
+            if (this._camera) {
+                this._camera.zoom = this._zoom;
+                this._camera.updateProjectionMatrix();
+            }
+        }
+    }
+    /**
+     * Aspect ratio of perspective camera. Has no effect on orthographic camera.
+     */
+    get aspect() { return this._aspect; }
+    set aspect(value) {
+        if (this._aspect !== value) {
+            this._aspect = value;
+            if (this._camera && this._camera instanceof PerspectiveCamera) {
+                this._camera.aspect = this._aspect;
+                this._camera.updateProjectionMatrix();
+            }
+        }
+    }
+    /**
+     * Far clipping plane
+     */
+    get far() { return this._far; }
+    set far(value) {
+        if (this._far !== value) {
+            this._far = value;
+            if (this._camera) {
+                this._camera.far = this._far;
+                this._camera.updateProjectionMatrix();
+            }
+        }
+    }
+    /**
+     * Near clipping plane
+     */
+    get near() { return this._near; }
+    set near(value) {
+        if (this._near !== value) {
+            this._near = value;
+            if (this._camera) {
+                this._camera.near = this._near;
+                this._camera.updateProjectionMatrix();
+            }
+        }
+    }
+    /**
+     * The frustum size of orthographic camera. This has no affect on perspective camera.
+     */
+    get size() { return this._size; }
+    set size(value) {
+        if (this._size !== value) {
+            this._size = value;
+            if (this._camera && this._camera instanceof OrthographicCamera) {
+                const planes = calculateFrustumPlanes(this._size, this._aspect);
+                this._camera.left = planes.left;
+                this._camera.right = planes.right;
+                this._camera.top = planes.top;
+                this._camera.bottom = planes.bottom;
+                this._camera.updateProjectionMatrix();
+            }
+        }
+    }
+    /**
+     * ThreeJS camera that is managed by this camera decorator.
+     */
+    get camera() { return this._camera; }
+    /**
+     * The frustum for the camera. Useful for doing intersection tests with the area visible to the camera.
+     */
+    get frustum() { return this._frustum; }
+    configure(options) {
+        super.configure(options);
+        this._cameraType = getOptionalValue(options.cameraType, 'perspective');
+        this._fovType = getOptionalValue(options.fovType, 'vertical');
+        this._vFov = getOptionalValue(options.vFov, 50);
+        this._hFov = getOptionalValue(options.hFov, 50);
+        this._zoom = getOptionalValue(options.zoom, 1);
+        this._aspect = getOptionalValue(options.aspect, window.innerWidth / window.innerHeight);
+        this._far = getOptionalValue(options.far, 2000);
+        this._near = getOptionalValue(options.near, 0.1);
+        this._size = getOptionalValue(options.size, 25);
+    }
+    onAttach(gameObject) {
+        super.onAttach(gameObject);
+        this._createCamera();
+        this._updateFrustum();
+        // Add camera decorator to global list of camera decorators.
+        CameraDecorator._Cameras.push(this);
+        this._onXRSessionStarted = this._onXRSessionStarted.bind(this);
+        APEngineEvents.onXRSessionStarted.addListener(this._onXRSessionStarted);
+        this._onXRSessionEnded = this._onXRSessionEnded.bind(this);
+        APEngineEvents.onXRSessionEnded.addListener(this._onXRSessionEnded);
+        this.resize();
+    }
+    onVisible() {
+        super.onVisible();
+    }
+    onInvisible() {
+        super.onInvisible();
+    }
+    onStart() {
+        super.onStart();
+    }
+    onUpdate() {
+        super.onUpdate();
+        this._updateFrustum();
+    }
+    onLateUpdate() {
+        super.onLateUpdate();
+    }
+    resize() {
+        if (this._camera) {
+            this.aspect = window.innerWidth / window.innerHeight;
+            if (this._camera instanceof PerspectiveCamera) {
+                if (this._fovType === 'horizontal') {
+                    // Reference: https://github.com/mrdoob/three.js/issues/15968#issuecomment-475986352
+                    this.vFov = Math.atan(Math.tan(this._hFov * Math.PI / 360) / this.aspect) * 360 / Math.PI;
+                }
+                else {
+                    this._hFov = 2 * Math.atan(Math.tan(this.vFov * Math.PI / 180 / 2) * this.aspect) * 180 / Math.PI;
+                }
+            }
+            else {
+                // Update frustum planes for othrogtraphic camera using new aspect ratio.
+                const planes = calculateFrustumPlanes(this._size, this._aspect);
+                this._camera.left = planes.left;
+                this._camera.right = planes.right;
+                this._camera.top = planes.top;
+                this._camera.bottom = planes.bottom;
+                this._camera.updateProjectionMatrix();
+            }
+        }
+    }
+    _onXRSessionStarted() {
+        // Store this camera decorator's game object matrix before the WebXRManager starts overtwriting camera positioning.
+        this._nonXrPositon = this.gameObject.position.clone();
+        this._nonXrRotation = this.gameObject.rotation.clone();
+        this._nonXrScale = this.gameObject.scale.clone();
+        // Reset the camera decorator game object to default position, rotation, and scale.
+        // WebXRManager doesnt like if the xr camera to be parented to an object with an offset.
+        this.gameObject.position.set(0, 0, 0);
+        this.gameObject.rotation.set(0, 0, 0);
+        this.gameObject.scale.set(1, 1, 1);
+    }
+    _onXRSessionEnded() {
+        // Restore the camera decorator's game object to the position, rotation, and scale it was at before entering XR mode.
+        this.gameObject.position.copy(this._nonXrPositon);
+        this.gameObject.rotation.copy(this._nonXrRotation);
+        this.gameObject.scale.copy(this._nonXrScale);
+        this._nonXrPositon = null;
+        this._nonXrRotation = null;
+        this._nonXrScale = null;
+    }
+    _createCamera() {
+        if (!this.gameObject) {
+            // Dont create camera until this decorator is attached to a GameObject.
+            return;
+        }
+        if (this._cameraType === 'perspective') {
+            this._camera = new PerspectiveCamera(this._vFov, this._aspect, this._near, this._far);
+        }
+        else if (this._cameraType === 'orthographic') {
+            const planes = calculateFrustumPlanes(this._size, this._aspect);
+            this._camera = new OrthographicCamera(planes.left, planes.right, planes.top, planes.bottom, this._near, this._far);
+        }
+        else {
+            console.error(`[CameraDecorator] Can't create camera. Unknown camera type: ${this._cameraType}`);
+        }
+        if (this._camera) {
+            // Rotate camera 180 degrees on the y-axis so that it faces forward.
+            this._camera.rotateY(180 * MathUtils.DEG2RAD);
+            // Add camera to this gameObject.
+            this.gameObject.add(this._camera);
+        }
+        this.resize();
+    }
+    _removeCamera() {
+        if (!this._camera) {
+            // No camera to remove.
+            return;
+        }
+        if (this._camera.parent) {
+            this._camera.parent.remove(this._camera);
+        }
+        this._camera = null;
+    }
+    _updateFrustum() {
+        if (!this._camera) {
+            // Need camera to update frustum.
+            return;
+        }
+        this._projScreenMatrix.multiplyMatrices(this._camera.projectionMatrix, this._camera.matrixWorldInverse);
+        this._frustum.setFromProjectionMatrix(this._projScreenMatrix);
+    }
+    onDestroy() {
+        super.onDestroy();
+        this._removeCamera();
+        // Remove camera decorator from global list of camera decorators.
+        const index = CameraDecorator._Cameras.findIndex(cameraDecorator => cameraDecorator === this);
+        if (index >= 0) {
+            CameraDecorator._Cameras.splice(index, 1);
+        }
+        // If this camera is the primary camera, set primary camera back to null.
+        if (CameraDecorator._PrimaryCamera === this) {
+            CameraDecorator._PrimaryCamera = null;
+        }
+    }
+}
+CameraDecorator._PrimaryCamera = null;
+CameraDecorator._Cameras = [];
 
 /**
  * A class that can be used to easily listen for some basic input events for Three JS Oojects.
  */
-let PointerEventSystem = /** @class */ (() => {
-    class PointerEventSystem {
-        constructor(name, priority, cameraDecorator) {
-            /**
-             * The camera to use for hit testing pointer event listeners.
-             * If this is undefined, this pointer event system will use the primary camera (CameraDecorator.PrimaryCamera).
-             */
-            this.cameraDecorator = undefined;
-            /**
-             * The priority this pointer event system has over other pointer event systems.
-             * During an update frame, pointer event systems are sorted by priority (highest to lowest) and hit testing is done
-             * in that order. If a hit is detected in a pointer system above another, all lower pointer systems have their pointers released and are then ignored.
-             * Lower priority pointer systems are only reached if the higher priority systems dont detect any hits.
-             */
-            this.priority = 0;
-            this._enabled = true;
-            this._listeners = new Set();
-            this._pointerDown = null;
-            this._pointerEnter = null;
-            this._name = name;
-            this.priority = priority;
-            this.cameraDecorator = cameraDecorator;
-            PointerEventSystem._activeSystems.push(this);
-        }
+class PointerEventSystem {
+    constructor(name, priority, cameraDecorator) {
         /**
-         * List of all active pointer event systems.
+         * The camera to use for hit testing pointer event listeners.
+         * If this is undefined, this pointer event system will use the primary camera (CameraDecorator.PrimaryCamera).
          */
-        static get activeSystems() {
-            return this._activeSystems;
-        }
+        this.cameraDecorator = undefined;
         /**
-         * Update all active pointer events systems.
-         * This function sorts the systems based on priority (highest to lowest priority).
+         * The priority this pointer event system has over other pointer event systems.
+         * During an update frame, pointer event systems are sorted by priority (highest to lowest) and hit testing is done
+         * in that order. If a hit is detected in a pointer system above another, all lower pointer systems have their pointers released and are then ignored.
+         * Lower priority pointer systems are only reached if the higher priority systems dont detect any hits.
          */
-        static updateActiveSystems(input) {
-            if (!this._activeSystems || this._activeSystems.length === 0) {
-                return;
+        this.priority = 0;
+        this._enabled = true;
+        this._listeners = new Set();
+        this._pointerDown = null;
+        this._pointerEnter = null;
+        this._name = name;
+        this.priority = priority;
+        this.cameraDecorator = cameraDecorator;
+        PointerEventSystem._activeSystems.push(this);
+    }
+    /**
+     * List of all active pointer event systems.
+     */
+    static get activeSystems() {
+        return this._activeSystems;
+    }
+    /**
+     * Update all active pointer events systems.
+     * This function sorts the systems based on priority (highest to lowest priority).
+     */
+    static updateActiveSystems(input) {
+        if (!this._activeSystems || this._activeSystems.length === 0) {
+            return;
+        }
+        if (this._activeSystems.length === 1) {
+            // No need to sort, only one pointer event system is active.
+            this._activeSystems[0]._update(input);
+        }
+        else {
+            // If there is a focused system, update it first.
+            // If the focuses system becomes no longer focuses then move on to updating
+            // systems until one does.
+            if (this._focusedSystem) {
+                const isFocused = this._focusedSystem._update(input);
+                if (!isFocused) {
+                    // Focused system is no longer focused.
+                    if (this.debug) {
+                        console.log(`[PointerEventSystem] ${this._focusedSystem.name} has lost focus.`);
+                    }
+                    this._focusedSystem = null;
+                }
+                else {
+                    // Focused system is still focused. Dont update other pointer event systems.
+                    return;
+                }
             }
-            if (this._activeSystems.length === 1) {
-                // No need to sort, only one pointer event system is active.
-                this._activeSystems[0]._update(input);
-            }
-            else {
-                // If there is a focused system, update it first.
-                // If the focuses system becomes no longer focuses then move on to updating
-                // systems until one does.
-                if (this._focusedSystem) {
-                    const isFocused = this._focusedSystem._update(input);
-                    if (!isFocused) {
-                        // Focused system is no longer focused.
+            // Sort pointer event systems in descending priority order.
+            const systems = Array.from(this._activeSystems);
+            sortZA(systems, 'priority');
+            // Loop through and update systems until one becomes focused.
+            // If we find a new focused system, release any active pointers for remaining systems.
+            for (const system of systems) {
+                if (!this._focusedSystem) {
+                    const isFocused = system._update(input);
+                    if (isFocused) {
+                        // Found a system that has gained focus.
+                        this._focusedSystem = system;
                         if (this.debug) {
-                            console.log(`[PointerEventSystem] ${this._focusedSystem.name} has lost focus.`);
-                        }
-                        this._focusedSystem = null;
-                    }
-                    else {
-                        // Focused system is still focused. Dont update other pointer event systems.
-                        return;
-                    }
-                }
-                // Sort pointer event systems in descending priority order.
-                const systems = Array.from(this._activeSystems);
-                sortZA(systems, 'priority');
-                // Loop through and update systems until one becomes focused.
-                // If we find a new focused system, release any active pointers for remaining systems.
-                for (const system of systems) {
-                    if (!this._focusedSystem) {
-                        const isFocused = system._update(input);
-                        if (isFocused) {
-                            // Found a system that has gained focus.
-                            this._focusedSystem = system;
-                            if (this.debug) {
-                                console.log(`[PointerEventSystem] ${this._focusedSystem.name} has gained focus.`);
-                            }
+                            console.log(`[PointerEventSystem] ${this._focusedSystem.name} has gained focus.`);
                         }
                     }
-                    else {
-                        // A system already gained focus, release active pointers for this system.
-                        system.releaseActivePointers();
-                    }
+                }
+                else {
+                    // A system already gained focus, release active pointers for this system.
+                    system.releaseActivePointers();
                 }
             }
         }
-        get name() { return this._name; }
-        get pointerDown() { return this._pointerDown; }
-        get pointerEnter() { return this._pointerEnter; }
-        get enabled() { return this._enabled; }
-        set enabled(value) {
-            if (this._enabled === value) {
-                return;
-            }
-            this._enabled = value;
-            if (!this._enabled) {
-                this.releaseActivePointers();
-            }
+    }
+    get name() { return this._name; }
+    get pointerDown() { return this._pointerDown; }
+    get pointerEnter() { return this._pointerEnter; }
+    get enabled() { return this._enabled; }
+    set enabled(value) {
+        if (this._enabled === value) {
+            return;
         }
-        addListener(listener) {
-            if (!this._listeners.has(listener)) {
-                this._listeners.add(listener);
-            }
+        this._enabled = value;
+        if (!this._enabled) {
+            this.releaseActivePointers();
         }
-        removeListener(listener) {
-            if (this._pointerDown === listener) {
-                this._pointerDown = null;
-            }
-            if (this._pointerEnter === listener) {
-                this._pointerEnter = null;
-            }
-            this._listeners.delete(listener);
+    }
+    addListener(listener) {
+        if (!this._listeners.has(listener)) {
+            this._listeners.add(listener);
         }
-        /**
-         * Update event system. Returns true if the update causes the pointer event system to become focused.
-         */
-        _update(input) {
-            if (!this._enabled) {
-                // Input must be enabled for the pointer event system.
-                return;
-            }
-            let cameraDecorator = this.cameraDecorator === undefined ? CameraDecorator.PrimaryCamera : this.cameraDecorator;
-            if (!input || !cameraDecorator || !cameraDecorator.camera) {
-                // Pointer event system needs both an input module and a camera.
-                return;
-            }
-            if (input.currentInputType !== InputType.Mouse &&
-                input.currentInputType !== InputType.Touch) {
-                // Pointer Event System only works with mouse and touch input types.
-                return;
-            }
-            // Retrieve the pointer's current screen position.
-            let pointerScreenPos = (input.currentInputType === InputType.Mouse) ? input.getMouseScreenPos() : input.getTouchScreenPos(0);
-            // Raycast against pointer event listeners using the pointer's screen position to find 
-            // the event listener that is currently the closest to the camera.
-            let closestIntersection;
-            let closestListener;
-            if (pointerScreenPos) {
-                // Collect all active listener target objects.
-                const allActiveListenerTargets = [];
-                this._listeners.forEach((listener) => {
-                    const pointerTargets = listener.pointerTargets;
-                    if (pointerTargets) {
-                        const activeTargets = pointerTargets.filter((target) => {
-                            return isObjectVisible(target);
-                        });
-                        allActiveListenerTargets.push(...activeTargets);
-                    }
-                });
-                // Raycast againsts all pointer event listener target objects.
-                const hits = Physics.raycastAtScreenPos(pointerScreenPos, allActiveListenerTargets, cameraDecorator.camera, false);
-                closestIntersection = Physics.firstRaycastHit(hits);
-                closestListener = closestIntersection ? this._findEventListenerForObject(closestIntersection.object) : null;
-            }
-            else {
-                // No pointer screen position currently.
-                closestIntersection = null;
-                closestListener = null;
-            }
-            //
-            // Pointer enter/exit events.
-            //
-            if (closestListener) {
-                if (this._pointerEnter !== null && this._pointerEnter !== closestListener) {
-                    // Let the last pointer enter object know that the pointer has exited it.
-                    const pointerExit = this._pointerEnter;
-                    this._pointerEnter = null;
-                    if (PointerEventSystem.debug) {
-                        console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer exit`, pointerExit);
-                    }
-                    pointerExit.onPointerExit({
-                        eventType: 'pointer exit',
-                        object: closestIntersection.object,
-                        pointerDown: this._pointerDown
-                    });
-                }
-                if (this._pointerEnter === null) {
-                    // Let the closest listener know that the pointer has entered it.
-                    this._pointerEnter = closestListener;
-                    if (PointerEventSystem.debug) {
-                        console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer enter`, this._pointerEnter);
-                    }
-                    this._pointerEnter.onPointerEnter({
-                        eventType: 'pointer enter',
-                        object: closestIntersection.object,
-                        pointerDown: this._pointerDown
-                    });
-                }
-            }
-            else {
-                // Pointer is not over any listeners.
-                if (this._pointerEnter !== null) {
-                    // Let the last pointer enter object know that the pointer has exited it.
-                    if (PointerEventSystem.debug) {
-                        console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer exit`, this._pointerEnter);
-                    }
-                    this._pointerEnter.onPointerExit({
-                        eventType: 'pointer exit',
-                        object: null,
-                        pointerDown: this._pointerDown
-                    });
-                    this._pointerEnter = null;
-                }
-            }
-            //
-            // Pointer down/up/click events.
-            //
-            const isPrimaryDown = (input.currentInputType === InputType.Mouse) ? input.getMouseButtonDown(0) : input.getTouchDown(0);
-            if (isPrimaryDown) {
-                if (this._pointerEnter !== null && this._pointerEnter === closestListener && this._pointerDown === null) {
-                    // Let the closest listener know that the pointer is down on it.
-                    this._pointerDown = closestListener;
-                    if (PointerEventSystem.debug) {
-                        console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer down`, this._pointerDown);
-                    }
-                    this._pointerDown.onPointerDown({
-                        eventType: 'pointer down',
-                        object: closestIntersection.object,
-                        pointerDown: this._pointerDown
-                    });
-                }
-            }
-            const isPrimaryUp = (input.currentInputType === InputType.Mouse) ? input.getMouseButtonUp(0) : input.getTouchUp(0);
-            if (isPrimaryUp) {
-                if (this._pointerDown !== null) {
-                    // Let the last pointer down object know that the pointer is up.
-                    const pointerUp = this._pointerDown;
-                    this._pointerDown = null;
-                    if (PointerEventSystem.debug) {
-                        console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer up`, pointerUp);
-                    }
-                    pointerUp.onPointerUp({
-                        eventType: 'pointer up',
-                        object: closestIntersection ? closestIntersection.object : null,
-                        pointerDown: this._pointerDown
-                    });
-                    // Detect if pointer click occurs. 
-                    // Click means that an event listener that received the down event is now receiving the up event while being hovered over.
-                    const isClick = (closestListener !== null && pointerUp === closestListener);
-                    if (isClick) {
-                        const pointerClick = pointerUp;
-                        if (PointerEventSystem.debug) {
-                            console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer click`, pointerClick);
-                        }
-                        pointerClick.onPointerClick({
-                            eventType: 'pointer click',
-                            object: closestIntersection.object,
-                            pointerDown: this._pointerDown
-                        });
-                    }
-                }
-            }
-            return !!this._pointerDown;
+    }
+    removeListener(listener) {
+        if (this._pointerDown === listener) {
+            this._pointerDown = null;
         }
-        /**
-         * Release any held pointers. If active enter/down listener, then exit/up is invoked.
-         */
-        releaseActivePointers() {
-            if (this._pointerDown) {
-                const pointerUp = this._pointerDown;
-                this._pointerDown = null;
-                if (PointerEventSystem.debug) {
-                    console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer up`, pointerUp);
+        if (this._pointerEnter === listener) {
+            this._pointerEnter = null;
+        }
+        this._listeners.delete(listener);
+    }
+    /**
+     * Update event system. Returns true if the update causes the pointer event system to become focused.
+     */
+    _update(input) {
+        if (!this._enabled) {
+            // Input must be enabled for the pointer event system.
+            return;
+        }
+        let cameraDecorator = this.cameraDecorator === undefined ? CameraDecorator.PrimaryCamera : this.cameraDecorator;
+        if (!input || !cameraDecorator || !cameraDecorator.camera) {
+            // Pointer event system needs both an input module and a camera.
+            return;
+        }
+        if (input.currentInputType !== InputType.Mouse &&
+            input.currentInputType !== InputType.Touch) {
+            // Pointer Event System only works with mouse and touch input types.
+            return;
+        }
+        // Retrieve the pointer's current screen position.
+        let pointerScreenPos = (input.currentInputType === InputType.Mouse) ? input.getMouseScreenPos() : input.getTouchScreenPos(0);
+        // Raycast against pointer event listeners using the pointer's screen position to find 
+        // the event listener that is currently the closest to the camera.
+        let closestIntersection;
+        let closestListener;
+        if (pointerScreenPos) {
+            // Collect all active listener target objects.
+            const allActiveListenerTargets = [];
+            this._listeners.forEach((listener) => {
+                const pointerTargets = listener.pointerTargets;
+                if (pointerTargets) {
+                    const activeTargets = pointerTargets.filter((target) => {
+                        return isObjectVisible(target);
+                    });
+                    allActiveListenerTargets.push(...activeTargets);
                 }
-                pointerUp.onPointerUp({
-                    eventType: 'pointer up',
-                    object: null,
-                    pointerDown: this._pointerDown
-                });
-            }
-            if (this._pointerEnter) {
+            });
+            // Raycast againsts all pointer event listener target objects.
+            const hits = Physics.raycastAtScreenPos(pointerScreenPos, allActiveListenerTargets, cameraDecorator.camera, false);
+            closestIntersection = Physics.firstRaycastHit(hits);
+            closestListener = closestIntersection ? this._findEventListenerForObject(closestIntersection.object) : null;
+        }
+        else {
+            // No pointer screen position currently.
+            closestIntersection = null;
+            closestListener = null;
+        }
+        //
+        // Pointer enter/exit events.
+        //
+        if (closestListener) {
+            if (this._pointerEnter !== null && this._pointerEnter !== closestListener) {
+                // Let the last pointer enter object know that the pointer has exited it.
                 const pointerExit = this._pointerEnter;
                 this._pointerEnter = null;
                 if (PointerEventSystem.debug) {
@@ -6798,53 +6685,157 @@ let PointerEventSystem = /** @class */ (() => {
                 }
                 pointerExit.onPointerExit({
                     eventType: 'pointer exit',
-                    object: null,
+                    object: closestIntersection.object,
+                    pointerDown: this._pointerDown
+                });
+            }
+            if (this._pointerEnter === null) {
+                // Let the closest listener know that the pointer has entered it.
+                this._pointerEnter = closestListener;
+                if (PointerEventSystem.debug) {
+                    console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer enter`, this._pointerEnter);
+                }
+                this._pointerEnter.onPointerEnter({
+                    eventType: 'pointer enter',
+                    object: closestIntersection.object,
                     pointerDown: this._pointerDown
                 });
             }
         }
-        dispose() {
-            this.releaseActivePointers();
-            this._listeners = null;
-            this.cameraDecorator = null;
-            const index = PointerEventSystem._activeSystems.findIndex(pes => pes === this);
-            if (index >= 0) {
-                PointerEventSystem._activeSystems.splice(index, 1);
-            }
-            if (PointerEventSystem._focusedSystem === this) {
-                PointerEventSystem._focusedSystem = null;
+        else {
+            // Pointer is not over any listeners.
+            if (this._pointerEnter !== null) {
+                // Let the last pointer enter object know that the pointer has exited it.
+                if (PointerEventSystem.debug) {
+                    console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer exit`, this._pointerEnter);
+                }
+                this._pointerEnter.onPointerExit({
+                    eventType: 'pointer exit',
+                    object: null,
+                    pointerDown: this._pointerDown
+                });
+                this._pointerEnter = null;
             }
         }
-        _findEventListenerForObject(obj3d) {
-            if (obj3d) {
-                const listenerValues = Array.from(this._listeners);
-                for (const listener of listenerValues) {
-                    const pointerTargets = listener.pointerTargets;
-                    if (pointerTargets && pointerTargets.length > 0) {
-                        const matchFound = pointerTargets.some((target) => {
-                            return target === obj3d;
-                        });
-                        if (matchFound) {
-                            return listener;
-                        }
+        //
+        // Pointer down/up/click events.
+        //
+        const isPrimaryDown = (input.currentInputType === InputType.Mouse) ? input.getMouseButtonDown(0) : input.getTouchDown(0);
+        if (isPrimaryDown) {
+            if (this._pointerEnter !== null && this._pointerEnter === closestListener && this._pointerDown === null) {
+                // Let the closest listener know that the pointer is down on it.
+                this._pointerDown = closestListener;
+                if (PointerEventSystem.debug) {
+                    console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer down`, this._pointerDown);
+                }
+                this._pointerDown.onPointerDown({
+                    eventType: 'pointer down',
+                    object: closestIntersection.object,
+                    pointerDown: this._pointerDown
+                });
+            }
+        }
+        const isPrimaryUp = (input.currentInputType === InputType.Mouse) ? input.getMouseButtonUp(0) : input.getTouchUp(0);
+        if (isPrimaryUp) {
+            if (this._pointerDown !== null) {
+                // Let the last pointer down object know that the pointer is up.
+                const pointerUp = this._pointerDown;
+                this._pointerDown = null;
+                if (PointerEventSystem.debug) {
+                    console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer up`, pointerUp);
+                }
+                pointerUp.onPointerUp({
+                    eventType: 'pointer up',
+                    object: closestIntersection ? closestIntersection.object : null,
+                    pointerDown: this._pointerDown
+                });
+                // Detect if pointer click occurs. 
+                // Click means that an event listener that received the down event is now receiving the up event while being hovered over.
+                const isClick = (closestListener !== null && pointerUp === closestListener);
+                if (isClick) {
+                    const pointerClick = pointerUp;
+                    if (PointerEventSystem.debug) {
+                        console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer click`, pointerClick);
+                    }
+                    pointerClick.onPointerClick({
+                        eventType: 'pointer click',
+                        object: closestIntersection.object,
+                        pointerDown: this._pointerDown
+                    });
+                }
+            }
+        }
+        return !!this._pointerDown;
+    }
+    /**
+     * Release any held pointers. If active enter/down listener, then exit/up is invoked.
+     */
+    releaseActivePointers() {
+        if (this._pointerDown) {
+            const pointerUp = this._pointerDown;
+            this._pointerDown = null;
+            if (PointerEventSystem.debug) {
+                console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer up`, pointerUp);
+            }
+            pointerUp.onPointerUp({
+                eventType: 'pointer up',
+                object: null,
+                pointerDown: this._pointerDown
+            });
+        }
+        if (this._pointerEnter) {
+            const pointerExit = this._pointerEnter;
+            this._pointerEnter = null;
+            if (PointerEventSystem.debug) {
+                console.log(`[PointerEventSystem] Name: ${this.name}, Event: pointer exit`, pointerExit);
+            }
+            pointerExit.onPointerExit({
+                eventType: 'pointer exit',
+                object: null,
+                pointerDown: this._pointerDown
+            });
+        }
+    }
+    dispose() {
+        this.releaseActivePointers();
+        this._listeners = null;
+        this.cameraDecorator = null;
+        const index = PointerEventSystem._activeSystems.findIndex(pes => pes === this);
+        if (index >= 0) {
+            PointerEventSystem._activeSystems.splice(index, 1);
+        }
+        if (PointerEventSystem._focusedSystem === this) {
+            PointerEventSystem._focusedSystem = null;
+        }
+    }
+    _findEventListenerForObject(obj3d) {
+        if (obj3d) {
+            const listenerValues = Array.from(this._listeners);
+            for (const listener of listenerValues) {
+                const pointerTargets = listener.pointerTargets;
+                if (pointerTargets && pointerTargets.length > 0) {
+                    const matchFound = pointerTargets.some((target) => {
+                        return target === obj3d;
+                    });
+                    if (matchFound) {
+                        return listener;
                     }
                 }
             }
-            return null;
         }
+        return null;
     }
-    PointerEventSystem.debug = false;
-    PointerEventSystem._activeSystems = [];
-    return PointerEventSystem;
-})();
+}
+PointerEventSystem.debug = false;
+PointerEventSystem._activeSystems = [];
 
 var APEngineBuildInfo;
 (function (APEngineBuildInfo) {
     /**
      * Version number of the app.
      */
-    APEngineBuildInfo.version = '0.5.1';
-    const _time = '1603217138209';
+    APEngineBuildInfo.version = '0.5.2';
+    const _time = '1611765387132';
     /**
      * The date that this version of the app was built.
      */
@@ -8655,7 +8646,6 @@ var GenericGFPoly = /** @class */ (function () {
         return this.coefficients[this.coefficients.length - 1 - degree];
     };
     GenericGFPoly.prototype.addOrSubtract = function (other) {
-        var _a;
         if (this.isZero()) {
             return other;
         }
@@ -8676,6 +8666,7 @@ var GenericGFPoly = /** @class */ (function () {
             sumDiff[i] = GenericGF_1.addOrSubtractGF(smallerCoefficients[i - lengthDiff], largerCoefficients[i]);
         }
         return new GenericGFPoly(this.field, sumDiff);
+        var _a;
     };
     GenericGFPoly.prototype.multiply = function (scalar) {
         if (scalar === 0) {
@@ -8757,33 +8748,30 @@ var decoder_1 = __webpack_require__(5);
 var extractor_1 = __webpack_require__(11);
 var locator_1 = __webpack_require__(12);
 function scan(matrix) {
-    var locations = locator_1.locate(matrix);
-    if (!locations) {
+    var location = locator_1.locate(matrix);
+    if (!location) {
         return null;
     }
-    for (var _i = 0, locations_1 = locations; _i < locations_1.length; _i++) {
-        var location_1 = locations_1[_i];
-        var extracted = extractor_1.extract(matrix, location_1);
-        var decoded = decoder_1.decode(extracted.matrix);
-        if (decoded) {
-            return {
-                binaryData: decoded.bytes,
-                data: decoded.text,
-                chunks: decoded.chunks,
-                location: {
-                    topRightCorner: extracted.mappingFunction(location_1.dimension, 0),
-                    topLeftCorner: extracted.mappingFunction(0, 0),
-                    bottomRightCorner: extracted.mappingFunction(location_1.dimension, location_1.dimension),
-                    bottomLeftCorner: extracted.mappingFunction(0, location_1.dimension),
-                    topRightFinderPattern: location_1.topRight,
-                    topLeftFinderPattern: location_1.topLeft,
-                    bottomLeftFinderPattern: location_1.bottomLeft,
-                    bottomRightAlignmentPattern: location_1.alignmentPattern,
-                },
-            };
-        }
+    var extracted = extractor_1.extract(matrix, location);
+    var decoded = decoder_1.decode(extracted.matrix);
+    if (!decoded) {
+        return null;
     }
-    return null;
+    return {
+        binaryData: decoded.bytes,
+        data: decoded.text,
+        chunks: decoded.chunks,
+        location: {
+            topRightCorner: extracted.mappingFunction(location.dimension, 0),
+            topLeftCorner: extracted.mappingFunction(0, 0),
+            bottomRightCorner: extracted.mappingFunction(location.dimension, location.dimension),
+            bottomLeftCorner: extracted.mappingFunction(0, location.dimension),
+            topRightFinderPattern: location.topRight,
+            topLeftFinderPattern: location.topLeft,
+            bottomLeftFinderPattern: location.bottomLeft,
+            bottomRightAlignmentPattern: location.alignmentPattern,
+        },
+    };
 }
 var defaultOptions = {
     inversionAttempts: "attemptBoth",
@@ -9026,7 +9014,7 @@ function readCodewords(matrix, version, formatInfo) {
     // Read columns in pairs, from right to left
     var readingUp = true;
     for (var columnIndex = dimension - 1; columnIndex > 0; columnIndex -= 2) {
-        if (columnIndex === 6) { // Skip whole column with vertical alignment pattern;
+        if (columnIndex === 6) {
             columnIndex--;
         }
         for (var i = 0; i < dimension; i++) {
@@ -9040,7 +9028,7 @@ function readCodewords(matrix, version, formatInfo) {
                         bit = !bit;
                     }
                     currentByte = pushBit(bit, currentByte);
-                    if (bitsRead === 8) { // Whole bytes
+                    if (bitsRead === 8) {
                         codewords.push(currentByte);
                         bitsRead = 0;
                         currentByte = 0;
@@ -9055,7 +9043,7 @@ function readCodewords(matrix, version, formatInfo) {
 function readVersion(matrix) {
     var dimension = matrix.height;
     var provisionalVersion = Math.floor((dimension - 17) / 4);
-    if (provisionalVersion <= 6) { // 6 and under dont have version info in the QR code
+    if (provisionalVersion <= 6) {
         return version_1.VERSIONS[provisionalVersion - 1];
     }
     var topRightVersionBits = 0;
@@ -9097,21 +9085,21 @@ function readVersion(matrix) {
 function readFormatInformation(matrix) {
     var topLeftFormatInfoBits = 0;
     for (var x = 0; x <= 8; x++) {
-        if (x !== 6) { // Skip timing pattern bit
+        if (x !== 6) {
             topLeftFormatInfoBits = pushBit(matrix.get(x, 8), topLeftFormatInfoBits);
         }
     }
     for (var y = 7; y >= 0; y--) {
-        if (y !== 6) { // Skip timing pattern bit
+        if (y !== 6) {
             topLeftFormatInfoBits = pushBit(matrix.get(8, y), topLeftFormatInfoBits);
         }
     }
     var dimension = matrix.height;
     var topRightBottomRightFormatInfoBits = 0;
-    for (var y = dimension - 1; y >= dimension - 7; y--) { // bottom left
+    for (var y = dimension - 1; y >= dimension - 7; y--) {
         topRightBottomRightFormatInfoBits = pushBit(matrix.get(8, y), topRightBottomRightFormatInfoBits);
     }
-    for (var x = dimension - 8; x < dimension; x++) { // top right
+    for (var x = dimension - 8; x < dimension; x++) {
         topRightBottomRightFormatInfoBits = pushBit(matrix.get(x, 8), topRightBottomRightFormatInfoBits);
     }
     var bestDifference = Infinity;
@@ -9126,7 +9114,7 @@ function readFormatInformation(matrix) {
             bestFormatInfo = formatInfo;
             bestDifference = difference;
         }
-        if (topLeftFormatInfoBits !== topRightBottomRightFormatInfoBits) { // also try the other option
+        if (topLeftFormatInfoBits !== topRightBottomRightFormatInfoBits) {
             difference = numBitsDiffering(topRightBottomRightFormatInfoBits, bits);
             if (difference < bestDifference) {
                 bestFormatInfo = formatInfo;
@@ -9370,7 +9358,6 @@ function decodeKanji(stream, size) {
     return { bytes: bytes, text: text };
 }
 function decode(data, version) {
-    var _a, _b, _c, _d;
     var stream = new BitStream_1.BitStream(data);
     // There are 3 'sizes' based on the version. 1-9 is small (0), 10-26 is medium (1) and 27-40 is large (2).
     var size = version <= 9 ? 0 : version <= 26 ? 1 : 2;
@@ -9450,10 +9437,7 @@ function decode(data, version) {
             });
         }
     }
-    // If there is no data left, or the remaining bits are all 0, then that counts as a termination marker
-    if (stream.available() === 0 || stream.readBits(stream.available()) === 0) {
-        return result;
-    }
+    var _a, _b, _c, _d;
 }
 exports.decode = decode;
 
@@ -16568,7 +16552,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var GenericGF_1 = __webpack_require__(1);
 var GenericGFPoly_1 = __webpack_require__(2);
 function runEuclideanAlgorithm(field, a, b, R) {
-    var _a;
     // Assume a's degree is >= b's
     if (a.degree() < b.degree()) {
         _a = [b, a], a = _a[0], b = _a[1];
@@ -16609,6 +16592,7 @@ function runEuclideanAlgorithm(field, a, b, R) {
     }
     var inverse = field.inverse(sigmaTildeAtZero);
     return [t.multiply(inverse), r.multiply(inverse)];
+    var _a;
 }
 function findErrorLocations(field, errorLocator) {
     // This is a direct application of Chien's search
@@ -18009,7 +17993,7 @@ var BitMatrix_1 = __webpack_require__(0);
 function squareToQuadrilateral(p1, p2, p3, p4) {
     var dx3 = p1.x - p2.x + p3.x - p4.x;
     var dy3 = p1.y - p2.y + p3.y - p4.y;
-    if (dx3 === 0 && dy3 === 0) { // Affine
+    if (dx3 === 0 && dy3 === 0) {
         return {
             a11: p2.x - p1.x,
             a12: p2.y - p1.y,
@@ -18113,7 +18097,6 @@ function sum(values) {
 }
 // Takes three finder patterns and organizes them into topLeft, topRight, etc
 function reorderFinderPatterns(pattern1, pattern2, pattern3) {
-    var _a, _b, _c, _d;
     // Find distances between pattern centers
     var oneTwoDistance = distance(pattern1, pattern2);
     var twoThreeDistance = distance(pattern2, pattern3);
@@ -18138,6 +18121,7 @@ function reorderFinderPatterns(pattern1, pattern2, pattern3) {
         _d = [topRight, bottomLeft], bottomLeft = _d[0], topRight = _d[1];
     }
     return { bottomLeft: bottomLeft, topLeft: topLeft, topRight: topRight };
+    var _a, _b, _c, _d;
 }
 // Computes the dimension (number of modules on a side) of the QR Code based on the position of the finder patterns
 function computeDimension(topLeft, topRight, bottomLeft, matrix) {
@@ -18227,13 +18211,13 @@ function countBlackWhiteRunTowardsPoint(origin, end, matrix, length) {
 // along the line that intersects with the end point. Returns an array of elements, representing the pixel sizes
 // of the black white run. Takes a length which represents the number of switches from black to white to look for.
 function countBlackWhiteRun(origin, end, matrix, length) {
-    var _a;
     var rise = end.y - origin.y;
     var run = end.x - origin.x;
     var towardsEnd = countBlackWhiteRunTowardsPoint(origin, end, matrix, Math.ceil(length / 2));
     var awayFromEnd = countBlackWhiteRunTowardsPoint(origin, { x: origin.x - run, y: origin.y - rise }, matrix, Math.ceil(length / 2));
     var middleValue = towardsEnd.shift() + awayFromEnd.shift() - 1; // Substract one so we don't double count a pixel
     return (_a = awayFromEnd.concat(middleValue)).concat.apply(_a, towardsEnd);
+    var _a;
 }
 // Takes in a black white run and an array of expected ratios. Returns the average size of the run as well as the "error" -
 // that is the amount the run diverges from the expected ratio
@@ -18280,27 +18264,6 @@ function scorePattern(point, ratios, matrix) {
     catch (_a) {
         return Infinity;
     }
-}
-function recenterLocation(matrix, p) {
-    var leftX = Math.round(p.x);
-    while (matrix.get(leftX, Math.round(p.y))) {
-        leftX--;
-    }
-    var rightX = Math.round(p.x);
-    while (matrix.get(rightX, Math.round(p.y))) {
-        rightX++;
-    }
-    var x = (leftX + rightX) / 2;
-    var topY = Math.round(p.y);
-    while (matrix.get(Math.round(x), topY)) {
-        topY--;
-    }
-    var bottomY = Math.round(p.y);
-    while (matrix.get(Math.round(x), bottomY)) {
-        bottomY++;
-    }
-    var y = (topY + bottomY) / 2;
-    return { x: x, y: y };
 }
 function locate(matrix) {
     var finderPatternQuads = [];
@@ -18404,7 +18367,6 @@ function locate(matrix) {
     })
         .filter(function (q) { return !!q; }) // Filter out any rejected quads from above
         .sort(function (a, b) { return a.score - b.score; })
-        // Now take the top finder pattern options and try to find 2 other options with a similar size.
         .map(function (point, i, finderPatterns) {
         if (i > MAX_FINDERPATTERNS_TO_SEARCH) {
             return null;
@@ -18425,49 +18387,12 @@ function locate(matrix) {
         return null;
     }
     var _a = reorderFinderPatterns(finderPatternGroups[0].points[0], finderPatternGroups[0].points[1], finderPatternGroups[0].points[2]), topRight = _a.topRight, topLeft = _a.topLeft, bottomLeft = _a.bottomLeft;
-    var alignment = findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, bottomLeft);
-    var result = [];
-    if (alignment) {
-        result.push({
-            alignmentPattern: { x: alignment.alignmentPattern.x, y: alignment.alignmentPattern.y },
-            bottomLeft: { x: bottomLeft.x, y: bottomLeft.y },
-            dimension: alignment.dimension,
-            topLeft: { x: topLeft.x, y: topLeft.y },
-            topRight: { x: topRight.x, y: topRight.y },
-        });
-    }
-    // We normally use the center of the quads as the location of the tracking points, which is optimal for most cases and will account
-    // for a skew in the image. However, In some cases, a slight skew might not be real and instead be caused by image compression
-    // errors and/or low resolution. For those cases, we'd be better off centering the point exactly in the middle of the black area. We
-    // compute and return the location data for the naively centered points as it is little additional work and allows for multiple
-    // attempts at decoding harder images.
-    var midTopRight = recenterLocation(matrix, topRight);
-    var midTopLeft = recenterLocation(matrix, topLeft);
-    var midBottomLeft = recenterLocation(matrix, bottomLeft);
-    var centeredAlignment = findAlignmentPattern(matrix, alignmentPatternQuads, midTopRight, midTopLeft, midBottomLeft);
-    if (centeredAlignment) {
-        result.push({
-            alignmentPattern: { x: centeredAlignment.alignmentPattern.x, y: centeredAlignment.alignmentPattern.y },
-            bottomLeft: { x: midBottomLeft.x, y: midBottomLeft.y },
-            topLeft: { x: midTopLeft.x, y: midTopLeft.y },
-            topRight: { x: midTopRight.x, y: midTopRight.y },
-            dimension: centeredAlignment.dimension,
-        });
-    }
-    if (result.length === 0) {
-        return null;
-    }
-    return result;
-}
-exports.locate = locate;
-function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, bottomLeft) {
-    var _a;
     // Now that we've found the three finder patterns we can determine the blockSize and the size of the QR code.
     // We'll use these to help find the alignment pattern but also later when we do the extraction.
     var dimension;
     var moduleSize;
     try {
-        (_a = computeDimension(topLeft, topRight, bottomLeft, matrix), dimension = _a.dimension, moduleSize = _a.moduleSize);
+        (_b = computeDimension(topLeft, topRight, bottomLeft, matrix), dimension = _b.dimension, moduleSize = _b.moduleSize);
     }
     catch (e) {
         return null;
@@ -18501,8 +18426,16 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     // If there are less than 15 modules between finder patterns it's a version 1 QR code and as such has no alignmemnt pattern
     // so we can only use our best guess.
     var alignmentPattern = modulesBetweenFinderPatterns >= 15 && alignmentPatterns.length ? alignmentPatterns[0] : expectedAlignmentPattern;
-    return { alignmentPattern: alignmentPattern, dimension: dimension };
+    return {
+        alignmentPattern: { x: alignmentPattern.x, y: alignmentPattern.y },
+        bottomLeft: { x: bottomLeft.x, y: bottomLeft.y },
+        dimension: dimension,
+        topLeft: { x: topLeft.x, y: topLeft.y },
+        topRight: { x: topRight.x, y: topRight.y },
+    };
+    var _b;
 }
+exports.locate = locate;
 
 
 /***/ })
@@ -19655,94 +19588,91 @@ class GLTFPrefab {
     }
 }
 
-let GLTFResource = /** @class */ (() => {
-    class GLTFResource extends Resource {
-        constructor(name, config) {
-            super(name, config);
-            this._gltfUrl = config.gltfUrl;
-            this._binUrl = config.binUrl;
-            this._textureUrls = config.textureUrls;
-        }
-        _loadObject() {
-            return new Promise((resolve, reject) => {
-                const loadingManager = new LoadingManager();
-                loadingManager.setURLModifier((url) => {
-                    if (url.startsWith('data:')) {
-                        // Do not redirect data uris.
-                        return url;
+class GLTFResource extends Resource {
+    constructor(name, config) {
+        super(name, config);
+        this._gltfUrl = config.gltfUrl;
+        this._binUrl = config.binUrl;
+        this._textureUrls = config.textureUrls;
+    }
+    _loadObject() {
+        return new Promise((resolve, reject) => {
+            const loadingManager = new LoadingManager();
+            loadingManager.setURLModifier((url) => {
+                if (url.startsWith('data:')) {
+                    // Do not redirect data uris.
+                    return url;
+                }
+                if (url.startsWith('blob:')) {
+                    // Do not redirect blobs.
+                    return url;
+                }
+                // Redirect gltf relative url to CDN asset location.
+                const filename = getFilename(url);
+                const ext = getExtension(url);
+                if (filename === 'draco_wasm_wrapper.js' || filename === 'draco_decoder.wasm' || filename === 'draco_decoder.js') {
+                    // Do not redirect draco specific files.
+                    return url;
+                }
+                let redirectUrl = null;
+                if (ext === 'gltf' || ext === 'glb') {
+                    redirectUrl = this._gltfUrl;
+                }
+                else if (ext === 'bin') {
+                    if (this._binUrl) {
+                        redirectUrl = this._binUrl;
                     }
-                    if (url.startsWith('blob:')) {
-                        // Do not redirect blobs.
-                        return url;
-                    }
-                    // Redirect gltf relative url to CDN asset location.
-                    const filename = getFilename(url);
-                    const ext = getExtension(url);
-                    if (filename === 'draco_wasm_wrapper.js' || filename === 'draco_decoder.wasm' || filename === 'draco_decoder.js') {
-                        // Do not redirect draco specific files.
-                        return url;
-                    }
-                    let redirectUrl = null;
-                    if (ext === 'gltf' || ext === 'glb') {
-                        redirectUrl = this._gltfUrl;
-                    }
-                    else if (ext === 'bin') {
-                        if (this._binUrl) {
-                            redirectUrl = this._binUrl;
-                        }
-                    }
-                    else {
-                        // Assume that url is for texture image.
-                        if (this._textureUrls) {
-                            if (isStringArray(this._textureUrls)) {
-                                if (!GLTFResource._sentTextureUrlObsoleteWarning) {
-                                    console.warn(`[GLTFResource] WARNING! OBSOLETE! It is highly recommended that GLTFResource textureUrls be in GLTFTextureRedirect format and not a plain string array.
+                }
+                else {
+                    // Assume that url is for texture image.
+                    if (this._textureUrls) {
+                        if (isStringArray(this._textureUrls)) {
+                            if (!GLTFResource._sentTextureUrlObsoleteWarning) {
+                                console.warn(`[GLTFResource] WARNING! OBSOLETE! It is highly recommended that GLTFResource textureUrls be in GLTFTextureRedirect format and not a plain string array.
                                 The string array implementation was designed for a specific CDN use case and requires that filesnames match. This filename matching does 
                                 not work if using local assets that are hashed at build time.
                                 `);
-                                    GLTFResource._sentTextureUrlObsoleteWarning = true;
-                                }
-                                redirectUrl = this._textureUrls.find((textureUrl) => filename === getFilename(textureUrl));
+                                GLTFResource._sentTextureUrlObsoleteWarning = true;
                             }
-                            else {
-                                const textureRedirect = this._textureUrls.find((tr) => filename === tr.filename);
-                                if (textureRedirect) {
-                                    redirectUrl = textureRedirect.redirectUrl;
-                                }
+                            redirectUrl = this._textureUrls.find((textureUrl) => filename === getFilename(textureUrl));
+                        }
+                        else {
+                            const textureRedirect = this._textureUrls.find((tr) => filename === tr.filename);
+                            if (textureRedirect) {
+                                redirectUrl = textureRedirect.redirectUrl;
                             }
                         }
                     }
-                    if (!redirectUrl) {
-                        console.error(`[GLTFResource] ${this.name} could not find a redirect url for ${url}`);
-                    }
-                    return redirectUrl;
-                });
-                const gltfLoader = new GLTFLoader(loadingManager);
-                if (!GLTFResource._dracoLoader) {
-                    GLTFResource._dracoLoader = new DRACOLoader(loadingManager);
-                    GLTFResource._dracoLoader.setDecoderPath('public/draco/');
-                    GLTFResource._dracoLoader.setDecoderConfig({ type: 'js' });
                 }
-                gltfLoader.setDRACOLoader(GLTFResource._dracoLoader);
-                gltfLoader.load(this._gltfUrl, (gltf) => {
-                    const prefab = new GLTFPrefab(gltf.scene, gltf.animations);
-                    resolve(prefab);
-                }, (progressEvent) => {
-                    this._progress = progressEvent.loaded / progressEvent.total;
-                }, (errorEvent) => {
-                    console.error(`[GLTFResource] ${this.name} Error: ${errorEvent}`);
-                    reject(errorEvent);
-                });
+                if (!redirectUrl) {
+                    console.error(`[GLTFResource] ${this.name} could not find a redirect url for ${url}`);
+                }
+                return redirectUrl;
             });
-        }
-        _unloadObject() {
-            this.object.dispose();
-        }
+            const gltfLoader = new GLTFLoader(loadingManager);
+            if (!GLTFResource._dracoLoader) {
+                GLTFResource._dracoLoader = new DRACOLoader(loadingManager);
+                GLTFResource._dracoLoader.setDecoderPath('public/draco/');
+                GLTFResource._dracoLoader.setDecoderConfig({ type: 'js' });
+            }
+            gltfLoader.setDRACOLoader(GLTFResource._dracoLoader);
+            gltfLoader.load(this._gltfUrl, (gltf) => {
+                const prefab = new GLTFPrefab(gltf.scene, gltf.animations);
+                resolve(prefab);
+            }, (progressEvent) => {
+                this._progress = progressEvent.loaded / progressEvent.total;
+            }, (errorEvent) => {
+                console.error(`[GLTFResource] ${this.name} Error: ${errorEvent}`);
+                reject(errorEvent);
+            });
+        });
     }
-    GLTFResource._sentTextureUrlObsoleteWarning = false;
-    GLTFResource._dracoLoader = null;
-    return GLTFResource;
-})();
+    _unloadObject() {
+        this.object.dispose();
+    }
+}
+GLTFResource._sentTextureUrlObsoleteWarning = false;
+GLTFResource._dracoLoader = null;
 function isStringArray(value) {
     if (value && Array.isArray(value) && value.length > 0) {
         if (typeof value[0] === 'string') {

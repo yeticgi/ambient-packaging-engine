@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { 
     APEngine, APEResources,
-} from '@yeticgi/ape';
+} from '@yeti-cgi/ape';
 
 export interface IPauseButtonState { 
     paused: boolean;

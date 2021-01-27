@@ -3,7 +3,7 @@ import './App.css';
 import {
     ThreeContainer,
     ARButton
-} from '@yeticgi/ape-reactcomponents';
+} from '@yeti-cgi/ape-reactcomponents';
 import {
     APEngine,
     APEngineEvents,
@@ -12,7 +12,7 @@ import {
     APEResources,
     CameraDecorator,
     TapCode
-} from '@yeticgi/ape';
+} from '@yeti-cgi/ape';
 import {
     Scene,
     BoxGeometry,
@@ -253,7 +253,7 @@ function createCamera(): CameraDecorator {
     const cameraDecorator = new CameraDecorator();
     cameraDecorator.configure({
         cameraType: 'perspective',
-        fov: 75,
+        vFov: 75,
         near: 0.1,
         far: 1000
     });

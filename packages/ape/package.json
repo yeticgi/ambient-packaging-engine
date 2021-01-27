@@ -1,11 +1,18 @@
 {
-    "name": "@yeticgi/ape",
-    "version": "0.5.1",
+    "name": "@yeti-cgi/ape",
+    "version": "0.5.2",
     "scripts": {
         "build": "rollup -c"
     },
     "description": "Three JS manager for the Ambient Packaging Engine.",
-    "repository": "git@github.com:yeticgi/ambient-packaging-engine.git",
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/yeticgi/ambient-packaging-engine.git"
+    },
+    "bugs": {
+        "url": "https://github.com/yeticgi/ambient-packaging-engine/issues"
+    },
+    "homepage": "https://github.com/yeticgi/ambient-packaging-engine#readme",
     "license": "MIT",
     "devDependencies": {
         "@rollup/plugin-commonjs": "11.0.2",
@@ -34,5 +41,6 @@
     "types": "dist/index.d.ts",
     "files": [
         "dist"
-    ]
+    ],
+    "author": "YETi CGI"
 }

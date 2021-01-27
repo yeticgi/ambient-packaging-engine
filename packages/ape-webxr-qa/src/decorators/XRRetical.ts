@@ -1,4 +1,4 @@
-import { Decorator, APEngine, IDecoratorOptions, GameObject, MeshDecorator } from "@yeticgi/ape";
+import { Decorator, APEngine, IDecoratorOptions, GameObject, MeshDecorator } from "@yeti-cgi/ape";
 
 export class XRRetical extends Decorator {
 

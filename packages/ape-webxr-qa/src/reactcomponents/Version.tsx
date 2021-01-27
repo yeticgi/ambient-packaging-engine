@@ -2,7 +2,7 @@ import React, { Component, version } from "react";
 import "./Version.css";
 import { 
     APEngineBuildInfo
-} from '@yeticgi/ape';
+} from '@yeti-cgi/ape';
 import { BuildInfo } from "../BuildInfo";
 
 export class Version extends Component {

@@ -1,11 +1,11 @@
 {
     "private": true,
-    "name": "@yeticgi/ape-root",
+    "name": "@yeti-cgi/ape-root",
     "workspaces": [
         "packages/*"
     ],
     "scripts": {
-        "build": "yarn workspace @yeticgi/ape build && yarn workspace @yeticgi/ape-reactcomponents build && yarn workspace @yeticgi/ape-webxr-qa build"
+        "build": "yarn workspace @yeti-cgi/ape build && yarn workspace @yeti-cgi/ape-reactcomponents build && yarn workspace @yeti-cgi/ape-webxr-qa build"
     },
     "repository": "git@github.com:yeticgi/ambient-packaging-engine.git",
     "license": "MIT"

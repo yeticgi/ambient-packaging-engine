@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { DeviceCamera } from "@yeticgi/ape";
+import { DeviceCamera } from "@yeti-cgi/ape";
 
 interface IDeviceCameraFeedProps {
     /**

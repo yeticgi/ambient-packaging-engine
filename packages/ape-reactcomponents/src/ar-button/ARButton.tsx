@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import "./ARButton.css";
-import { APEngine } from '@yeticgi/ape';
+import { APEngine } from '@yeti-cgi/ape';
 
 declare type ARButtonMode = 'start ar' | 'not supported' | 'not available' | 'need https';
 

@@ -1,12 +1,12 @@
 {
     "private": true,
-    "name": "@yeticgi/ape-reactcomponents",
+    "name": "@yeti-cgi/ape-reactcomponents",
     "version": "0.0.3",
     "scripts": {
         "build": "rollup -c"
     },
     "files": [
-        "dist/index.js"
+        "dist"
     ],
     "repository": "git@github.com:yeticgi/ambient-packaging-engine.git",
     "license": "MIT",
@@ -26,12 +26,12 @@
         "typescript": "^3.9.2"
     },
     "dependencies": {
-        "@yeticgi/ape": "*",
+        "@yeti-cgi/ape": "*",
         "react": "^16.13.1",
         "react-dom": "^16.13.1",
         "tslib": "^2.0.0"
     },
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
-    "author": "Ryan Cook"
+    "author": "YETi CGI"
 }

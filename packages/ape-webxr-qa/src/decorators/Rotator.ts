@@ -1,4 +1,4 @@
-import { Decorator, getOptionalValue, APEngine, IDecoratorOptions } from "@yeticgi/ape";
+import { Decorator, getOptionalValue, APEngine, IDecoratorOptions } from "@yeti-cgi/ape";
 
 export interface IRotatorOptions extends IDecoratorOptions {
     xSpeed?: number,

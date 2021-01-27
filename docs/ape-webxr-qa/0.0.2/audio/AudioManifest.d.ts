@@ -1,4 +1,4 @@
-import { AudioManager, IAudioItemOptions } from "@yeticgi/ape";
+import { AudioManager, IAudioItemOptions } from "@yeti-cgi/ape";
 export interface IAudioItemEntry {
     name: string;
     url: string;

@@ -1,4 +1,4 @@
-import { Decorator, IDecoratorOptions, GameObject } from "@yeticgi/ape";
+import { Decorator, IDecoratorOptions, GameObject } from "@yeti-cgi/ape";
 export declare class XRRetical extends Decorator {
     static instance: XRRetical | null;
     private _meshDecorator;

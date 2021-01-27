@@ -1,5 +1,5 @@
 import { Component } from "react";
-import { DeviceCamera } from "@yeticgi/ape";
+import { DeviceCamera } from "@yeti-cgi/ape";
 interface IDeviceCameraFeedProps {
     /**
      * The Device Camera to use as input for video feed rendering.

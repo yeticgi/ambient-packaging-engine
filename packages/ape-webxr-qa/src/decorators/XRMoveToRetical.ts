@@ -1,4 +1,4 @@
-import { Decorator, APEngine, APEngineEvents, IDecoratorOptions, MeshDecorator } from "@yeticgi/ape";
+import { Decorator, APEngine, APEngineEvents, IDecoratorOptions, MeshDecorator } from "@yeti-cgi/ape";
 import { Vector3 } from 'three';
 import { XRRetical } from './XRRetical';
 

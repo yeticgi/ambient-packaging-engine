@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { APEngine } from '@yeticgi/ape';
+import { APEngine } from '@yeti-cgi/ape';
 
 function styleInject(css, ref) {
   if ( ref === void 0 ) ref = {};

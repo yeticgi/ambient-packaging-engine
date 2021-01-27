@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import { APEngine, DeviceCameraQRReader } from '@yeticgi/ape';
-import { Overlay, DeviceCameraFeed } from '@yeticgi/ape-reactcomponents';
+import { APEngine, DeviceCameraQRReader } from '@yeti-cgi/ape';
+import { Overlay, DeviceCameraFeed } from '@yeti-cgi/ape-reactcomponents';
 
 import './QRReader.css';
 

@@ -1,4 +1,4 @@
-import { Decorator, IDecoratorOptions } from "@yeticgi/ape";
+import { Decorator, IDecoratorOptions } from "@yeti-cgi/ape";
 export declare class XRMoveToRetical extends Decorator {
     private _nonXrPosition;
     configure(options: IDecoratorOptions): void;

@@ -80,7 +80,7 @@ export abstract class Resource<O, K extends IResourceConfig> implements IDisposa
      * This function should be implemented by classed that derive from Resource
      * to return a promise that for the Resource's given object type.
      */
-    protected abstract async _loadObject(): Promise<O>;
+    protected abstract _loadObject(): Promise<O>;
 
     /**
      * This function should be implemented by classed that derive from Resource

@@ -86,9 +86,7 @@ export default (args) => {
   
   if (!isDevMode) {
     plugins.push(
-      terser({
-        sourcemap: true
-      })
+      terser()
     );
   }
 

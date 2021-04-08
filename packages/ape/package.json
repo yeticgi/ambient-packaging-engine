@@ -34,7 +34,7 @@
         "jsqr": "^1.2.0",
         "lodash": "^4.17.19",
         "stats.js": "^0.17.0",
-        "three": "^0.125.0",
+        "three": "^0.127.0",
         "tslib": "^2.0.0"
     },
     "main": "dist/index.js",

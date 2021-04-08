@@ -8,7 +8,7 @@ import {
     APEResources,
     CameraDecorator
 } from "@yeti-cgi/ape";
-import { Rotator } from "./Rotator";cd
+import { Rotator } from "./Rotator";
 
 export class TestClick extends Decorator {
 

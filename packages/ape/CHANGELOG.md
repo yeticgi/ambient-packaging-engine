@@ -4,4 +4,5 @@
 
 ## Changes
 
-- Upgraded `three` to r127.
+- Upgraded `three` to r127
+- Upgraded `jsqr` to 1.3.1

@@ -3495,7 +3495,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.5.4';
-    const _time = '1617907178853';
+    const _time = '1617907450978';
     /**
      * The date that this version of the app was built.
      */

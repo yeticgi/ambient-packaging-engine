@@ -24,19 +24,7 @@ export default {
       noderesolve({
         browser: true
       }),
-      commonjs({
-        namedExports: {
-          'react': [
-            'Children',
-            'Component',
-            'PropTypes',
-            'createElement',
-          ],
-          'react-dom': [
-            'render'
-          ],
-        },
-      }),
+      commonjs(),
       typescript({
         check: true,
         clean: true,

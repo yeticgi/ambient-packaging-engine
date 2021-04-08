@@ -42,19 +42,7 @@ export default (args) => {
   );
 
   plugins.push(
-    commonjs({
-      namedExports: {
-        'react': [
-          'Children',
-          'Component',
-          'PropTypes',
-          'createElement',
-        ],
-        'react-dom': [
-          'render'
-        ],
-      }
-    })
+    commonjs()
   );
 
   plugins.push(

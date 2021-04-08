@@ -4,5 +4,8 @@
 
 ## Changes
 
-- Upgraded `three` to r127
-- Upgraded `jsqr` to 1.3.1
+- Dependency updates:
+  - `three` -> r127
+  - `jsqr` -> 1.3.1
+  - `rollup` -> 2.44.0
+  - `@rollup/plugin-commonjs` -> 18.0.0

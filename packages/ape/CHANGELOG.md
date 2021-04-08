@@ -1,6 +1,6 @@
 # Ambient Packaging Engine - Changelog
 
-## v0.5.4 - TBD
+## v0.5.4 - April 8, 2021
 
 ## Changes
 

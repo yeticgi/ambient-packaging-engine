@@ -9,3 +9,4 @@
   - `jsqr` -> 1.3.1
   - `rollup` -> 2.44.0
   - `@rollup/plugin-commonjs` -> 18.0.0
+  - `@rollup/plugin-node-resolve` -> 11.2.1

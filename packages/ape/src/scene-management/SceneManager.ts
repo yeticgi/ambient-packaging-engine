@@ -139,12 +139,6 @@ export class SceneManager implements IDisposable {
     }
 
     dispose(): void {
-        for (let scene of this._scenes) {
-            if (scene) {
-                scene.dispose();
-            }
-        }
-
         this._scenes = [];
         this._renderList = [];
         this._primaryScene = null;

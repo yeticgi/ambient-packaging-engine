@@ -15,7 +15,6 @@ import {
     Camera,
     Vector3,
     Quaternion,
-    Euler
 } from 'three';
 
 /**
@@ -38,7 +37,7 @@ export function setParent(object3d: Object3D, parent: Object3D, scene: Scene) {
 
     // Attach
     if (parent) {
-        object3d.applyMatrix4(new Matrix4().getInverse(parent.matrixWorld));
+        object3d.applyMatrix4(parent.matrixWorld.clone().invert())
         scene.remove(object3d);
         parent.add(object3d);
     }

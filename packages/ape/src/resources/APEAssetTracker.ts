@@ -1,6 +1,6 @@
-import { Geometry, Material, Texture, Object3D, Mesh, SkinnedMesh, BufferGeometry, TextureDataType, Skeleton, MathUtils } from "three";
+import { Material, Texture, Object3D, Mesh, SkinnedMesh, BufferGeometry, TextureDataType, Skeleton, MathUtils } from "three";
 
-declare type Trackable = Object3D | Geometry | BufferGeometry | Material | Texture | Skeleton;
+declare type Trackable = Object3D | BufferGeometry | Material | Texture | Skeleton;
 
 export interface IAssetCount {
     object3d: number;
@@ -161,7 +161,7 @@ export namespace APEAssetTracker {
                 assetCounts.object3d++;
             } else if (asset instanceof Material) {
                 assetCounts.material++;
-            } else if (asset instanceof Geometry || asset instanceof BufferGeometry) {
+            } else if (asset instanceof BufferGeometry) {
                 assetCounts.geometry++;
             } else if (asset instanceof Texture) {
                 assetCounts.texture++;

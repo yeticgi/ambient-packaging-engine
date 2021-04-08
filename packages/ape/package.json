@@ -21,6 +21,7 @@
         "@types/howler": "^2.1.2",
         "@types/lodash": "^4.14.151",
         "@types/stats.js": "^0.17.0",
+        "@types/three": "^0.127.0",
         "rollup": "^2.10.2",
         "rollup-plugin-copy": "^3.3.0",
         "rollup-plugin-delete": "^1.2.0",

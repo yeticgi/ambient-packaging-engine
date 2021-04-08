@@ -1,4 +1,4 @@
-import { Clock, Vector2, Vector3, Matrix4, Scene, Box2, Layers, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, Mesh, BoxBufferGeometry, Object3D, Quaternion, MathUtils, Plane, Raycaster, Frustum, PerspectiveCamera, OrthographicCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Skeleton, SkinnedMesh, Material, Texture, Geometry, BufferGeometry, LoadingManager, TextureLoader } from 'three';
+import { Clock, Vector2, Vector3, Scene, Box2, Layers, SphereBufferGeometry, MeshStandardMaterial, MeshBasicMaterial, Mesh, BoxBufferGeometry, Object3D, Quaternion, Matrix4, MathUtils, Plane, Raycaster, Frustum, PerspectiveCamera, OrthographicCamera, WebGLRenderer, AnimationMixer, LoopOnce, LoopRepeat, Skeleton, SkinnedMesh, Material, Texture, BufferGeometry, LoadingManager, TextureLoader } from 'three';
 import { __awaiter } from 'tslib';
 import find from 'lodash/find';
 import some from 'lodash/some';
@@ -1478,7 +1478,7 @@ function setParent(object3d, parent, scene) {
     }
     // Attach
     if (parent) {
-        object3d.applyMatrix4(new Matrix4().getInverse(parent.matrixWorld));
+        object3d.applyMatrix4(parent.matrixWorld.clone().invert());
         scene.remove(object3d);
         parent.add(object3d);
     }
@@ -3495,7 +3495,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.5.3';
-    const _time = '1611768339238';
+    const _time = '1617906062088';
     /**
      * The date that this version of the app was built.
      */
@@ -3655,11 +3655,6 @@ class SceneManager {
         }
     }
     dispose() {
-        for (let scene of this._scenes) {
-            if (scene) {
-                scene.dispose();
-            }
-        }
         this._scenes = [];
         this._renderList = [];
         this._primaryScene = null;
@@ -5574,7 +5569,7 @@ var APEAssetTracker;
             else if (asset instanceof Material) {
                 assetCounts.material++;
             }
-            else if (asset instanceof Geometry || asset instanceof BufferGeometry) {
+            else if (asset instanceof BufferGeometry) {
                 assetCounts.geometry++;
             }
             else if (asset instanceof Texture) {

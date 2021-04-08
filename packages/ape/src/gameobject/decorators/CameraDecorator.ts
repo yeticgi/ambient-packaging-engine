@@ -1,6 +1,6 @@
 import { IDecoratorOptions, Decorator } from "./Decorator";
 import { GameObject } from "../GameObject";
-import { PerspectiveCamera, OrthographicCamera, MathUtils, WebGLRenderer, Scene, Camera, Geometry, BufferGeometry, Material, Group, Matrix4, Vector3, Euler, Frustum } from "three";
+import { PerspectiveCamera, OrthographicCamera, MathUtils, Matrix4, Vector3, Euler, Frustum } from "three";
 import { getOptionalValue } from "../../utils/MiscUtils";
 import { calculateFrustumPlanes } from "../../utils/MathUtils";
 import { APEngineEvents } from "../../APEngineEvents";

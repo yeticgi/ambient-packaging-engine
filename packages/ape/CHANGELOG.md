@@ -10,3 +10,4 @@
   - `rollup` -> 2.44.0
   - `@rollup/plugin-commonjs` -> 18.0.0
   - `@rollup/plugin-node-resolve` -> 11.2.1
+  - `@rollup/plugin-replace` -> 2.4.2

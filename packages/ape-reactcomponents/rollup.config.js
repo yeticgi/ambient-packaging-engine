@@ -37,8 +37,11 @@ export default {
         destDir: 'dist/public'
       }),
       replace({
-        'process.env.NODE_ENV': JSON.stringify('production'),
-        '__ape-reactcomponents_version__': pkg.version
+        values: {
+          'process.env.NODE_ENV': JSON.stringify('production'),
+          '__ape-reactcomponents_version__': pkg.version
+        },
+        preventAssignment: false
       })
     ],
     external: ['react', 'react-dom', '@yeti-cgi/ape']

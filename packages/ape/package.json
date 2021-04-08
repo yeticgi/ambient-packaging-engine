@@ -17,7 +17,7 @@
     "devDependencies": {
         "@rollup/plugin-commonjs": "^18.0.0",
         "@rollup/plugin-node-resolve": "^11.2.1",
-        "@rollup/plugin-replace": "^2.3.2",
+        "@rollup/plugin-replace": "^2.4.2",
         "@types/howler": "^2.2.2",
         "@types/lodash": "^4.14.151",
         "@types/stats.js": "^0.17.0",

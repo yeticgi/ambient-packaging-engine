@@ -59,9 +59,12 @@ export default (args) => {
 
   plugins.push(
     replace({
-      'process.env.NODE_ENV': JSON.stringify(isDevMode ? 'development' : 'production'),
-      '__ape-webxr-qa-version__': pkg.version,
-      '__ape-webxr-qa-build-time__': Date.now().toString(),
+      values: {
+        'process.env.NODE_ENV': JSON.stringify(isDevMode ? 'development' : 'production'),
+        '__ape-webxr-qa-version__': pkg.version,
+        '__ape-webxr-qa-build-time__': Date.now().toString(),
+      },
+      preventAssignment: false,
     })
   );
 

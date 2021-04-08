@@ -15,6 +15,7 @@ import { SceneManager } from './scene-management/SceneManager';
 import { CameraDecorator } from './gameobject/decorators/CameraDecorator';
 import { XRPhysics } from './physics/XRPhysics';
 import { APEngineEvents } from './APEngineEvents';
+import { Howler } from 'howler';
 
 export namespace APEngine {
 

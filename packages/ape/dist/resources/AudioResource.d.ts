@@ -1,5 +1,5 @@
-/// <reference types="howler" />
 import { Resource, IResourceConfig } from "./Resource";
+import { Howl } from "howler";
 export interface IAudioConfig extends IResourceConfig {
     url: string;
     loop?: boolean;

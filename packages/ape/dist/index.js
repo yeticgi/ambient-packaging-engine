@@ -3,11 +3,11 @@ import { __awaiter } from 'tslib';
 import find from 'lodash/find';
 import some from 'lodash/some';
 import Stats from 'stats.js';
+import { Howler, Howl } from 'howler';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import jsQR from 'jsqr';
 import isEqual from 'lodash/isEqual';
 import remove from 'lodash/remove';
-import { Howl } from 'howler';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 import { SkeletonUtils } from 'three/examples/jsm/utils/SkeletonUtils';
@@ -3495,7 +3495,7 @@ var APEngineBuildInfo;
      * Version number of the app.
      */
     APEngineBuildInfo.version = '0.5.3';
-    const _time = '1617906062088';
+    const _time = '1617906288063';
     /**
      * The date that this version of the app was built.
      */

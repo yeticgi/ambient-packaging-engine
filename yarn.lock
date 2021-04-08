@@ -125,10 +125,10 @@
     "@types/minimatch" "*"
     "@types/node" "*"
 
-"@types/howler@^2.1.2":
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/@types/howler/-/howler-2.1.2.tgz#318a9cac65eeb8ed7d453dd70c9367067d35137b"
-  integrity sha512-gK7snhJcWVvTdiE6cCBAjeZ9od9Q8LmB5lEyB/3n6jMJOLn7EQ8Zvmkz8XPhnN5xB+b7QzCiqxJY3YiHrM3Jpg==
+"@types/howler@^2.2.2":
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/@types/howler/-/howler-2.2.2.tgz#54f621983c3635e2e071a95644ba28eea84814c2"
+  integrity sha512-/znab/CjipQ25epk7YcsoEsR96rB77Y/fCLMaNtIzV5oPeUeilc7dYGyMjYi+OQklkllADLM+jGZRSt3d6lhiA==
 
 "@types/lodash@^4.14.151":
   version "4.14.157"
@@ -973,10 +973,10 @@ hex-color-regex@^1.1.0:
   resolved "https://registry.yarnpkg.com/hex-color-regex/-/hex-color-regex-1.1.0.tgz#4c06fccb4602fe2602b3c93df82d7e7dbf1a8a8e"
   integrity sha512-l9sfDFsuqtOqKDsQdqrMRk0U85RZc0RtOR9yPI7mRVOa4FsR/BVnZ0shmQRM96Ji99kYZP/7hn1cedc1+ApsTQ==
 
-howler@^2.1.3:
-  version "2.1.3"
-  resolved "https://registry.yarnpkg.com/howler/-/howler-2.1.3.tgz#07c88618f8767e879407a4d647fe2d6d5f15f121"
-  integrity sha512-PSGbOi1EYgw80C5UQbxtJM7TmzD+giJunIMBYyH3RVzHZx2fZLYBoes0SpVVHi/SFa1GoNtgXj/j6I7NOKYBxQ==
+howler@^2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/howler/-/howler-2.2.1.tgz#a521a9b495841e8bb9aa12e651bebba0affc179e"
+  integrity sha512-0iIXvuBO/81CcrQ/HSSweYmbT50fT2mIc9XMFb+kxIfk2pW/iKzDbX1n3fZmDXMEIpYvyyfrB+gXwPYSDqUxIQ==
 
 hsl-regex@^1.0.0:
   version "1.0.0"

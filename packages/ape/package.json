@@ -1,6 +1,6 @@
 {
     "name": "@yeti-cgi/ape",
-    "version": "0.5.3",
+    "version": "0.5.4",
     "scripts": {
         "build": "rollup -c"
     },
